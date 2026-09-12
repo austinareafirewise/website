@@ -391,6 +391,49 @@ section[id] { scroll-margin-top: 92px; }
 
 .cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
 
+/* ---------- Partner mark in the hero ----------
+
+   The NFPA / Firewise USA lockup, top right of the home hero. The markup puts
+   it last inside .hero .wrap on purpose: below 640px the layout falls back to
+   source order, and the headline and the two primary actions have to come
+   before a partner logo. Grid lifts it back to the top of the second column
+   at desktop width, where source order stops mattering. */
+
+.hero .wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(150px, 250px);
+    column-gap: 40px;
+    row-gap: 0;             /* the text elements keep their own margins */
+    align-items: start;
+    align-content: start;
+}
+
+.hero-mark {
+    grid-column: 2;
+    grid-row: 1 / span 4;   /* alongside kicker, h1, lede and the button row */
+    align-self: start;
+    justify-self: end;
+    margin-top: 6px;
+}
+
+/* The border is --green-700, the tone .btn-green fills with, so the frame and
+   the "Start a Firewise community" button read as one system rather than two
+   greens that nearly match.
+
+   The white padding is doing a second job. The supplied file is a JPEG, which
+   cannot carry transparency, so its opaque white background floated as a pale
+   rectangle against the page's warm off-white. Matting it inside the frame
+   makes that white read as a deliberate card instead of a stray edge. */
+.hero-mark img {
+    display: block;
+    width: 100%;
+    height: auto;
+    padding: 14px;
+    background: #fff;
+    border: 3px solid var(--green-700);
+    border-radius: 8px;     /* matches .btn */
+}
+
 /* Interior page header, smaller than the home hero. */
 .page-head {
     padding: 44px 0 30px;
@@ -715,6 +758,12 @@ section { padding: 52px 0; }
     .site-nav a { font-size: .85rem; }
 
     .brand img { height: 36px; }
+
+    /* Hero goes back to one column, which means back to source order — the
+       partner mark is last in the markup, so it lands below the buttons
+       rather than pushing them off a phone screen. */
+    .hero .wrap { display: block; }
+    .hero-mark { max-width: 200px; margin-top: 26px; }
 
     /* The banner label sat on its own line, costing a full line of a
        three-line block. Inline on a phone; the sentence carries the meaning. */
