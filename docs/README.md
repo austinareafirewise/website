@@ -24,8 +24,8 @@ Under **$25 a year**, nearly all of it the domain name.
 
 | | | Time |
 | --- | --- | --- |
-| [01-prerequisites.md](01-prerequisites.md) | AWS account, securing it, domain, GitHub organization | ~90 min |
-| [02-deploy-stack.md](02-deploy-stack.md) | Upload one template; it builds the infrastructure | ~10 min |
+| [01-prerequisites.md](01-prerequisites.md) | AWS account, alias, admin user, CLI, region, domain, GitHub organization | ~90 min |
+| [02-deploy-stack.md](02-deploy-stack.md) | Upload one template; it builds the infrastructure | ~10 min + DNS |
 | [03-connect-github.md](03-connect-github.md) | Wire the repository to AWS, first publish | ~15 min |
 | [05-runbook.md](05-runbook.md) | Everything afterwards — editing, rollback, removing people, costs | reference |
 
@@ -80,6 +80,8 @@ fixes. The two that account for most lost time:
 
 - **Resources seem to have disappeared** — check the region selector, top
   right of the console
+- **Stack finished but the domain doesn't work yet** — expected; the
+  certificate and DNS finish separately, 15–45 minutes after the stack
 - **First deploy refused with an authorization error** —
   [03-connect-github.md](03-connect-github.md) §3.5, which includes how to read
   what AWS actually saw

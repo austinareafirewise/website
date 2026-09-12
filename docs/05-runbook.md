@@ -48,7 +48,7 @@ history, which is what you want — you can see what happened and why.
 Update the same stack. CloudFormation → your stack → **Update** → **Use
 current template** → change the **Domain name** parameter → through to
 **Submit**. The hosted zone must already exist in the account (see
-[01-prerequisites.md](01-prerequisites.md) §1.6).
+[01-prerequisites.md](01-prerequisites.md) §1.7).
 
 ## Someone leaves the organization
 

@@ -50,59 +50,134 @@ roughly once a year.
 > without MFA, on an address that also receives ordinary email, is one
 > successful phishing message away from losing the site.
 
-## 1.3 Create a day-to-day admin user
+## 1.3 Set the account alias
+
+Skip-able, but do it now — it saves confusion every time you sign in.
+
+1. Console search bar → type **IAM** → open it
+
+   > Three similar results come back: **IAM**, **IAM Identity Center**, and
+   > **Resource Access Manager**. You want plain **IAM**. Identity Center
+   > manages sign-in across *many* AWS accounts and Resource Access Manager
+   > shares resources between them; neither applies to a single account.
+   > AWS may later suggest Identity Center as the modern option — it is, for
+   > organizations with many accounts and staff, and it is a lot of extra
+   > machinery for one or two admins.
+
+2. On the **Dashboard**, right-hand panel **AWS Account** → next to **Account
+   Alias** click **Create**
+3. Enter the organization's name, e.g. `austinareafirewise`
+
+Your sign-in URL becomes `https://austinareafirewise.signin.aws.amazon.com/console`
+instead of a twelve-digit number.
+
+> **The name in the top-right corner is not the alias.** That is the account
+> *name* from signup, and it appears whether or not an alias exists. Until you
+> do the step above, the friendly URL returns a 404 and only the numeric one
+> works. The IAM Dashboard tells you the truth: if it shows **Account Alias:
+> Create**, no alias is set.
+
+## 1.4 Create a day-to-day admin user
 
 Root is for emergencies. Daily work uses a separate user.
 
-1. In the console search bar, type **IAM** and open it
-2. **Users** → **Create user**
-3. Name it something like `vicki-admin`
-4. Tick **Provide user access to the AWS Management Console**
-5. Choose **I want to create an IAM user**, set a strong password
-6. Next → **Attach policies directly** → tick **AdministratorAccess**
-7. Create the user, then **download the sign-in URL** — it looks like
-   `https://123456789012.signin.aws.amazon.com/console`. That is how you sign
-   in from now on
-8. Sign in as that user and turn on MFA for it too (same steps as 1.2)
+1. IAM → left sidebar **IAM users** (the label says "IAM users", not "Users")
+   → **Create user**
+2. **User name** — name it for the person, not the role: `vicki-admin`,
+   `dave-admin`. Each person who needs access gets their own user, so that
+   removing one person does not disturb anyone else and the audit trail says
+   who did what
+3. Tick **Provide user access to the AWS Management Console**
+4. It then asks what kind of access — choose **I want to create an IAM user**
+5. **Custom password**, set a strong one
 
-Then sign out of root and leave it alone.
+   > Leaving **Users must create a new password at next sign-in** ticked is
+   > fine. It just prompts for a new password on the first console sign-in, and
+   > it has no effect on access keys or the command line. It also causes
+   > `IAMUserChangePassword` to appear alongside your chosen policy on the
+   > review screen — expected, not something you did.
 
-## 1.4 Create access keys for the command line
+6. **Next** → **Permissions options** → **Attach policies directly**
+
+   > The third option, on the right. The form defaults to **Add user to group**,
+   > which is better practice for a team — you set permissions once and add
+   > people to it — but for one or two admins it is a layer managing a single
+   > member. Converting later takes two minutes.
+
+7. Search `AdministratorAccess`, tick it → **Next** → **Create user**
+8. Copy the console password from the final screen; it is not shown again
+9. Sign out of root, sign in as the new user, and turn on MFA for it too
+
+Then leave root alone.
+
+## 1.5 Create access keys for the command line
 
 Some steps use commands rather than clicks. This is how your computer proves
 who it is.
 
-1. IAM → **Users** → your admin user → **Security credentials**
-2. **Create access key** → choose **Command Line Interface (CLI)**
-3. Tick the acknowledgement, then create
-4. Copy both values now — **the secret is shown once and never again**
+**Create a key for the person who will use it.** Keys belong to individuals —
+if two people work on this, each makes their own from their own user. Sharing
+one key means CloudTrail cannot tell you apart and removing one person's access
+breaks the other's.
+
+1. IAM → **IAM users** → click your user
+2. **Security credentials** tab (along the top, next to "Permissions")
+3. Scroll to **Access keys** → **Create access key**
+4. Choose **Command Line Interface (CLI)**
+5. Tick **I understand the above recommendation and want to proceed to create
+   an access key**
+6. **Next** → description tag optional → **Create access key**
+
+The **Retrieve access keys** screen shows both values, and this is the only
+time the secret is ever displayed:
+
+| Screen label | Goes into the prompt |
+| --- | --- |
+| **Access key** — 20 characters, starts `AKIA` | `AWS Access Key ID` |
+| **Secret access key** — ~40 characters, behind a **Show** link | `AWS Secret Access Key` |
+
+Click **Show**, or use **Download .csv file**. If you lose the secret you
+cannot recover it — you delete that key and create another, which is routine
+and takes a minute.
 
 Install the AWS CLI: <https://aws.amazon.com/cli/> (there is a normal Windows
-installer). Then open Command Prompt or PowerShell and run:
+installer). Then open Command Prompt or PowerShell:
 
 ```bash
-aws configure
+aws configure --profile austinareafirewise
 ```
 
-Paste the access key ID, the secret, `us-east-2` for the region, and `json` for
-the output format.
+Four prompts: the access key, the secret, `us-east-2`, and `json`.
 
-Check it worked:
+> **Always include `--profile`.** With it, the command adds a new named section
+> and leaves any existing profiles alone. Without it, it silently overwrites
+> your `[default]` profile — which matters if this machine already talks to
+> another AWS account. Back the files up first if you are unsure:
+> `cp ~/.aws/config ~/.aws/config.bak` and the same for `~/.aws/credentials`.
+
+`json` is the output format. It only affects how results print on screen, and
+it is what the commands in these documents assume.
+
+It prints nothing when it succeeds. Check it worked:
 
 ```bash
-aws sts get-caller-identity
+aws sts get-caller-identity --profile austinareafirewise
 ```
 
-You should see your account number and your user name. If you see an error
-about credentials, run `aws configure` again — something was mistyped.
+You should see the account number and your user name. If you get "The config
+profile could not be found", the `aws configure` step did not complete — run it
+again.
 
 > **Treat the secret key like a house key.** It is not protected by your
 > password or MFA: anyone holding it has your access. Never paste it into a
-> repository, a document, a chat message, or a support ticket. If it is ever
-> exposed, delete it in IAM immediately and create a new one — that takes two
-> minutes and instantly makes the old one useless.
+> repository, a document, a chat message, or a support ticket. Note that
+> `aws configure` **echoes what you type**, so the secret appears on screen —
+> clear the terminal afterwards, and do not use `aws configure set` for it,
+> which would put it in your shell history. Delete any downloaded .csv once the
+> profile works. If a key is ever exposed, delete it in IAM immediately and
+> create a new one; that instantly makes the old one useless.
 
-## 1.5 Pick a region and stay in it
+## 1.6 Pick a region and stay in it
 
 A region is which part of the world your site is served from. **`us-east-2`**
 (Ohio) is a reasonable default for a Texas organization.
@@ -114,7 +189,7 @@ created has vanished, check the region selector in the top right before
 anything else.** It is the most common source of confusion in AWS, by a wide
 margin.
 
-## 1.6 Domain name
+## 1.7 Domain name
 
 Skip this section if the site is launching on its free `amplifyapp.com`
 address for now. You can add a domain later without rebuilding anything.
@@ -147,6 +222,19 @@ zones** → **Create hosted zone** → enter the domain → **Public hosted zone
 Then copy the four nameserver (NS) values it shows you and enter them at your
 current registrar, replacing what is there.
 
+> **A registration can fail on a brand-new account.** AWS runs fraud and
+> payment checks, and registering two domains in the same minute on a
+> day-old account is a common trigger. The failure message is generic — "We
+> can't finish registering your domain. Contact AWS Support" — and tells you
+> nothing about the cause. The name usually remains available; wait a day and
+> retry, or open a support case. Check your bill to confirm you were not
+> charged for the failed attempt. To see what actually happened:
+>
+> ```bash
+> aws route53domains list-operations --region us-east-1 \
+>   --query "Operations[].{d:DomainName,status:Status}" --output table
+> ```
+
 Confirm the hosted zone exists before you go on:
 
 ```bash
@@ -156,7 +244,7 @@ aws route53 list-hosted-zones --query "HostedZones[].Name" --output text
 Your domain should be in that list, with a trailing dot. If it is not, the
 template in step 2 will fail when it tries to set up the certificate.
 
-## 1.7 Create the GitHub organization and repository
+## 1.8 Create the GitHub organization and repository
 
 GitHub holds the website's files and publishes them to AWS.
 
@@ -201,7 +289,7 @@ are free either way at this volume.
 > history, or issues: **Settings** → **Organizations** → **Turn <account> into
 > an organization**. Do it before other people depend on the account, not after.
 
-## 1.8 Check whether the GitHub identity provider already exists
+## 1.9 Check whether the GitHub identity provider already exists
 
 Only relevant if this AWS account has hosted a site before. A fresh account has
 none, and you can skip to step 2.
@@ -221,10 +309,15 @@ the provider already existing, and you re-run it with the other answer.
 ## Before moving on
 
 - [ ] Root user has MFA, and its password is stored somewhere safe
+- [ ] Account alias set, and the friendly sign-in URL works
 - [ ] Admin user created, with MFA, and you can sign in as it
-- [ ] `aws sts get-caller-identity` returns your account number
+- [ ] `aws sts get-caller-identity --profile <name>` returns the **new**
+      account's number — not another account you already had configured
+- [ ] Your other AWS profiles still work, if you had any
 - [ ] You know which region you are using and it is the same everywhere
-- [ ] Hosted zone exists, if you are using a custom domain
-- [ ] GitHub organization exists with two owners, and holds an empty repository
+- [ ] Hosted zone exists and the domain registration **succeeded**, if you are
+      using a custom domain
+- [ ] GitHub organization exists with **two owners**, and holds an empty
+      repository
 
 Next: [02-deploy-stack.md](02-deploy-stack.md)

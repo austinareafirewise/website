@@ -19,7 +19,7 @@ About 10 minutes of work, plus waiting if you are attaching a domain.
 
 1. Sign in as your **admin user** (not root)
 2. **Check the region** in the top right — it must be the one you chose in
-   step 1.5
+   step 1.6
 3. Search for **CloudFormation** and open it
 4. **Create stack** → **With new resources (standard)**
 5. Choose **Upload a template file**, then **Choose file**, and select
@@ -61,7 +61,7 @@ card statement does.
 warns. It does not cap or stop anything.
 
 **Create the GitHub identity provider?** — `yes` for a fresh account, `no` if
-step 1.8 showed one already exists.
+step 1.9 showed one already exists.
 
 Then **Next**, **Next** again through the options page (nothing to change).
 
@@ -77,12 +77,24 @@ is much of the point. Then **Submit**.
 
 ## 2.4 Wait
 
-The **Events** tab shows progress, newest first.
+The **Events** tab shows progress, newest first. The stack itself finishes
+quickly — **under a minute** is normal, with or without a domain.
 
-- **No domain:** finished in 2–3 minutes
-- **With a domain:** **15–45 minutes**, nearly all of it the TLS certificate
-  and DNS. `CREATE_IN_PROGRESS` on `SiteDomain` for half an hour is normal.
-  Leave it alone.
+**The domain keeps working after the stack says CREATE_COMPLETE.** The stack
+finishing does not mean the site is reachable at your domain yet: Amplify has
+to get a TLS certificate issued and let DNS propagate, which takes roughly
+15–45 minutes and happens independently. Do not read a completed stack as a
+broken domain, or a slow domain as a hung stack.
+
+Check where the domain has got to:
+
+```bash
+aws amplify get-domain-association --profile <your-profile> --region us-east-2 \
+  --app-id <AmplifyAppId from Outputs> --domain-name <your domain> \
+  --query "domainAssociation.domainStatus"
+```
+
+It moves `PENDING_VERIFICATION` → `PENDING_DEPLOYMENT` → `AVAILABLE`.
 
 When the stack shows **CREATE_COMPLETE**, open the **Outputs** tab. Keep it
 open — step 3 uses four of those values.
@@ -97,8 +109,9 @@ its status reason.
 | --- | --- | --- |
 | `provider already exists` / `EntityAlreadyExists` | An identity provider was already there | Delete the stack, re-run with `CreateGitHubOIDCProvider` = `no` |
 | `Role with name ... already exists` | A previous attempt left it behind, or the name collides | Delete the stack; if it persists, choose a different Site name |
-| Hosted zone / certificate errors | No hosted zone in this account for that domain | Finish step 1.6, or blank the domain and add it later |
-| `not authorized to perform iam:CreateRole` | Signed in as a user without admin | Sign in as the admin user from step 1.3 |
+| Hosted zone / certificate errors | No hosted zone in this account for that domain | Finish step 1.7, or blank the domain and add it later |
+| `not authorized to perform iam:CreateRole` | Signed in as a user without admin | Sign in as the admin user from step 1.4 |
+| Stack succeeds, but the first deploy is later refused | GitHub owner or repository name does not match | Not a stack failure — see [03-connect-github.md](03-connect-github.md) §3.5 |
 
 After any failure: **Delete** the stack, wait for it to finish deleting, then
 create it again. Do not try to repair a failed stack by hand — a half-created
@@ -117,7 +130,10 @@ aws cloudformation describe-stacks --stack-name aafa-site --query "Stacks[0].Out
 You should see `AmplifyAppId`, `DeployRoleArn`, `AwsRegion`, `BranchNameOut`,
 `TemporaryUrl`, and `WorkflowEnvBlock`.
 
-Opening `TemporaryUrl` in a browser now gives an error page. That is correct —
-the host exists but nothing has been published to it yet. Step 3 fixes that.
+Opening `TemporaryUrl` now shows an Amplify placeholder reading **"Welcome —
+Your app will appear here once you complete your first deployment."** That is
+success, not a fault: the host exists and nothing has been published to it yet.
+Seeing the same page on your custom domain also confirms DNS and the
+certificate are working. Step 3 publishes the site.
 
 Next: [03-connect-github.md](03-connect-github.md)
