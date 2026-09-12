@@ -27,6 +27,8 @@ Amplify** workflow from the Actions tab.
 | `firewise-communities.html` | What Firewise USA® is, the six steps to recognition, AFD vs. ESD coverage, keeping a site alive after year one |
 | `evacuation.html` | Alerts and STEAR, Ready/Set/Go, go-bag contents, streets with one way out, returning afterward |
 | `about.html` | Who the Alliance is, where it works, how to get involved, sources for the guidance |
+| `news.html` | Board-published news, rendered from `/content/content.json` by `js/content.js` — list, or one article with `?id=` |
+| `admin/` | The board's editing page. Sign-in via Cognito; see `docs/04-editing-the-site.md` |
 | `404.html` | Served for unmatched paths |
 
 Shared shell (emergency strip, header, footer) is repeated in each file rather
@@ -166,6 +168,17 @@ logos are exempt from contrast rules, interface text is not.
 
 If you add a colour, check it before shipping. Target 4.5:1 for normal text,
 3:1 for text at or above 24px (or 18.66px bold).
+
+## Board-published content
+
+Meeting notices and news articles are not in this repository. Board members
+publish them at `/admin/`, they are stored in AWS, and `js/content.js` renders
+them into the notice slot and home News section on `index.html` and onto
+`news.html`. The site works exactly as before if that content is unavailable —
+the slots stay hidden.
+
+Design: `docs/06-cms-design.md`. Using it: `docs/04-editing-the-site.md`.
+Deploying changes to it: `infra/README.md`.
 
 ## Contact address and mailing list
 

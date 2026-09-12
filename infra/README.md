@@ -20,6 +20,56 @@ the stack over changing things by hand, so the template stays the truth.
 | Domain registration | Route 53 Domains, auto-renew on, expires 2027-09-12 |
 | GitHub OIDC deploy role | `arn:aws:iam::773005956573:role/aafa-site-github-deploy` |
 
+### Board content (stack `aafa-cms`, template [`cms-stack.yaml`](cms-stack.yaml))
+
+| Resource | Identifier |
+| --- | --- |
+| Cognito user pool | `us-east-2_YHXgXpCPz` (`aafa-board`) — self sign-up off, deletion protection on |
+| Board group | `board` — the API refuses writes from anyone not in it |
+| App client | `6hm3jsg16bia9r18fu6utv3o7n` (public, PKCE) |
+| Sign-in page | `https://austinareafirewise-admin.auth.us-east-2.amazoncognito.com` |
+| API | `https://dpnvwt7kp5.execute-api.us-east-2.amazonaws.com` (HTTP API, JWT authorizer) |
+| Lambda | `aafa-cms`, Node.js 22, no dependencies — source in [`../lambda/cms/`](../lambda/cms/) |
+| DynamoDB | `aafa-content`, on-demand, point-in-time recovery on |
+| Content bucket | `aafa-site-content` — public read on `content.json` and `images/*` only |
+| Artifacts bucket | `aafa-deploy-artifacts-773005956573` — private, holds packaged Lambda zips, 30-day expiry |
+| Site rewrite | `/content/<*>` → the content bucket (parameter `ContentBucketDomain` on the site stack) |
+
+Design and the reasoning behind each piece: [`../docs/06-cms-design.md`](../docs/06-cms-design.md).
+Board-facing instructions: [`../docs/04-editing-the-site.md`](../docs/04-editing-the-site.md).
+
+#### Deploying a change to the Lambda or the CMS stack
+
+```bash
+export AWS_PROFILE=austinareafirewise
+aws cloudformation package --region us-east-2 --template-file infra/cms-stack.yaml \
+  --s3-bucket aafa-deploy-artifacts-773005956573 --s3-prefix cms \
+  --output-template-file /tmp/cms-packaged.yaml
+aws cloudformation deploy --region us-east-2 --template-file /tmp/cms-packaged.yaml \
+  --stack-name aafa-cms --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
+```
+
+Run from the repository root. `package` uploads `lambda/cms/` and rewrites the
+`Code:` reference; `deploy` applies it. A code-only change takes about a minute.
+
+#### Board members
+
+```bash
+export AWS_PROFILE=austinareafirewise
+P=us-east-2_YHXgXpCPz; U=person@example.org
+aws cognito-idp admin-create-user --region us-east-2 --user-pool-id $P --username $U \
+  --user-attributes Name=email,Value=$U Name=email_verified,Value=true
+aws cognito-idp admin-add-user-to-group --region us-east-2 --user-pool-id $P --username $U --group-name board
+```
+
+They get an emailed temporary password. Remove someone with
+`admin-delete-user`; park them without deleting with `admin-remove-user-from-group`.
+
+Cognito's default email sender is limited to 50 messages a day, which is
+plenty for a board. The user pool has **deletion protection**: deleting the
+`aafa-cms` stack will fail until that is switched off, which is the intended
+safeguard against removing every login by accident.
+
 ### Custom rules on the app
 
 1. `https://austinareafirewise.org` → `https://www.austinareafirewise.org` (302). The
@@ -88,6 +138,9 @@ AWS_PROFILE=austinareafirewise aws amplify start-deployment \
 ```
 
 ## What does not exist yet: the mailing list
+
+The CMS stack above is the natural home for this when it is built — same
+API, same Lambda pattern, a second table.
 
 The signup form on the home page has no backend. Nothing is stored, and the
 form tells the visitor so. The intended shape when it is built:

@@ -1,0 +1,112 @@
+/* Admin page. Reuses the site's tokens and components; this file only adds
+   what editing needs. Built for people who do not use computers much: big
+   targets, one thing per screen, no jargon, nothing that moves. */
+
+/* An author `display` rule beats the browser's own [hidden] { display: none },
+   so anything toggled with the hidden attribute stays visible unless this
+   says otherwise. This page hides and shows nearly everything that way —
+   screens, modals, the sign-out button — so state it once, globally, rather
+   than remembering it per selector. Without it the page loads with both
+   modals open on top of the sign-in card. */
+[hidden] { display: none !important; }
+
+.admin-main { padding: 28px 20px 60px; }
+
+.admin-who { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: .95rem; color: var(--muted); }
+
+.btn-small { padding: 8px 14px; font-size: .9rem; }
+.btn-big { padding: 18px 34px; font-size: 1.15rem; }
+.btn-danger { background: #fff; border-color: #9c2b16; color: #9c2b16; }
+.btn-danger:hover { background: #FBE4E0; color: #9c2b16; }
+
+.admin-card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 30px; box-shadow: var(--shadow); max-width: 620px;
+}
+.admin-signin { margin: 40px auto; text-align: center; }
+.admin-signin h1 { font-size: 2rem; }
+
+.admin-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 26px; }
+
+/* ---------- List ---------- */
+
+.list-group { margin-bottom: 28px; }
+.list-group h2 { font-size: 1.25rem; margin-bottom: 10px; }
+.list-group.dim .item { opacity: .72; }
+
+.item {
+    display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center;
+    background: var(--card); border: 1px solid var(--line); border-left: 6px solid var(--sage);
+    border-radius: 10px; padding: 14px 18px; margin-bottom: 10px;
+}
+.item.live { border-left-color: var(--green-500); }
+.item.scheduled { border-left-color: var(--orange); }
+.item.draft { border-left-color: #b8b8ae; }
+.item h3 { margin: 0 0 3px; font-size: 1.1rem; }
+.item .meta { color: var(--muted); font-size: .9rem; margin: 0; }
+.item .badge {
+    display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 999px; margin-right: 8px; background: var(--sage-200); color: var(--green-900);
+}
+.item.live .badge { background: #E4F0E6; color: #1d5b2c; }
+.item.scheduled .badge { background: var(--alert-bg); color: var(--orange-dark); }
+.item.draft .badge { background: #eeeee9; color: #555; }
+
+/* ---------- Form ---------- */
+
+.admin-form-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.admin-status { font-weight: 700; color: var(--muted); }
+#form h1 { font-size: 1.8rem; }
+#form h2 { font-size: 1.25rem; margin-top: 22px; }
+.admin-two { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.field-check label { display: flex; gap: 10px; align-items: flex-start; font-weight: 600; cursor: pointer; }
+.field-check input { width: 22px; height: 22px; flex: 0 0 auto; margin-top: 2px; }
+.opt { font-weight: 400; color: var(--muted); }
+.req { font-weight: 400; color: var(--orange-dark); }
+code { background: #f1f1ec; padding: 1px 5px; border-radius: 4px; font-size: .9em; }
+
+.admin-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; align-items: center; }
+.admin-buttons .btn-danger { margin-left: auto; }
+
+/* ---------- Pictures ---------- */
+
+#pictures { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-bottom: 14px; }
+.pic {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+}
+.pic img { display: block; width: 100%; height: auto; }
+.pic .pic-text { padding: 10px 12px; font-size: .9rem; color: var(--muted); }
+.pic .pic-text strong { display: block; color: var(--ink); }
+.pic .pic-actions { padding: 0 12px 12px; }
+
+.dropzone {
+    border: 2px dashed var(--sage); border-radius: 10px; padding: 26px; text-align: center;
+    color: var(--muted); cursor: pointer; background: #fff;
+}
+.dropzone.over { border-color: var(--green-700); background: var(--sage-200); }
+.dropzone:focus-visible { outline: 3px solid var(--orange-dark); }
+
+/* ---------- Modals ---------- */
+
+.modal {
+    position: fixed; inset: 0; z-index: 200; background: rgba(25, 70, 43, .55);
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.modal-box {
+    background: var(--page); border-radius: 12px; padding: 22px; max-width: 760px; width: 100%;
+    max-height: 95vh; overflow: auto;
+}
+.modal-wide { max-width: 1200px; height: 92vh; display: flex; flex-direction: column; }
+#preview-frame { flex: 1; width: 100%; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+
+.crop-stage { background: #222; border-radius: 8px; overflow: hidden; margin: 12px 0 16px; touch-action: none; }
+#crop-canvas { display: block; width: 100%; height: auto; cursor: move; }
+
+/* ---------- Status colours reuse the site's form-status ---------- */
+
+.form-status.warn { background: var(--alert-bg); color: var(--orange-dark); }
+
+@media (max-width: 640px) {
+    .item { grid-template-columns: 1fr; }
+    .admin-buttons .btn-danger { margin-left: 0; }
+}

@@ -26,7 +26,8 @@ disappears at the stop date on its own.
 | Field | Notice | Article | Notes |
 | --- | --- | --- | --- |
 | Title | required | required | ≤ 120 characters |
-| Body | required | required | ≤ 6,000 characters; blank lines become paragraphs; plain text only |
+| Body | required | required | ≤ 6,000 characters; blank lines become paragraphs |
+| **Body uses Markdown** | — | yes/no | off by default; see *Markdown* below |
 | Starts / Stops | required | required | date and time, Central; stop after start |
 | **Link + label** | optional | optional | one `https://` address to an outside site — a registration page, a map, an agency notice. Shown as a button on the notice and on the article |
 | **Show on home page** | — | yes/no | puts the title in the home News section |
@@ -51,6 +52,19 @@ chipper day will not publish the location of their driveway.
 Each picture carries a **credit line** ("Photo: J. Smith") shown beneath it,
 and a **description** for people using screen readers. The description is
 required; the credit is optional.
+
+### Markdown
+
+An article's body can opt into a **restricted Markdown subset** with a
+checkbox. Supported: paragraphs, `##` and `###` headings, `**bold**`,
+`*italic*`, bulleted and numbered lists, `>` quotes, and `[links](https://…)`.
+Anything else — raw HTML above all — is shown as the literal characters typed.
+
+The renderer is about 120 lines of the site's own code that builds elements
+directly and sets text with `textContent`; it never assigns `innerHTML` from
+content. That is what keeps the injection guarantee below intact with
+Markdown on. Links render only when they start with `https://`. Meeting
+notices stay plain text.
 
 ### Preview
 
@@ -250,6 +264,7 @@ endsAt       ISO 8601 with offset
 link         https URL | absent
 linkText     ≤ 60 | absent
 showOnHome   boolean            (news only)
+bodyFormat   "plain" | "markdown"  (news only, default plain)
 pictures     [ { key, thumbKey, width, height, credit ≤ 120, alt ≤ 200 } ]  ≤ 3
 createdAt    createdBy (email)
 updatedAt    updatedBy (email)
@@ -292,7 +307,7 @@ the template the truth.
 | Password handling | Cognito. We never see, store or transmit one. |
 | Who can sign in | Only accounts an admin created. Self sign-up off. |
 | Who can write | Only sign-ins in the `board` group, checked server-side. |
-| Script injection via content | Impossible by construction: plain text stored, `textContent` rendered. |
+| Script injection via content | Impossible by construction: text stored; plain text rendered with `textContent`; Markdown rendered by a subset renderer that builds DOM nodes and never interprets raw HTML. |
 | Malicious image file | Re-encoded through a canvas in the browser; only the resulting JPEG is stored. Upload URL is content-type- and size-capped. |
 | Location leakage from photos | Re-encoding strips EXIF, including GPS. |
 | Compromised editor account | Can post, alter or remove news and notices and their pictures. Cannot touch emergency content, agency links, code, DNS, or the account. Fix: delete the user, re-save affected items. |

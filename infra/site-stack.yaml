@@ -28,6 +28,10 @@ Metadata:
         Parameters:
           - DomainName
       - Label:
+          default: Board-editable content (leave blank until the CMS stack exists)
+        Parameters:
+          - ContentBucketDomain
+      - Label:
           default: Safety net
         Parameters:
           - BudgetEmail
@@ -43,6 +47,7 @@ Metadata:
       GitHubRepo: {default: "Repository name"}
       BranchName: {default: "Branch that publishes the site"}
       DomainName: {default: "Domain name, without www"}
+      ContentBucketDomain: {default: "Content bucket domain, from the CMS stack's ContentBucketDomain output"}
       BudgetEmail: {default: "Email for cost alerts"}
       MonthlyBudgetUSD: {default: "Alert if the month exceeds (US dollars)"}
       CreateGitHubOIDCProvider: {default: "Create the GitHub identity provider?"}
@@ -88,6 +93,16 @@ Parameters:
       Leave blank to launch on the free amplifyapp.com address and add the
       domain later by updating the stack.
 
+  ContentBucketDomain:
+    Type: String
+    Default: ""
+    Description: >
+      Regional S3 domain of the CMS content bucket, e.g.
+      aafa-site-content.s3.us-east-2.amazonaws.com. When set, the site
+      proxies /content/* to that bucket so board-published news and pictures
+      appear at the site's own address. Leave blank if the CMS stack has not
+      been deployed.
+
   BudgetEmail:
     Type: String
     Default: ""
@@ -118,6 +133,7 @@ Conditions:
   MakeOIDCProvider: !Equals [!Ref CreateGitHubOIDCProvider, "yes"]
   HasDomain: !Not [!Equals [!Ref DomainName, ""]]
   HasBudget: !Not [!Equals [!Ref BudgetEmail, ""]]
+  HasContent: !Not [!Equals [!Ref ContentBucketDomain, ""]]
 
 
 Resources:
@@ -227,6 +243,16 @@ Resources:
           - Source: !Sub "https://${DomainName}"
             Target: !Sub "https://www.${DomainName}"
             Status: "302"
+          - !Ref AWS::NoValue
+        # Board-published content: content.json and pictures live in S3 and
+        # are proxied here, so the page never references an S3 address and
+        # the storage can move later without touching HTML. Must come before
+        # the catch-all below. A 200 rewrite, not a redirect.
+        - !If
+          - HasContent
+          - Source: "/content/<*>"
+            Target: !Sub "https://${ContentBucketDomain}/<*>"
+            Status: "200"
           - !Ref AWS::NoValue
         # Unmatched paths get the site's own 404 page.
         #

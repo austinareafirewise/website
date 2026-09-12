@@ -39,6 +39,12 @@
 
 * { box-sizing: border-box; }
 
+/* An author `display` rule beats the browser's own [hidden] { display: none }.
+   The board-content slots are toggled with the hidden attribute and do set a
+   display, so without this they would show as empty boxes whenever there is
+   no notice or news to render. */
+[hidden] { display: none !important; }
+
 /* Root size is the hook the Aa control turns. Everything sized in rem
    follows it. 100% (not a px value) is deliberate: it inherits whatever the
    reader has already set as their browser's default font size, so someone who
@@ -711,8 +717,11 @@ section { padding: 52px 0; }
        here and the gap tightens; the accessible name on the link stays the
        full phrase, so a screen reader still announces "Prepare your home".
        (WCAG 2.5.3 is satisfied because the visible text is contained in it.) */
-    .site-nav { gap: 10px; width: 100%; margin-left: 0; }
-    .site-nav a { font-size: .85rem; }
+    /* Six items now (News joined). At gap 10px / .85rem they need 377px
+       against 335px usable and wrap to a second permanently-sticky row;
+       at 6px / .78rem they need 330px. Measured, not guessed. */
+    .site-nav { gap: 6px; width: 100%; margin-left: 0; }
+    .site-nav a { font-size: .78rem; }
 
     .brand img { height: 36px; }
 
@@ -725,4 +734,67 @@ section { padding: 52px 0; }
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     .btn:hover, .action:hover { transform: none; }
+}
+
+
+/* ---------- Board-published content ----------
+   Rendered by js/content.js from content the board publishes at /admin/.
+   Slots are hidden until there is something to show. */
+
+/* Meeting notice: green, not orange. Orange on this site means alert. */
+#notice-slot { background: var(--sage-200); border-bottom: 1px solid var(--line); padding: 22px 0; }
+.notice {
+    background: var(--card); border: 1px solid var(--line); border-left: 6px solid var(--green-700);
+    border-radius: 10px; padding: 18px 22px; max-width: 72ch;
+}
+.notice + .notice { margin-top: 14px; }
+.notice-kicker { text-transform: uppercase; letter-spacing: .12em; font-size: .76rem; font-weight: 700; color: var(--green-500); margin: 0 0 4px; }
+.notice h2 { font-size: 1.45rem; margin-bottom: .2em; }
+.notice-when { color: var(--muted); font-weight: 600; margin-bottom: .6em; }
+.notice p:last-child { margin-bottom: 0; }
+.content-link { margin-top: 12px; }
+
+/* Home News: titles only, drawing attention to the News page. */
+#home-news { padding: 34px 0; border-bottom: 1px solid var(--line); }
+#home-news h2 { font-size: 1.4rem; margin-bottom: 10px; }
+#home-news ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+#home-news li a {
+    display: block; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--orange);
+    border-radius: 8px; padding: 12px 16px; font-weight: 600; text-decoration: none; color: var(--ink);
+}
+#home-news li a:hover { border-color: var(--orange-dark); color: var(--orange-dark); }
+#home-news .more { margin: 12px 0 0; }
+
+/* News page */
+.news-list { display: grid; gap: 18px; }
+.news-card {
+    display: grid; grid-template-columns: 1fr; gap: 16px; background: var(--card);
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow);
+}
+.news-card .news-thumb { margin: 0; }
+.news-card .news-thumb img { width: 100%; height: auto; border-radius: 8px; display: block; }
+.news-card h2 { font-size: 1.35rem; margin-bottom: .3em; }
+.news-card h2 a { text-decoration: none; color: var(--green-900); }
+.news-card h2 a:hover { color: var(--orange-dark); }
+.news-card p { color: var(--muted); margin-bottom: 0; }
+.news-card .kicker { text-transform: uppercase; letter-spacing: .12em; font-size: .76rem; font-weight: 700; color: var(--green-500); margin-bottom: 4px; }
+@media (min-width: 640px) { .news-card { grid-template-columns: 240px 1fr; } }
+
+.news-article { max-width: 76ch; }
+.news-article h1 { font-size: clamp(1.7rem, 1rem + 2vw, 2.4rem); text-transform: none; }
+.news-article .kicker { text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; font-weight: 700; color: var(--green-500); margin-bottom: 8px; }
+.news-figure { margin: 18px 0; }
+.news-figure img { width: 100%; height: auto; border-radius: 10px; display: block; }
+.news-figure figcaption { font-size: .85rem; color: var(--muted); margin-top: 6px; }
+.news-body h2 { font-size: 1.35rem; margin-top: 1.2em; }
+.news-body h3 { font-size: 1.1rem; margin-top: 1em; }
+.news-body blockquote { border-left: 4px solid var(--sage); margin: 1em 0; padding: 4px 0 4px 16px; color: var(--muted); }
+.news-body ul, .news-body ol { padding-left: 22px; }
+.news-back { margin-top: 26px; }
+.news-empty { color: var(--muted); }
+
+/* Preview banner: only ever seen by a signed-in board member. */
+.preview-banner {
+    background: #9c2b16; color: #fff; text-align: center; padding: 10px 20px; font-size: .95rem;
+    position: sticky; top: 0; z-index: 50;
 }

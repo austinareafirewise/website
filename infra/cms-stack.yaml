@@ -1,0 +1,386 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >
+  Board-editable content for a static site: Cognito sign-in for editors, a
+  DynamoDB table of items, a Lambda-backed HTTP API, and an S3 bucket holding
+  the public projection (content.json and pictures). Deploy after the site
+  stack; then give the site stack this bucket so it can proxy /content/*.
+
+  Uses "aws cloudformation package" to upload the Lambda code — see
+  docs/06-cms-design.md for the exact commands.
+
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: {default: Site}
+        Parameters: [SiteOrigin]
+      - Label: {default: Sign-in}
+        Parameters: [CognitoDomainPrefix, InviteFromName]
+      - Label: {default: Names}
+        Parameters: [ContentBucketName, TableName]
+    ParameterLabels:
+      SiteOrigin: {default: "Site origin (https://www.example.org, no trailing slash)"}
+      CognitoDomainPrefix: {default: "Sign-in page address prefix (must be unique across AWS)"}
+      InviteFromName: {default: "Organisation name in invitation emails"}
+      ContentBucketName: {default: "S3 bucket name for published content"}
+      TableName: {default: "DynamoDB table name"}
+
+
+Parameters:
+
+  SiteOrigin:
+    Type: String
+    Default: https://www.austinareafirewise.org
+    AllowedPattern: "^https://[a-z0-9.-]+$"
+    Description: >
+      The only origin allowed to call the API or upload pictures, and where
+      sign-in returns to. Must match the live site exactly.
+
+  CognitoDomainPrefix:
+    Type: String
+    Default: austinareafirewise-admin
+    AllowedPattern: "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$"
+    Description: >
+      Becomes https://<prefix>.auth.<region>.amazoncognito.com, the hosted
+      sign-in page. Lowercase letters, digits and hyphens. If the stack fails
+      with "domain already exists", someone else in the world has it; pick
+      another.
+
+  InviteFromName:
+    Type: String
+    Default: Austin Area Firewise Alliance
+
+  ContentBucketName:
+    Type: String
+    Default: aafa-site-content
+    AllowedPattern: "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$"
+    Description: Bucket names are global; if taken, choose another.
+
+  TableName:
+    Type: String
+    Default: aafa-content
+    AllowedPattern: "^[A-Za-z0-9_.-]{3,255}$"
+
+
+Resources:
+
+  # ==================================================================
+  # Sign-in
+  # ==================================================================
+
+  # ------------------------------------------------------------------
+  # The user pool holds board members' accounts. Two settings here are the
+  # security model, and both are deliberate:
+  #
+  #   AllowAdminCreateUserOnly — nobody can sign themselves up. A board
+  #   member exists because someone with account access created them.
+  #
+  #   DeletionProtection — a stack delete will NOT remove the pool, and
+  #   with it every board member's login, by accident. To retire the whole
+  #   thing on purpose, flip this to INACTIVE first.
+  # ------------------------------------------------------------------
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: aafa-board
+      DeletionProtection: ACTIVE
+      UsernameAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 12
+          RequireLowercase: true
+          RequireUppercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          TemporaryPasswordValidityDays: 7
+      MfaConfiguration: OPTIONAL
+      EnabledMfas: [SOFTWARE_TOKEN_MFA]
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - {Name: verified_email, Priority: 1}
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+        InviteMessageTemplate:
+          EmailSubject: !Sub "Your ${InviteFromName} website login"
+          EmailMessage: !Sub |
+            <p>You have been given access to edit news and meeting notices on the ${InviteFromName} website.</p>
+            <p>Your sign-in email is <b>{username}</b> and your temporary password is <b>{####}</b>.</p>
+            <p>Go to <a href="${SiteOrigin}/admin/">${SiteOrigin}/admin/</a>, sign in, and you will be asked to choose your own password.</p>
+            <p>If you were not expecting this, ignore it — nothing happens unless you sign in.</p>
+      UserPoolTags:
+        project: website
+
+  # Being able to sign in is not the same as being allowed to publish. The
+  # API checks for this group on every request.
+  BoardGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    Properties:
+      UserPoolId: !Ref UserPool
+      GroupName: board
+      Description: May create, edit, publish and delete news and notices.
+
+  # ------------------------------------------------------------------
+  # The admin page is a public client (it runs in a browser; it cannot keep
+  # a secret) using the authorization-code flow with PKCE. Tokens are short;
+  # a refresh token lasts a day so a board member is asked to sign in again
+  # tomorrow, not every hour.
+  # ------------------------------------------------------------------
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: admin-page
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      SupportedIdentityProviders: [COGNITO]
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows: [code]
+      AllowedOAuthScopes: [openid, email, profile]
+      CallbackURLs: [!Sub "${SiteOrigin}/admin/"]
+      LogoutURLs: [!Sub "${SiteOrigin}/admin/"]
+      ExplicitAuthFlows: [ALLOW_REFRESH_TOKEN_AUTH, ALLOW_USER_SRP_AUTH]
+      PreventUserExistenceErrors: ENABLED
+      EnableTokenRevocation: true
+      TokenValidityUnits: {IdToken: minutes, AccessToken: minutes, RefreshToken: days}
+      IdTokenValidity: 60
+      AccessTokenValidity: 60
+      RefreshTokenValidity: 1
+
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Ref CognitoDomainPrefix
+      UserPoolId: !Ref UserPool
+
+  # ==================================================================
+  # Storage
+  # ==================================================================
+
+  ContentTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref TableName
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - {AttributeName: id, AttributeType: S}
+      KeySchema:
+        - {AttributeName: id, KeyType: HASH}
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - {Key: project, Value: website}
+
+  # ------------------------------------------------------------------
+  # The public projection lives here: content.json and the pictures. The
+  # bucket is private; the policy below opens exactly two prefixes for
+  # anonymous GET. BlockPublicPolicy must be off for that policy to be
+  # accepted — the other three public-access blocks stay on.
+  #
+  # CORS is what lets the admin page PUT a picture straight to S3 using a
+  # signed URL, without the bytes passing through Lambda.
+  # ------------------------------------------------------------------
+  ContentBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref ContentBucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: false
+        RestrictPublicBuckets: false
+      OwnershipControls:
+        Rules:
+          - {ObjectOwnership: BucketOwnerEnforced}
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins: [!Ref SiteOrigin]
+            AllowedMethods: [PUT, GET, HEAD]
+            AllowedHeaders: ["*"]
+            ExposedHeaders: [ETag]
+            MaxAge: 3000
+      LifecycleConfiguration:
+        Rules:
+          - Id: abort-incomplete-uploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload: {DaysAfterInitiation: 1}
+      Tags:
+        - {Key: project, Value: website}
+
+  ContentBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ContentBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: PublicReadOfPublishedContent
+            Effect: Allow
+            Principal: "*"
+            Action: s3:GetObject
+            Resource:
+              - !Sub "${ContentBucket.Arn}/content.json"
+              - !Sub "${ContentBucket.Arn}/images/*"
+
+  # ==================================================================
+  # The API
+  # ==================================================================
+
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: aafa-cms-function
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: lambda.amazonaws.com}
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      Policies:
+        - PolicyName: content-access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [dynamodb:GetItem, dynamodb:PutItem, dynamodb:DeleteItem, dynamodb:Scan]
+                Resource: !GetAtt ContentTable.Arn
+              - Effect: Allow
+                Action: [s3:PutObject, s3:GetObject, s3:DeleteObject]
+                Resource: !Sub "${ContentBucket.Arn}/*"
+              - Effect: Allow
+                Action: [s3:ListBucket]
+                Resource: !GetAtt ContentBucket.Arn
+
+  CmsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: aafa-cms
+      Description: Board content API — items, pictures, publish.
+      Runtime: nodejs22.x
+      Handler: index.handler
+      Architectures: [arm64]
+      MemorySize: 256
+      Timeout: 20
+      Role: !GetAtt FunctionRole.Arn
+      Code: ../lambda/cms
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ContentTable
+          CONTENT_BUCKET: !Ref ContentBucket
+          ALLOWED_GROUP: board
+          SITE_ORIGIN: !Ref SiteOrigin
+      Tags:
+        - {Key: project, Value: website}
+
+  FunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${CmsFunction}"
+      RetentionInDays: 90
+
+  # ------------------------------------------------------------------
+  # HTTP API with a JWT authorizer: API Gateway checks the Cognito token's
+  # signature, issuer, audience and expiry before the function is invoked.
+  # An unsigned or expired request never reaches Lambda and never costs an
+  # invocation. Throttling is generous for a board and hostile to a script.
+  # ------------------------------------------------------------------
+  Api:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: aafa-cms
+      ProtocolType: HTTP
+      Description: Board content API.
+      CorsConfiguration:
+        AllowOrigins: [!Ref SiteOrigin]
+        AllowMethods: [GET, PUT, POST, DELETE, OPTIONS]
+        AllowHeaders: [authorization, content-type]
+        MaxAge: 600
+
+  Authorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      ApiId: !Ref Api
+      Name: cognito
+      AuthorizerType: JWT
+      IdentitySource: ["$request.header.Authorization"]
+      JwtConfiguration:
+        Audience: [!Ref UserPoolClient]
+        Issuer: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}"
+
+  Integration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref Api
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt CmsFunction.Arn
+      PayloadFormatVersion: "2.0"
+      TimeoutInMillis: 25000
+
+  RouteList:
+    Type: AWS::ApiGatewayV2::Route
+    Properties: {ApiId: !Ref Api, RouteKey: "GET /items", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
+  RouteGet:
+    Type: AWS::ApiGatewayV2::Route
+    Properties: {ApiId: !Ref Api, RouteKey: "GET /items/{id}", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
+  RoutePut:
+    Type: AWS::ApiGatewayV2::Route
+    Properties: {ApiId: !Ref Api, RouteKey: "PUT /items/{id}", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
+  RouteDelete:
+    Type: AWS::ApiGatewayV2::Route
+    Properties: {ApiId: !Ref Api, RouteKey: "DELETE /items/{id}", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
+  RoutePicture:
+    Type: AWS::ApiGatewayV2::Route
+    Properties: {ApiId: !Ref Api, RouteKey: "POST /items/{id}/pictures", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
+
+  Stage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref Api
+      StageName: "$default"
+      AutoDeploy: true
+      DefaultRouteSettings:
+        ThrottlingRateLimit: 10
+        ThrottlingBurstLimit: 20
+
+  InvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CmsFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${Api}/*"
+
+
+Outputs:
+
+  UserPoolId:
+    Description: Needed to add or remove board members.
+    Value: !Ref UserPool
+
+  ClientId:
+    Description: Goes into src/js/config.js as AAFA_CMS.clientId.
+    Value: !Ref UserPoolClient
+
+  SignInDomain:
+    Description: Goes into src/js/config.js as AAFA_CMS.authDomain.
+    Value: !Sub "${CognitoDomainPrefix}.auth.${AWS::Region}.amazoncognito.com"
+
+  ApiUrl:
+    Description: Goes into src/js/config.js as AAFA_CMS.apiUrl.
+    Value: !GetAtt Api.ApiEndpoint
+
+  ContentBucketDomain:
+    Description: Give this to the site stack's ContentBucketDomain parameter.
+    Value: !GetAtt ContentBucket.RegionalDomainName
+
+  AddBoardMember:
+    Description: Copy, replace the address, run.
+    Value: !Sub |
+      aws cognito-idp admin-create-user --region ${AWS::Region} --user-pool-id ${UserPool} --username EMAIL --user-attributes Name=email,Value=EMAIL Name=email_verified,Value=true && aws cognito-idp admin-add-user-to-group --region ${AWS::Region} --user-pool-id ${UserPool} --username EMAIL --group-name board

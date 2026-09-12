@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>News — Austin Area Firewise Alliance</title>
+    <meta name="description"
+        content="News from the Austin Area Firewise Alliance: seminars, chipper days, new Firewise communities, and answers from agencies across Travis County.">
+    <link rel="canonical" href="https://www.austinareafirewise.org/news.html">
+    <link rel="icon" href="img/aafa-logo.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Oswald:wght@500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/site.css">
+    <script>
+        try {
+            var s = localStorage.getItem("aafa-text-scale");
+            if (s) { document.documentElement.style.setProperty("--text-scale", s); }
+        } catch (e) { /* private mode: fall back to the default size */ }
+    </script>
+</head>
+
+<body data-page="news">
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <div class="emergency">
+        <strong>In a fire emergency, call 911.</strong>
+        Official emergency alerts for this region come from
+        <a class="ext" href="https://warncentraltexas.org/" rel="noopener">Warn Central Texas</a> — register your phone.
+    </div>
+
+    <header class="site-header">
+        <div class="wrap">
+            <a class="brand" href="index.html">
+                <img src="img/aafa-logo.svg" alt="">
+                <span class="brand-text">Austin Area<br>Firewise Alliance
+                    <span>Travis County, Texas</span>
+                </span>
+            </a>
+            <nav class="site-nav" aria-label="Main">
+                <a href="index.html">Home</a>
+                <a href="news.html" aria-current="page">News</a>
+                <a href="prepare-your-home.html" aria-label="Prepare your home">Prepare</a>
+                <a href="firewise-communities.html">Communities</a>
+                <a href="evacuation.html">Evacuation</a>
+                <a href="about.html">About</a>
+            </nav>
+
+            <div class="text-size" role="group" aria-label="Text size">
+                <span class="label" aria-hidden="true">Text size</span>
+                <button type="button" class="s1" data-scale="1" aria-pressed="true">A</button>
+                <button type="button" class="s2" data-scale="1.15" aria-pressed="false">A</button>
+                <button type="button" class="s3" data-scale="1.3" aria-pressed="false">A</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="main" tabindex="-1">
+        <div class="page-head">
+            <div class="wrap">
+                <p class="kicker">Austin Area Firewise Alliance</p>
+                <h1>News</h1>
+                <p>
+                    Seminars, chipper days, newly recognized Firewise communities, and what
+                    agencies tell us when we ask. Published by the Alliance board.
+                </p>
+            </div>
+        </div>
+
+        <section>
+            <div class="wrap">
+                <!-- Filled by js/content.js from the board-published content file.
+                     Shows a list, or one article when the URL has ?id=. -->
+                <div id="news-root" aria-live="polite"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="wrap">
+            <div class="cols">
+                <div>
+                    <h4>Austin Area Firewise Alliance</h4>
+                    <p style="margin:0">
+                        Volunteers working on wildfire preparedness with neighborhoods across
+                        Travis County, Texas.
+                    </p>
+                </div>
+                <div>
+                    <h4>Prepare</h4>
+                    <ul>
+                        <li><a href="prepare-your-home.html">Prepare your home</a></li>
+                        <li><a href="prepare-your-home.html#zones">Defensible space</a></li>
+                        <li><a href="evacuation.html">Evacuation planning</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Organize</h4>
+                    <ul>
+                        <li><a href="firewise-communities.html">Firewise communities</a></li>
+                        <li><a href="news.html">News</a></li>
+                        <li><a href="about.html">About the Alliance</a></li>
+                        <li><a href="index.html#updates">Get updates</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Official sources</h4>
+                    <ul>
+                        <li><a class="ext" href="https://warncentraltexas.org/" rel="noopener">Warn Central Texas</a></li>
+                        <li><a class="ext" href="https://www.traviscountytx.gov/fire-marshal" rel="noopener">Travis County Fire Marshal</a></li>
+                        <li><a class="ext" href="https://tfsweb.tamu.edu/" rel="noopener">Texas A&amp;M Forest Service</a></li>
+                        <li><a class="ext" href="https://www.nfpa.org/firewise" rel="noopener">Firewise USA (NFPA)</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="legal">
+                <p>
+                    The Austin Area Firewise Alliance is an independent volunteer organization. It
+                    is not the City of Austin, the Austin Fire Department, Travis County, or any
+                    Emergency Services District, and nothing here is an official notice from them.
+                    Emergency instructions always come from those agencies.
+                </p>
+                <p>
+                    Guidance on this site follows Firewise USA® and NFPA practice. It is general
+                    preparedness information, not a substitute for a site assessment of your own
+                    property. Firewise USA® is a registered program of the National Fire Protection
+                    Association.
+                </p>
+                <p>&copy; <span id="year">2026</span> Austin Area Firewise Alliance.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/site.js"></script>
+    <script src="js/content.js"></script>
+</body>
+
+</html>

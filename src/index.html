@@ -30,7 +30,7 @@
     </script>
 </head>
 
-<body>
+<body data-page="home">
     <a class="skip-link" href="#main">Skip to main content</a>
 
     <!-- The 911 line is first in the DOM on every page. On a wildfire site it
@@ -65,6 +65,7 @@
             </a>
             <nav class="site-nav" aria-label="Main">
                 <a href="index.html" aria-current="page">Home</a>
+                <a href="news.html">News</a>
                 <a href="prepare-your-home.html" aria-label="Prepare your home">Prepare</a>
                 <a href="firewise-communities.html">Communities</a>
                 <a href="evacuation.html">Evacuation</a>
@@ -81,6 +82,11 @@
     </header>
 
     <main id="main" tabindex="-1">
+        <!-- Meeting notices published by the board at /admin/. Filled by
+             js/content.js; stays hidden when none is active. Inside <main>
+             so the skip link lands on it. -->
+        <div id="notice-slot" hidden></div>
+
         <section class="hero">
             <div class="wrap">
                 <p class="kicker">Travis County, Texas</p>
@@ -97,6 +103,16 @@
                     <a class="btn btn-outline ext" href="https://warncentraltexas.org/" rel="noopener">Sign up for alerts</a>
                     <a class="btn btn-outline" href="#updates">Get Alliance updates</a>
                 </div>
+            </div>
+        </section>
+
+        <!-- Titles of news articles the board flagged for the home page.
+             Filled by js/content.js; hidden when there are none. -->
+        <section id="home-news" hidden>
+            <div class="wrap">
+                <h2>News</h2>
+                <ul></ul>
+                <p class="more"><a href="news.html">All news →</a></p>
             </div>
         </section>
 
@@ -351,6 +367,7 @@
                     <h4>Organize</h4>
                     <ul>
                         <li><a href="firewise-communities.html">Firewise communities</a></li>
+                        <li><a href="news.html">News</a></li>
                         <li><a href="about.html">About the Alliance</a></li>
                         <li><a href="#updates">Get updates</a></li>
                     </ul>
@@ -385,6 +402,7 @@
 
     <script src="js/config.js"></script>
     <script src="js/site.js"></script>
+    <script src="js/content.js"></script>
 </body>
 
 </html>

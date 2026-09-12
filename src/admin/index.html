@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit the site — Austin Area Firewise Alliance</title>
+    <!-- Search engines have no business here. This is hygiene, not security;
+         the API is what keeps this page from doing anything without a signed-in
+         board member. -->
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" href="../img/aafa-logo.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Oswald:wght@500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../css/site.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+
+<body class="admin">
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <header class="site-header">
+        <div class="wrap">
+            <a class="brand" href="../index.html">
+                <img src="../img/aafa-logo.svg" alt="">
+                <span class="brand-text">Austin Area<br>Firewise Alliance
+                    <span>Edit the site</span>
+                </span>
+            </a>
+            <div class="admin-who" id="who" hidden>
+                <span id="who-email"></span>
+                <button type="button" class="btn btn-outline btn-small" id="sign-out">Sign out</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="main" tabindex="-1" class="wrap admin-main">
+
+        <!-- Signed-out -->
+        <section id="screen-signin" hidden>
+            <div class="admin-card admin-signin">
+                <h1>Edit the website</h1>
+                <p>
+                    Board members can add meeting notices and news articles here. You need the
+                    login that was emailed to you.
+                </p>
+                <button type="button" class="btn btn-primary btn-big" id="sign-in">Sign in</button>
+                <p class="hint">Nothing on the public site changes until you press Publish.</p>
+            </div>
+        </section>
+
+        <!-- Not on the board -->
+        <section id="screen-denied" hidden>
+            <div class="admin-card">
+                <h1>Signed in, but not on the board list</h1>
+                <p>
+                    Your login works, but this account has not been given permission to edit the
+                    site. Ask whoever manages the website to add you to the board group.
+                </p>
+            </div>
+        </section>
+
+        <!-- List -->
+        <section id="screen-list" hidden>
+            <div class="admin-actions">
+                <button type="button" class="btn btn-primary" id="new-notice">+ New meeting notice</button>
+                <button type="button" class="btn btn-green" id="new-news">+ New news article</button>
+            </div>
+            <div id="list" aria-live="polite"></div>
+        </section>
+
+        <!-- Edit -->
+        <section id="screen-edit" hidden>
+            <form id="form" novalidate>
+                <div class="admin-form-head">
+                    <button type="button" class="btn btn-outline btn-small" id="back">← Back to the list</button>
+                    <span class="admin-status" id="form-status"></span>
+                </div>
+
+                <h1 id="form-title">Edit</h1>
+
+                <div class="field">
+                    <label for="f-title">Title</label>
+                    <input type="text" id="f-title" maxlength="120" required autocomplete="off">
+                </div>
+
+                <div class="field">
+                    <label for="f-body">Text</label>
+                    <textarea id="f-body" rows="10" maxlength="6000" required></textarea>
+                    <p class="hint">Leave a blank line between paragraphs.</p>
+                </div>
+
+                <div class="field field-check" id="wrap-markdown">
+                    <label><input type="checkbox" id="f-markdown"> Text uses Markdown</label>
+                    <p class="hint">
+                        For people who know it: <code>## Heading</code>, <code>**bold**</code>,
+                        <code>*italic*</code>, <code>- bullet</code>, <code>1. numbered</code>,
+                        <code>&gt; quote</code>, <code>[label](https://…)</code>. Anything else shows
+                        as typed. Leave this off if unsure.
+                    </p>
+                </div>
+
+                <div class="admin-two">
+                    <div class="field">
+                        <label for="f-starts">Show from</label>
+                        <input type="datetime-local" id="f-starts" required>
+                    </div>
+                    <div class="field">
+                        <label for="f-ends">Show until</label>
+                        <input type="datetime-local" id="f-ends" required>
+                    </div>
+                </div>
+                <p class="hint">Central time. It appears at the first time and disappears at the second, on its own.</p>
+
+                <div class="admin-two">
+                    <div class="field">
+                        <label for="f-link">Link to another website <span class="opt">(optional)</span></label>
+                        <input type="url" id="f-link" placeholder="https://" autocomplete="off">
+                    </div>
+                    <div class="field">
+                        <label for="f-linktext">Words on the link button</label>
+                        <input type="text" id="f-linktext" maxlength="60" placeholder="More information" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="field field-check" id="wrap-home">
+                    <label><input type="checkbox" id="f-home"> Show the title in the News section on the home page</label>
+                </div>
+
+                <div id="wrap-pictures">
+                    <h2>Pictures <span class="opt">(up to 3)</span></h2>
+                    <div id="pictures"></div>
+                    <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Add a picture">
+                        <strong>Drop a picture here</strong> or click to choose one
+                        <input type="file" id="file" accept="image/jpeg,image/png,image/webp" hidden>
+                    </div>
+                    <p class="hint">JPEG, PNG or WebP, up to 10 MB. You will crop it before it is added.</p>
+                </div>
+
+                <div class="admin-buttons">
+                    <button type="button" class="btn btn-outline" id="save-draft">Save as draft</button>
+                    <button type="button" class="btn btn-outline" id="preview">Preview</button>
+                    <button type="button" class="btn btn-primary" id="publish">Publish</button>
+                    <button type="button" class="btn btn-outline" id="unpublish" hidden>Take off the site</button>
+                    <button type="button" class="btn btn-danger" id="delete">Delete</button>
+                </div>
+                <div class="form-status" id="msg" role="status" aria-live="polite"></div>
+            </form>
+        </section>
+    </main>
+
+    <!-- Cropper -->
+    <div class="modal" id="crop-modal" hidden role="dialog" aria-modal="true" aria-labelledby="crop-title">
+        <div class="modal-box">
+            <h2 id="crop-title">Choose what shows</h2>
+            <p class="hint">Drag the frame to move it. Drag the corner to resize. The frame keeps the same shape as every other picture on the site.</p>
+            <div class="crop-stage"><canvas id="crop-canvas"></canvas></div>
+            <div class="admin-two">
+                <div class="field">
+                    <label for="p-alt">What is in the picture <span class="req">(required, for people who cannot see it)</span></label>
+                    <input type="text" id="p-alt" maxlength="200" autocomplete="off">
+                </div>
+                <div class="field">
+                    <label for="p-credit">Photo credit <span class="opt">(optional)</span></label>
+                    <input type="text" id="p-credit" maxlength="120" placeholder="Photo: J. Smith" autocomplete="off">
+                </div>
+            </div>
+            <div class="admin-buttons">
+                <button type="button" class="btn btn-outline" id="crop-cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="crop-ok">Add this picture</button>
+            </div>
+            <div class="form-status" id="crop-msg" role="status"></div>
+        </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="modal" id="preview-modal" hidden role="dialog" aria-modal="true" aria-label="Preview">
+        <div class="modal-box modal-wide">
+            <div class="admin-form-head">
+                <strong>Preview — this is the real page with your item shown in place.</strong>
+                <button type="button" class="btn btn-outline btn-small" id="preview-close">Close preview</button>
+            </div>
+            <iframe id="preview-frame" title="Site preview"></iframe>
+        </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="admin.js"></script>
+</body>
+
+</html>

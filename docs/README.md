@@ -27,7 +27,9 @@ Under **$25 a year**, nearly all of it the domain name.
 | [01-prerequisites.md](01-prerequisites.md) | AWS account, alias, admin user, CLI, region, domain, GitHub organization | ~90 min |
 | [02-deploy-stack.md](02-deploy-stack.md) | Upload one template; it builds the infrastructure | ~10 min + DNS |
 | [03-connect-github.md](03-connect-github.md) | Wire the repository to AWS, first publish | ~15 min |
+| [04-editing-the-site.md](04-editing-the-site.md) | **For board members** — notices, news, pictures, preview, publish | reference |
 | [05-runbook.md](05-runbook.md) | Everything afterwards — editing, rollback, removing people, costs | reference |
+| [06-cms-design.md](06-cms-design.md) | How the board-editing feature works and why it is built that way | reference |
 
 Do them in order. Step 2 fails in confusing ways if step 1 was not finished.
 
@@ -91,6 +93,7 @@ fixes. The two that account for most lost time:
 This covers hosting a static site: HTML, CSS, JavaScript, images. No server, no
 database, no build step.
 
-A separate document will cover the optional admin area — letting non-technical
-people edit part of the site from a browser without touching GitHub — once that
-is built.
+The optional board-editing area — notices and news from a browser, no GitHub —
+is [06-cms-design.md](06-cms-design.md) for how it works and
+[04-editing-the-site.md](04-editing-the-site.md) for how to use it. It is a
+second CloudFormation stack, [`infra/cms-stack.yaml`](../infra/cms-stack.yaml).
