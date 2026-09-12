@@ -328,8 +328,13 @@ function int(v) {
     return Number.isInteger(n) && n > 0 && n < 20000 ? n : 0;
 }
 
+/* The fractional-seconds group is not optional decoration: the admin page
+   sends Date.prototype.toISOString(), which always emits milliseconds
+   ("2026-10-15T00:00:00.000Z"). An earlier version of this pattern omitted
+   it, so every date the browser produced was rejected as invalid while
+   hand-written test payloads passed. Keep .\d{1,3} here. */
 function isoDate(v, label) {
-    if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?([+-]\d{2}:\d{2}|Z)$/.test(v) || Number.isNaN(Date.parse(v))) {
+    if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)$/.test(v) || Number.isNaN(Date.parse(v))) {
         throw new ValidationError(`${label} needs a valid date and time.`);
     }
     return new Date(v).toISOString();
