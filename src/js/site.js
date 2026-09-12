@@ -1,4 +1,4 @@
-/* Austin Area Firewise Alliance — rpdiscoverer.com
+/* Austin Area Firewise Alliance — austinareafirewise.org
    Plain browser JS, no build step, no dependencies. */
 
 (function () {
@@ -140,7 +140,7 @@
             area: form.elements.area ? form.elements.area.value.trim() : "",
             interest: form.elements.interest.value,
             note: form.elements.note.value.trim(),
-            source: "rpdiscoverer.com"
+            source: "austinareafirewise.org"
         };
 
         var endpoint = window.AAFA_SIGNUP_ENDPOINT;

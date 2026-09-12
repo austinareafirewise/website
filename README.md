@@ -1,7 +1,7 @@
-# rp-vicki — Austin Area Firewise Alliance website
+# Austin Area Firewise Alliance — website
 
 Source for the Austin Area Firewise Alliance site, served at
-`https://www.rpdiscoverer.com`.
+`https://www.austinareafirewise.org`.
 
 Wildfire preparedness for neighborhoods across Travis County, Texas. Static
 HTML/CSS/JS with no build step — everything under `src/` is served exactly as
@@ -75,11 +75,11 @@ One-time setup:
 1. Install **Git for Windows** (bundles Git Credential Manager for sign-in), or
    **GitHub Desktop** if you would rather not use a terminal.
 2. Install **VS Code**, or any text editor.
-3. Get added as a collaborator on `dweilert/rp-vicki`. The repo is public, so
-   you can clone it without that — but pushing needs write access.
+3. Get added to the `austinareafirewise` GitHub organization with write access
+   to the `website` repository.
 
 ```bash
-git clone https://github.com/dweilert/rp-vicki.git
+git clone https://github.com/austinareafirewise/website.git
 ```
 
 Each editing session:
@@ -96,7 +96,7 @@ git commit -m "short description of the change"
 git push
 ```
 
-**A push to `main` publishes to rpdiscoverer.com within about a minute.** There
+**A push to `main` publishes to austinareafirewise.org within about a minute.** There
 is no staging step and no review gate. Preview locally before pushing, and when
 in doubt push to a branch and open a pull request instead.
 
@@ -128,7 +128,8 @@ requirement here, not a checkbox.
 
 What the site does:
 
-- **Text size control** (`Aa`) in the header — 100% / 115% / 130%. Sets
+- **Text size control** in the header — 100% / 115% / 130%, labelled
+  "Text size" on desktop and three sized A's on mobile. Sets
   `--text-scale` on `<html>`; the stylesheet multiplies the root font size by
   it. The choice is stored in `localStorage` and re-applied by a small inline
   script in each page's `<head>`, so pages paint at the reader's size instead
@@ -140,10 +141,10 @@ What the site does:
 - Labelled form fields, `alt` on images, `lang`, ordered headings,
   `aria-current` on the active nav item, `prefers-reduced-motion` respected.
 
-### Sizing rules that keep the Aa control working
+### Sizing rules that keep the text size control working
 
 **Size text in `rem`, never `px`.** A `px` font size ignores `--text-scale`
-entirely, so the Aa button appears to do nothing to that element. Padding,
+entirely, so the text size buttons appear to do nothing to that element. Padding,
 borders, and fixed image dimensions in `px` are fine — only type matters.
 
 For `clamp()` headings, the middle term needs a `rem` component
