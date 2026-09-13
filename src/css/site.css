@@ -808,7 +808,10 @@ section { padding: 52px 0; }
     background: var(--card); border: 1px solid var(--line); border-left: 6px solid var(--green-700);
     border-radius: 10px; padding: 20px 24px;
 }
-.notice p, .notice ul, .notice ol { max-width: 78ch; }
+/* Board-published text runs the width of the page, like every other section.
+   It used to be capped for line length, which left a notice sitting in a
+   full-width box with its words down the left-hand half. */
+.notice p, .notice ul, .notice ol { max-width: none; }
 .notice + .notice { margin-top: 14px; }
 .notice-kicker { text-transform: uppercase; letter-spacing: .12em; font-size: .76rem; font-weight: 700; color: var(--green-500); margin: 0 0 4px; }
 .notice h2 { font-size: 1.45rem; margin-bottom: .2em; }
@@ -847,7 +850,7 @@ section { padding: 52px 0; }
 .news-card .kicker { text-transform: uppercase; letter-spacing: .12em; font-size: .76rem; font-weight: 700; color: var(--green-500); margin-bottom: 4px; }
 @media (min-width: 640px) { .news-card { grid-template-columns: 240px 1fr; } }
 
-.news-article { max-width: 76ch; }
+.news-article { max-width: none; }
 .news-article h1 { font-size: clamp(1.7rem, 1rem + 2vw, 2.4rem); text-transform: none; }
 .news-article .kicker { text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; font-weight: 700; color: var(--green-500); margin-bottom: 8px; }
 .news-figure { margin: 18px 0; }
