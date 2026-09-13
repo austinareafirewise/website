@@ -84,10 +84,24 @@ Up to three per article.
    see the picture hear this instead: "Volunteers loading branches into the
    chipper at Walnut Creek"
 4. **Photo credit** — optional. "Photo: J. Smith"
-5. Click **Add this picture**
+5. **How it sits in the article** — choose one:
+   - **Across the whole width** — a band the width of the text. Good for a
+     wide photo, and for the one at the top
+   - **Beside the text, on the right** or **on the left** — about a third of
+     the width, with the writing flowing around it
+6. Click **Add this picture**
 
-The picture is saved straight away. Click **Remove** under a picture to take it
-out, then save.
+Pictures are spread down the article in the order you add them: the first one
+above the first paragraph, the next a couple of paragraphs below that. If you
+add more pictures than the article has paragraphs, the spare ones go at the
+end.
+
+On a phone every picture goes full width whatever you chose, because a picture
+and two words of text side by side is worse than either on its own.
+
+The picture is saved straight away. Under each picture you can change **Where
+it sits** at any time, or click **Remove** to take it out; either way, save or
+publish afterwards to keep the change.
 
 Only the cropped part is kept, and it is re-made on your computer before it
 is sent, which also removes the location and camera information phones hide

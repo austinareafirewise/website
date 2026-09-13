@@ -80,6 +80,26 @@ code { background: #f1f1ec; padding: 1px 5px; border-radius: 4px; font-size: .9e
 .pic .pic-text strong { display: block; color: var(--ink); }
 .pic .pic-actions { padding: 0 12px 12px; }
 
+/* Where the picture sits, changeable without uploading it again. */
+.pic .pic-layout-label {
+    display: block;
+    margin-top: 10px;
+    font-size: .85rem;
+    color: var(--ink);
+}
+.pic .pic-layout {
+    display: block;
+    width: 100%;
+    margin-top: 4px;
+    padding: 7px 8px;
+    font: inherit;
+    font-size: .9rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--ink);
+}
+
 .dropzone {
     border: 2px dashed var(--sage); border-radius: 10px; padding: 26px; text-align: center;
     color: var(--muted); cursor: pointer; background: #fff;

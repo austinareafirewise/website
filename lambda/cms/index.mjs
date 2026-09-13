@@ -49,6 +49,12 @@ const KINDS = new Set(["news", "notice"]);
 const STATUSES = new Set(["draft", "published"]);
 const BODY_FORMATS = new Set(["plain", "markdown"]);
 
+/* Where a picture sits in the article. "full" is the whole column width;
+   "right" and "left" are about a third of it with the text wrapping round.
+   The site drops the wrap on a narrow screen, where there is no room for a
+   picture and a line of text side by side. */
+const PICTURE_LAYOUTS = new Set(["full", "right", "left"]);
+
 /* ------------------------------------------------------------------ */
 /* Entry point                                                          */
 /* ------------------------------------------------------------------ */
@@ -314,7 +320,9 @@ function validateItem(input, id) {
             const credit = str(p.credit, `Picture ${i + 1} credit`, LIMITS.credit);
             const width = int(p.width), height = int(p.height);
             if (!width || !height) throw new ValidationError(`Picture ${i + 1} is missing its size.`);
-            return { key, thumbKey, width, height, alt, credit };
+            const layout = str(p.layout, `Picture ${i + 1} layout`, 10) || "full";
+            if (!PICTURE_LAYOUTS.has(layout)) throw new ValidationError(`Picture ${i + 1} has a layout the site does not have.`);
+            return { key, thumbKey, width, height, alt, credit, layout };
         });
     }
 

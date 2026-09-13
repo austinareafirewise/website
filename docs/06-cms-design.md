@@ -231,6 +231,8 @@ The Lambda (Node.js 22, AWS SDK only, no third-party packages):
 - rejects any token whose `cognito:groups` claim lacks `board`
 - validates every field — lengths, ISO dates, stop after start, link `https://`
   only, at most three pictures, each picture's keys under the item's own prefix
+- accepts one of three picture layouts (`full`, `right`, `left`) and rejects
+  any other, so a hand-made request cannot invent a class name for the site
 - requires a title, a body and both dates **to publish**, not to save. A draft
   may be missing any of them, so an editor can start an article with nothing
   but a picture. The admin form applies the same rule, so the two agree

@@ -482,6 +482,31 @@
     /* 3. Pictures                                                   */
     /* ============================================================ */
 
+    var PIC_LAYOUTS = [
+        ["full", "Across the whole width"],
+        ["right", "Beside the text, on the right"],
+        ["left", "Beside the text, on the left"]
+    ];
+
+    /* Changing where a picture sits does not need the picture uploaded again,
+       so it is on the card rather than back in the cropper. */
+    function layoutPicker(pic, i) {
+        var id = "pic-layout-" + i;
+        var sel = node("select", { id: id, class: "pic-layout" });
+        PIC_LAYOUTS.forEach(function (o) {
+            var opt = node("option", { value: o[0], text: o[1] });
+            if ((pic.layout || "full") === o[0]) opt.selected = true;
+            sel.appendChild(opt);
+        });
+        sel.addEventListener("change", function () {
+            current.pictures[i].layout = sel.value;
+            dirty = true;
+            updateStatusLine();
+            msg("warn", "Layout changed. Save or Publish to make that stick.");
+        });
+        return node("label", { class: "pic-layout-label", for: id }, ["Where it sits ", sel]);
+    }
+
     function renderPictures() {
         var root = $("pictures");
         root.textContent = "";
@@ -489,7 +514,11 @@
         pics.forEach(function (p, i) {
             var card = node("div", { class: "pic" }, [
                 node("img", { src: cfg.contentBase + "/" + p.thumbKey, alt: p.alt || "" }),
-                node("div", { class: "pic-text" }, [node("strong", { text: p.alt || "" }), p.credit || "No credit line"]),
+                node("div", { class: "pic-text" }, [
+                    node("strong", { text: p.alt || "" }),
+                    p.credit || "No credit line",
+                    layoutPicker(p, i)
+                ]),
                 node("div", { class: "pic-actions" }, [node("button", { type: "button", class: "btn btn-outline btn-small", text: "Remove" })])
             ]);
             card.querySelector("button").addEventListener("click", function () {
@@ -530,6 +559,9 @@
         crop = { img: img, scale: scale, x: (canvas.width - w) / 2, y: (canvas.height - h) / 2, w: w, h: h, drag: null };
 
         $("p-alt").value = ""; $("p-credit").value = "";
+        // Second and third pictures default to beside the text: an article
+        // with three full-width bands in it is mostly bands.
+        $("p-layout").value = (current.pictures || []).length === 0 ? "full" : "right";
         clearMsg($("crop-msg"));
         $("crop-modal").hidden = false;
         drawCrop();
@@ -594,6 +626,7 @@
 
     function confirmCrop() {
         var alt = $("p-alt").value.trim(), credit = $("p-credit").value.trim();
+        var layout = $("p-layout").value;
         if (!alt) { msg("err", "Say what is in the picture — a short sentence. People using screen readers hear this instead of seeing it.", $("crop-msg")); $("p-alt").focus(); return; }
         if (alt.length > LIMITS.alt || credit.length > LIMITS.credit) { msg("err", "That description or credit is too long.", $("crop-msg")); return; }
 
@@ -614,7 +647,7 @@
             };
             return Promise.all([put(grant.uploadUrl, full.blob), put(grant.thumbUploadUrl, thumb.blob)]).then(function () {
                 current.pictures = current.pictures || [];
-                current.pictures.push({ key: grant.key, thumbKey: grant.thumbKey, width: full.w, height: full.h, alt: alt, credit: credit });
+                current.pictures.push({ key: grant.key, thumbKey: grant.thumbKey, width: full.w, height: full.h, alt: alt, credit: credit, layout: layout });
                 return save(current.status === "published" ? "published" : "draft", true);
             });
         }).then(function () {

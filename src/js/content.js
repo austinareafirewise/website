@@ -199,9 +199,33 @@
             width: thumb ? 480 : pic.width,
             height: thumb ? Math.round(480 * (pic.height / pic.width)) : pic.height
         });
-        var fig = el("figure", { class: thumb ? "news-thumb" : "news-figure" }, [img]);
+        var layout = pic.layout === "right" || pic.layout === "left" ? pic.layout : "full";
+        var cls = thumb ? "news-thumb" : "news-figure news-figure-" + layout;
+        var fig = el("figure", { class: cls }, [img]);
         if (!thumb && pic.credit) fig.appendChild(el("figcaption", { text: pic.credit }));
         return fig;
+    }
+
+    /* Pictures go into the text, not on top of it.
+     *
+     * One rule, so an editor can predict the result without learning a layout
+     * tool: pictures are placed in the order they were added, the first above
+     * the first paragraph and each next one two paragraphs further down. A
+     * "full" picture is a band across the column; a "right" or "left" one is
+     * about a third of the width with the paragraphs flowing round it, which
+     * is why it has to sit immediately before the text it wraps into.
+     *
+     * An article with more pictures than paragraphs puts the leftovers at the
+     * end rather than stacking them all at the top. */
+    function placePictures(body, pics) {
+        var blocks = [];
+        for (var n = body.firstChild; n; n = n.nextSibling) if (n.nodeType === 1) blocks.push(n);
+        (pics || []).forEach(function (pic, i) {
+            var fig = figure(pic, false);
+            var before = blocks[i * 2];
+            if (before) body.insertBefore(fig, before);
+            else body.appendChild(fig);
+        });
     }
 
     /* ------------------------------------------------------------ */
@@ -259,8 +283,9 @@
                 el("p", { class: "kicker", text: fmtDate(item.startsAt) }),
                 el("h1", { text: item.title })
             ]);
-            (item.pictures || []).forEach(function (p) { art.appendChild(figure(p, false)); });
-            var body = el("div", { class: "news-body" }); body.appendChild(renderBody(item)); art.appendChild(body);
+            var flow = renderBody(item);
+            placePictures(flow, item.pictures);
+            var body = el("div", { class: "news-body" }); body.appendChild(flow); art.appendChild(body);
             var lb = linkButton(item); if (lb) art.appendChild(lb);
             root.appendChild(art);
             root.appendChild(el("p", { class: "news-back" }, [el("a", { href: "news.html", text: "← All news" })]));

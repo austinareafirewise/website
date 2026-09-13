@@ -853,6 +853,31 @@ section { padding: 52px 0; }
 .news-figure { margin: 18px 0; }
 .news-figure img { width: 100%; height: auto; border-radius: 10px; display: block; }
 .news-figure figcaption { font-size: .85rem; color: var(--muted); margin-top: 6px; }
+
+/* A picture beside the text. Roughly a third of the column, with the
+   paragraphs wrapping round it. */
+.news-figure-right,
+.news-figure-left { width: min(46%, 340px); margin-top: 4px; }
+
+.news-figure-right { float: right; margin-left: 26px; }
+.news-figure-left { float: left; margin-right: 26px; }
+
+/* The float has to be closed, or a short article's picture hangs below the
+   text and over whatever follows it. */
+.news-body::after { content: ""; display: block; clear: both; }
+
+/* There is no room beside the text on a phone: a wrapped picture and the two
+   or three words that fit next to it are worse than either alone. Below this
+   width every picture is a full-width band, whatever the editor chose. */
+@media (max-width: 680px) {
+    .news-figure-right,
+    .news-figure-left {
+        float: none;
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
 .news-body h2 { font-size: 1.35rem; margin-top: 1.2em; }
 .news-body h3 { font-size: 1.1rem; margin-top: 1em; }
 .news-body blockquote { border-left: 4px solid var(--sage); margin: 1em 0; padding: 4px 0 4px 16px; color: var(--muted); }
