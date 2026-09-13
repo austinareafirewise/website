@@ -42,6 +42,7 @@
 .item.live { border-left-color: var(--green-500); }
 .item.scheduled { border-left-color: var(--orange); }
 .item.draft { border-left-color: #b8b8ae; }
+.item-actions { display: flex; gap: 8px; align-items: center; }
 .item h3 { margin: 0 0 3px; font-size: 1.1rem; }
 .item .meta { color: var(--muted); font-size: .9rem; margin: 0; }
 .item .badge {
@@ -108,5 +109,6 @@ code { background: #f1f1ec; padding: 1px 5px; border-radius: 4px; font-size: .9e
 
 @media (max-width: 640px) {
     .item { grid-template-columns: 1fr; }
+    .item-actions { justify-content: flex-start; }
     .admin-buttons .btn-danger { margin-left: 0; }
 }

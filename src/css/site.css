@@ -752,7 +752,12 @@ section { padding: 52px 0; }
 .notice h2 { font-size: 1.45rem; margin-bottom: .2em; }
 .notice-when { color: var(--muted); font-weight: 600; margin-bottom: .6em; }
 .notice p:last-child { margin-bottom: 0; }
-.content-link { margin-top: 12px; }
+.content-link { margin-top: 12px; margin-bottom: 0; }
+
+/* The external link on a notice or article is a secondary action next to the
+   page's own calls to action, so it is sized below them deliberately — a
+   full-size button here competes with "Prepare your home" in the hero. */
+.content-link .btn { padding: 8px 15px; font-size: .88rem; }
 
 /* Home News: titles only, drawing attention to the News page. */
 #home-news { padding: 34px 0; border-bottom: 1px solid var(--line); }

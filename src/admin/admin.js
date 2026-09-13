@@ -205,9 +205,23 @@
                         node("h3", null, [node("span", { class: "badge", text: i.kind === "notice" ? "Meeting notice" : "News" }), i.title]),
                         node("p", { class: "meta", text: STATE_LABEL[g[0]] + " · " + when + " · by " + (i.updatedBy || "") })
                     ]),
-                    node("button", { type: "button", class: "btn btn-outline btn-small", text: "Open" })
+                    node("div", { class: "item-actions" })
                 ]);
-                row.querySelector("button").addEventListener("click", function () { openItem(i); });
+                var actions = row.querySelector(".item-actions");
+                var open = node("button", { type: "button", class: "btn btn-outline btn-small", text: "Open" });
+                open.addEventListener("click", function () { openItem(i); });
+                actions.appendChild(open);
+
+                /* Ended items get a delete button here as well as in the form.
+                   They are the ones that accumulate: past their stop date,
+                   invisible to visitors, and nothing on the site refers to
+                   them. Being able to clear one out without opening it keeps
+                   the list from becoming a graveyard nobody tidies. */
+                if (g[0] === "ended") {
+                    var del = node("button", { type: "button", class: "btn btn-danger btn-small", text: "Delete" });
+                    del.addEventListener("click", function () { removeFromList(i, del); });
+                    actions.appendChild(del);
+                }
                 sec.appendChild(row);
             });
             root.appendChild(sec);
@@ -250,6 +264,38 @@
         openItem({ id: newId(), kind: kind, status: "draft", title: "", body: "", startsAt: start.toISOString(), endsAt: end.toISOString(), pictures: [], showOnHome: false, bodyFormat: "plain", _new: true });
     }
 
+    /* Copy an existing item into a fresh draft. The quarterly meeting notice
+       is the same words every time and only the dates change, so retyping it
+       — or editing last quarter's, which destroys the record of it — is the
+       wrong shape of work.
+
+       Pictures are deliberately not copied. They live under the original
+       item's own prefix in S3, and the cleanup that removes an item's
+       pictures when it is deleted assumes exactly one item owns them.
+       Sharing a key between two items would mean deleting one silently
+       breaks the other. */
+    function duplicateItem() {
+        if (dirty && !window.confirm("You have unsaved changes, which will not be copied. Continue?")) return;
+        var start = new Date(); start.setMinutes(0, 0, 0); start.setHours(start.getHours() + 1);
+        var end = new Date(start); end.setDate(end.getDate() + (current.kind === "notice" ? 14 : 60));
+        var copy = {
+            id: newId(), kind: current.kind, status: "draft",
+            title: current.title, body: current.body,
+            bodyFormat: current.bodyFormat || "plain",
+            showOnHome: !!current.showOnHome,
+            startsAt: start.toISOString(), endsAt: end.toISOString(),
+            pictures: [], _new: true
+        };
+        if (current.link) { copy.link = current.link; copy.linkText = current.linkText; }
+        var hadPictures = (current.pictures || []).length > 0;
+        openItem(copy);
+        dirty = true;
+        updateStatusLine();
+        msg("info", "Copied into a new draft with new dates" +
+            (hadPictures ? ", without the pictures — add them again if you want them" : "") +
+            ". The original is untouched. Nothing is saved until you press Save or Publish.");
+    }
+
     function openItem(item) {
         current = JSON.parse(JSON.stringify(item));
         dirty = false;
@@ -269,6 +315,7 @@
         $("unpublish").hidden = item.status !== "published";
         $("publish").textContent = item.status === "published" ? "Save and keep published" : "Publish";
         $("delete").hidden = !!item._new;
+        $("duplicate").hidden = !!item._new;
         renderPictures();
         updateStatusLine();
         clearMsg();
@@ -338,17 +385,38 @@
     }
 
     function setBusy(b) {
-        ["save-draft", "preview", "publish", "unpublish", "delete"].forEach(function (id) { $(id).disabled = b; });
+        ["save-draft", "preview", "publish", "unpublish", "delete", "duplicate"].forEach(function (id) { $(id).disabled = b; });
+    }
+
+    function confirmDelete(item) {
+        return window.confirm("Delete \"" + (item.title || "this item") + "\"?\n\nIt will be taken off the site and cannot be brought back.");
     }
 
     function removeItem() {
-        if (!window.confirm("Delete \"" + (current.title || "this item") + "\"?\n\nIt will be taken off the site and cannot be brought back.")) return;
+        if (!confirmDelete(current)) return;
         setBusy(true);
         api("DELETE", "/items/" + current.id).then(function () {
             items = items.filter(function (x) { return x.id !== current.id; });
             current = null; dirty = false;
             renderList(); show("screen-list");
         }).catch(function (e) { msg("err", e.message); }).finally(function () { setBusy(false); });
+    }
+
+    /* Delete from the list rather than from the form. The button disables
+       itself while the request is in flight so a second click cannot fire a
+       second delete against an id that is already gone. */
+    function removeFromList(item, button) {
+        if (!confirmDelete(item)) return;
+        button.disabled = true;
+        button.textContent = "Deleting…";
+        api("DELETE", "/items/" + item.id).then(function () {
+            items = items.filter(function (x) { return x.id !== item.id; });
+            renderList();
+        }).catch(function (e) {
+            button.disabled = false;
+            button.textContent = "Delete";
+            window.alert(e.message);
+        });
     }
 
     /* ============================================================ */
@@ -533,6 +601,7 @@
             save("draft").catch(function () {});
         });
         $("delete").addEventListener("click", removeItem);
+        $("duplicate").addEventListener("click", duplicateItem);
         $("preview").addEventListener("click", preview);
         $("preview-close").addEventListener("click", function () { $("preview-modal").hidden = true; $("preview-frame").src = "about:blank"; });
 
