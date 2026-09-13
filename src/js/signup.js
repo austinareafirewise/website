@@ -48,10 +48,9 @@
                 "Meanwhile, register for official emergency alerts at Warn Central Texas.");
         }
         var smsOn = !!o.sms;
-        // The text options are offered even before the number is live: the
-        // API takes the number and holds it unconfirmed rather than refusing
-        // the sign-up, and the hint below the choices explains that.
-        ["m-sms", "m-both"].forEach(function (id) { var el = document.getElementById(id); if (el) el.hidden = false; });
+        // All three choices are in the markup and visible without JavaScript;
+        // this only swaps the hint underneath, because what happens to a
+        // mobile number differs before and after the number is approved.
         var note = document.getElementById("sms-soon");
         if (note) note.hidden = smsOn;
         syncFields();
