@@ -97,7 +97,7 @@
             if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
             if (m[1] != null) frag.appendChild(el("strong", { text: m[1] }));
             else if (m[2] != null) frag.appendChild(el("em", { text: m[2] }));
-            else frag.appendChild(el("a", { href: m[4], rel: "noopener", class: "ext", text: m[3] }));
+            else frag.appendChild(el("a", { href: m[4], target: "_blank", rel: "noopener", class: "ext", text: m[3] }));
             last = re.lastIndex;
         }
         if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
@@ -170,11 +170,24 @@
         return first.length > 220 ? first.slice(0, 217).replace(/\s+\S*$/, "") + "…" : first;
     }
 
+    /* Board-published outbound links open in a new tab, so a visitor who
+       follows one to a registration page or an agency notice still has the
+       site behind them. rel="noopener" is not optional with target="_blank":
+       without it the opened page gets a handle on this window and can
+       navigate it somewhere else.
+
+       Opening a new tab unannounced is a WCAG 3.2.2 concern, so the link
+       says so — visually through the .ext arrow, and to a screen reader
+       through the appended hidden text. */
     function linkButton(item) {
         if (!item.link) return null;
-        return el("p", { class: "content-link" }, [
-            el("a", { class: "btn btn-outline ext", href: item.link, rel: "noopener", text: item.linkText || "More information" })
-        ]);
+        var a = el("a", {
+            class: "btn btn-outline ext", href: item.link,
+            target: "_blank", rel: "noopener",
+            text: item.linkText || "More information"
+        });
+        a.appendChild(el("span", { class: "sr-only", text: " (opens in a new tab)" }));
+        return el("p", { class: "content-link" }, [a]);
     }
 
     function figure(pic, thumb) {

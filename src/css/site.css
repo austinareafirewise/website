@@ -757,7 +757,7 @@ section { padding: 52px 0; }
 /* The external link on a notice or article is a secondary action next to the
    page's own calls to action, so it is sized below them deliberately — a
    full-size button here competes with "Prepare your home" in the hero. */
-.content-link .btn { padding: 8px 15px; font-size: .88rem; }
+.content-link .btn { padding: 5px 11px; font-size: .8rem; border-width: 1px; }
 
 /* Home News: titles only, drawing attention to the News page. */
 #home-news { padding: 34px 0; border-bottom: 1px solid var(--line); }
