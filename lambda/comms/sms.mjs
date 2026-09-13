@@ -21,6 +21,8 @@ export function smsEnabled() {
          : false;
 }
 
+export function smsProviderName() { return ENV.smsProvider; }
+
 /* kind: "transactional" for a confirmation code someone is waiting for,
    "promotional" for a board broadcast. This is a declaration to the
    carriers about what the message is, not a routing preference — telling
@@ -52,12 +54,27 @@ async function sendAws(to, body, messageType) {
 async function sendTwilio(to, body) {
     const t = await twilioConfig();
     const url = `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(t.accountSid)}/Messages.json`;
-    const form = new URLSearchParams({ To: to, From: t.from, Body: body });
+    const form = new URLSearchParams({ To: to, Body: body });
+
+    // A Messaging Service is Twilio's preferred sender: it carries the 10DLC
+    // campaign registration, handles STOP/START/HELP itself, and can hold
+    // several numbers. Fall back to a bare From number when none is given.
+    if (t.messagingServiceSid) form.set("MessagingServiceSid", t.messagingServiceSid);
+    else form.set("From", t.from);
+
     if (t.statusCallback) form.set("StatusCallback", t.statusCallback);
+
+    // An API key can be revoked on its own; the account auth token cannot be
+    // revoked without breaking everything that uses it. Prefer a key for
+    // sending when one is supplied. The auth token is still needed for
+    // webhook signature checking, which Twilio always signs with it.
+    const user = t.keySid || t.accountSid;
+    const pass = t.keySid ? t.keySecret : t.authToken;
+
     const res = await fetch(url, {
         method: "POST",
         headers: {
-            "Authorization": "Basic " + Buffer.from(`${t.accountSid}:${t.authToken}`).toString("base64"),
+            "Authorization": "Basic " + Buffer.from(`${user}:${pass}`).toString("base64"),
             "Content-Type": "application/x-www-form-urlencoded",
         },
         body: form.toString(),

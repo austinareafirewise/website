@@ -453,8 +453,18 @@ export async function twilioConfig() {
     if (!ENV.twilioParam) throw new Error("Twilio is selected but TWILIO_PARAM is not set.");
     const ssm = new SSMClient({});
     const r = await ssm.send(new GetParameterCommand({ Name: ENV.twilioParam, WithDecryption: true }));
-    twilio = JSON.parse(r.Parameter.Value);   // { accountSid, authToken, from }
-    if (!twilio.accountSid || !twilio.authToken || !twilio.from) throw new Error("Twilio parameter is incomplete.");
+    /* { accountSid, authToken, from | messagingServiceSid,
+         keySid?, keySecret?, statusCallback? }
+
+       authToken is required even when an API key is used for sending,
+       because Twilio signs inbound webhooks with the account auth token and
+       nothing else. Without it we could not tell a real STOP reply from a
+       forged one. */
+    twilio = JSON.parse(r.Parameter.Value);
+    if (!twilio.accountSid) throw new Error("Twilio parameter is missing accountSid.");
+    if (!twilio.authToken) throw new Error("Twilio parameter is missing authToken (needed to verify inbound webhooks).");
+    if (!twilio.from && !twilio.messagingServiceSid) throw new Error("Twilio parameter needs either from or messagingServiceSid.");
+    if (twilio.keySid && !twilio.keySecret) throw new Error("Twilio parameter has keySid without keySecret.");
     return twilio;
 }
 

@@ -151,6 +151,7 @@ async function signup(event) {
     // Existing record on either channel? Reuse it rather than creating a
     // duplicate — and never reveal to the browser which case this was.
     let m = (wantEmail && await findByEmail(e)) || (wantSms && await findByPhone(p)) || null;
+    const existed = Boolean(m);
     const now = nowIso();
     const consent = { version: CONSENT.version, text: CONSENT.text, at: now, ip, source: "signup-form", method };
 
@@ -185,12 +186,28 @@ async function signup(event) {
         codeOut.code = code;
     }
 
+    const isNewRecord = !existed;
     await ddb.send(new PutCommand({ TableName: ENV.members, Item: m }));
 
-    // Confirmations, after the record exists.
-    if (wantEmail && m.emailStatus !== "confirmed") await sendEmailConfirmation(m);
-    if (codeOut.code) {
-        await sendSms(m.phone, `${ENV.orgName}: your confirmation code is ${codeOut.code}. It expires in 15 minutes. Reply STOP to stop.`);
+    // Confirmations, after the record exists — the code hash has to be stored
+    // before the code is sent, or a fast reply could arrive before we could
+    // check it.
+    //
+    // If sending fails, a brand-new record is removed again rather than left
+    // as a sign-up nobody can complete, and the person is told plainly. An
+    // existing record is kept, because deleting it would take away a
+    // subscription they already had.
+    try {
+        if (wantEmail && m.emailStatus !== "confirmed") await sendEmailConfirmation(m);
+        if (codeOut.code) {
+            await sendSms(m.phone, `${ENV.orgName}: your confirmation code is ${codeOut.code}. It expires in 15 minutes. Reply STOP to stop.`, "transactional");
+        }
+    } catch (err) {
+        console.error("confirmation send failed:", err.message);
+        if (isNewRecord) await ddb.send(new DeleteCommand({ TableName: ENV.members, Key: { memberId: m.memberId } }));
+        throw new ValidationError(
+            "We could not send your confirmation just now, so nothing was saved. " +
+            "This is our problem, not yours — please try again later.", 503);
     }
 
     return respond(200, {
