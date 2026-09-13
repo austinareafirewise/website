@@ -81,7 +81,17 @@ async function sendTwilio(to, body) {
     });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(`Twilio ${res.status}: ${j.message || "send failed"}`);
-    return { providerId: j.sid };
+
+    /* Twilio accepts a message and then fails it asynchronously, so a 201
+       here does not mean anyone received anything. The failure that matters
+       most is 30034 — the number is not attached to an approved A2P 10DLC
+       campaign — because the caller would otherwise tell someone to "enter
+       the code we texted you" when the carrier had already rejected it.
+       Silent is worse than late, so surface it. */
+    if (j.status === "failed" || j.status === "undelivered" || j.error_code) {
+        throw new Error(`Twilio could not deliver the message (${j.error_code || j.status}).`);
+    }
+    return { providerId: j.sid, status: j.status };
 }
 
 /* Inbound keyword handling is shared: both providers deliver the sender's
