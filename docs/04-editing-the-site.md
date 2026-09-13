@@ -99,7 +99,11 @@ inside photos.
 
 Every item is either a **draft** or **published**.
 
-- **Save as draft** keeps your work. Visitors cannot see a draft, ever
+- **Save as draft** keeps your work. Visitors cannot see a draft, ever. A
+  draft can be half finished — no title yet, no dates yet, nothing but a
+  picture you wanted to keep. Save it and come back to it
+- **Publish** is the step that insists on a title, some text and both dates.
+  Nothing reaches the site without them
 - **Preview** shows the real page with your item in place, exactly as visitors
   will see it. Use it every time
 - **Publish** makes it live — within a minute, if the start time has passed;

@@ -231,6 +231,9 @@ The Lambda (Node.js 22, AWS SDK only, no third-party packages):
 - rejects any token whose `cognito:groups` claim lacks `board`
 - validates every field — lengths, ISO dates, stop after start, link `https://`
   only, at most three pictures, each picture's keys under the item's own prefix
+- requires a title, a body and both dates **to publish**, not to save. A draft
+  may be missing any of them, so an editor can start an article with nothing
+  but a picture. The admin form applies the same rule, so the two agree
 - issues upload URLs only for the item's own prefix, valid for five minutes,
   content-type `image/jpeg`, size-capped
 - on save, deletes any object under the item's prefix that the item no longer

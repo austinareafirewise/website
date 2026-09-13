@@ -266,12 +266,20 @@ function validateItem(input, id) {
     const status = str(input.status, "Status", 10);
     if (!STATUSES.has(status)) throw new ValidationError("Status must be draft or published.");
 
-    const title = str(input.title, "Title", LIMITS.title, true);
-    const body = str(input.body, "Body", LIMITS.body, true).replace(/\r\n?/g, "\n");
+    /* A draft is scratch paper. It may be missing its title, its text or its
+       dates, so an editor can start with a picture, or save what they have
+       and come back to it. Everything below is required to publish, and
+       publishing is the only way anything reaches a visitor. */
+    const draft = status === "draft";
 
-    const startsAt = isoDate(input.startsAt, "Starts");
-    const endsAt = isoDate(input.endsAt, "Stops");
-    if (Date.parse(endsAt) <= Date.parse(startsAt)) throw new ValidationError("Stops must be after Starts.");
+    const title = str(input.title, "Title", LIMITS.title, !draft);
+    const body = str(input.body, "Body", LIMITS.body, !draft).replace(/\r\n?/g, "\n");
+
+    const startsAt = draft && !input.startsAt ? "" : isoDate(input.startsAt, "Starts");
+    const endsAt = draft && !input.endsAt ? "" : isoDate(input.endsAt, "Stops");
+    if (startsAt && endsAt && Date.parse(endsAt) <= Date.parse(startsAt)) {
+        throw new ValidationError("Stops must be after Starts.");
+    }
 
     const item = { id, kind, status, title, body, startsAt, endsAt, pictures: [] };
 

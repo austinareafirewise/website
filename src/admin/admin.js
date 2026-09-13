@@ -231,7 +231,7 @@
                 var when = g[0] === "scheduled" ? "Appears " + fmt(i.startsAt) : g[0] === "live" ? "Until " + fmt(i.endsAt) : g[0] === "ended" ? "Ended " + fmt(i.endsAt) : "Last saved " + fmt(i.updatedAt);
                 var row = node("div", { class: "item " + g[0] }, [
                     node("div", null, [
-                        node("h3", null, [node("span", { class: "badge", text: i.kind === "notice" ? "Meeting notice" : "News" }), i.title]),
+                        node("h3", null, [node("span", { class: "badge", text: i.kind === "notice" ? "Meeting notice" : "News" }), i.title || "(untitled)"]),
                         node("p", { class: "meta", text: STATE_LABEL[g[0]] + " · " + when + " · by " + (i.updatedBy || "") })
                     ]),
                     node("div", { class: "item-actions" })
@@ -370,22 +370,44 @@
         if (link) { it.link = link; it.linkText = $("f-linktext").value.trim() || "More information"; }
         if (current.kind === "news") { it.showOnHome = $("f-home").checked; it.bodyFormat = $("f-markdown").checked ? "markdown" : "plain"; }
 
-        if (!it.title) return fail("Give it a title.", "f-title");
+        // A draft can be missing anything: the point of saving one is to keep
+        // work that is not finished, including an article that is so far
+        // nothing but a picture. Publishing is what has to be complete, and
+        // publishing is the only thing a visitor ever sees.
+        if (status !== "draft") {
+            if (!it.title) return fail("Give it a title.", "f-title");
+            if (!it.body) return fail("Add some text.", "f-body");
+            if (!it.startsAt) return fail("Choose when it should start showing.", "f-starts");
+            if (!it.endsAt) return fail("Choose when it should stop showing.", "f-ends");
+        }
         if (it.title.length > LIMITS.title) return fail("The title is too long — " + LIMITS.title + " characters at most.", "f-title");
-        if (!it.body) return fail("Add some text.", "f-body");
         if (it.body.length > LIMITS.body) return fail("The text is too long — " + LIMITS.body + " characters at most.", "f-body");
-        if (!it.startsAt) return fail("Choose when it should start showing.", "f-starts");
-        if (!it.endsAt) return fail("Choose when it should stop showing.", "f-ends");
-        if (Date.parse(it.endsAt) <= Date.parse(it.startsAt)) return fail("The stop time must be after the start time.", "f-ends");
+        if (it.startsAt && it.endsAt && Date.parse(it.endsAt) <= Date.parse(it.startsAt)) return fail("The stop time must be after the start time.", "f-ends");
         if (it.link && !/^https:\/\/\S+$/.test(it.link)) return fail("The link must start with https://", "f-link");
         if (it.link && it.linkText.length > LIMITS.linkText) return fail("The link button words are too long.", "f-linktext");
         return it;
     }
-    function fail(text, focusId) { msg("err", text); if (focusId) $(focusId).focus(); return null; }
+    /* Why readForm last refused, so a caller that is standing in front of the
+       form -- the crop dialog, which saves a draft before it can attach a
+       picture to it -- can repeat the reason instead of the code word. */
+    var lastInvalid = "";
+
+    function fail(text, focusId) {
+        lastInvalid = text;
+        msg("err", text);
+        // Not while a dialog is open: the field is behind it, and moving focus
+        // out of a modal strands anyone using the keyboard.
+        if (focusId && $("crop-modal").hidden && $("preview-modal").hidden) $(focusId).focus();
+        return null;
+    }
 
     function save(status, quiet) {
         var it = readForm(status);
-        if (!it) return Promise.reject(new Error("invalid"));
+        if (!it) {
+            var stop = new Error("invalid");
+            stop.reason = lastInvalid;
+            return Promise.reject(stop);
+        }
         clearMsg();
         setBusy(true);
         return api("PUT", "/items/" + current.id, it).then(function (j) {
@@ -600,7 +622,14 @@
             renderPictures(); updateStatusLine();
             msg("ok", "Picture added and saved.");
         }).catch(function (e) {
-            msg("err", e.message || "The picture could not be added. Try again.", $("crop-msg"));
+            // A picture belongs to an article, so the article is saved as a
+            // draft first. A draft accepts an empty form, so that save rarely
+            // fails -- but when it does, the reason is on the form behind this
+            // dialog, where it cannot be read from here. Repeat it.
+            var text = e.message === "invalid"
+                ? (e.reason || "The article could not be saved, so the picture was not added.")
+                : e.message || "The picture could not be added. Try again.";
+            msg("err", text, $("crop-msg"));
         }).finally(function () { $("crop-ok").disabled = false; });
     }
 
