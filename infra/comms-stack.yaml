@@ -301,6 +301,11 @@ Resources:
                 Resource:
                   - !Sub "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:identity/${MailDomain}"
                   - !Sub "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${ConfigSet}"
+              # Readiness check before accepting a sign-up: is the account out
+              # of the sandbox, and is the domain verified?
+              - Effect: Allow
+                Action: [ses:GetAccount, ses:GetEmailIdentity]
+                Resource: "*"
               - Effect: Allow
                 Action: [sms-voice:SendTextMessage]
                 Resource: "*"

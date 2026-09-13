@@ -39,6 +39,14 @@
 
     /* Show or hide the text choices depending on what the API says. */
     fetch(api + "/signup/options").then(function (r) { return r.json(); }).then(function (o) {
+        // Email still being verified: say so plainly instead of letting
+        // someone fill the form in and hit an error.
+        if (o.email === false) {
+            var b = form.querySelector("button[type=submit]");
+            if (b) { b.disabled = true; b.textContent = "Sign-ups open shortly"; }
+            setStatus("info", "Sign-ups open in a day or two — we're finishing the setup that lets us email you. " +
+                "Meanwhile, register for official emergency alerts at Warn Central Texas.");
+        }
         var smsOn = !!o.sms;
         ["m-sms", "m-both"].forEach(function (id) { var el = document.getElementById(id); if (el) el.hidden = !smsOn; });
         var note = document.getElementById("sms-soon");

@@ -25,7 +25,7 @@ import {
     getMember, findByEmail, findByPhone, allMembers, deriveStatus, publicMember, audienceFor,
     renderEmail, renderSms, markdownToHtml, twilioConfig, sha1Base64Hmac,
 } from "./lib.mjs";
-import { sendEmail, sendPlainEmail } from "./email.mjs";
+import { sendEmail, sendPlainEmail, emailEnabled } from "./email.mjs";
 import { sendSms, smsEnabled, classifyKeyword } from "./sms.mjs";
 
 const sqs = new SQSClient({});
@@ -34,7 +34,7 @@ export const handler = async (event) => {
     const route = event.routeKey;
     try {
         // ---- Public ----
-        if (route === "GET /signup/options") return respond(200, { sms: smsEnabled(), consent: CONSENT });
+        if (route === "GET /signup/options") return respond(200, { sms: smsEnabled(), email: await emailEnabled(), consent: CONSENT });
         if (route === "POST /signup") return await signup(event);
         if (route === "POST /confirm") return await confirmEmail(event);
         if (route === "POST /confirm-code") return await confirmCode(event);
@@ -99,6 +99,10 @@ async function signup(event) {
     if (!METHODS.has(method)) throw new ValidationError("Choose email, text, or both.");
     if ((method === "sms" || method === "both") && !smsEnabled()) {
         throw new ValidationError("Text sign-up isn't available yet. Choose email for now.");
+    }
+    // Refuse before storing anything, rather than failing after.
+    if (method !== "sms" && !(await emailEnabled())) {
+        throw new ValidationError("Sign-ups aren't open quite yet — our email is still being set up. Please try again in a day or two.");
     }
     if (b.consent !== true && b.consent !== "true" && b.consent !== "on") {
         throw new ValidationError("Please tick the box to agree to receive messages.");
