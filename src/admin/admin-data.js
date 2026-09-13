@@ -84,7 +84,8 @@
     var FIELDS = {
         member: function () {
             return [
-                { k: "name", label: "Name", type: "text" },
+                { k: "firstName", label: "First name", type: "text" },
+                { k: "lastName", label: "Last name", type: "text" },
                 { k: "method", label: "Contact by", type: "select", required: true,
                   options: [{ value: "email", label: "Email" }, { value: "sms", label: "Text" }, { value: "both", label: "Both" }] },
                 { k: "email", label: "Email address", type: "email" },

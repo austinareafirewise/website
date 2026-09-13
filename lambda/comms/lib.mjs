@@ -45,7 +45,7 @@ export const ENV = {
 /* ------------------------------------------------------------------ */
 
 export const LIMITS = {
-    name: 120, area: 120, notes: 1000, zip: 10,
+    name: 120, firstName: 60, lastName: 60, area: 120, notes: 1000, zip: 10,
     groupName: 120, groupArea: 300, groupAbout: 2000, role: 80, personName: 120,
     commName: 120, subject: 150, emailBody: 20000, smsBody: 480,
     smsSegmentChars: 160, smsMaxSegments: 3,
@@ -319,9 +319,36 @@ export function deriveStatus(m) {
 
 /* What the admin page and the sender may see; the confirmation code hash
    and similar internals never leave the function. */
+/* Names are stored as firstName and lastName. Records made before that split
+   — and sign-ups from the public form, which still asks for one name — carry
+   a single `name` instead. Rather than migrate and hope nothing was missed,
+   derive the parts on the way out: the last word is the surname and
+   everything before it the given name, which is right for most US names and
+   wrong for some. An editor who opens such a record sees the split, and
+   saving makes it permanent for that person.
+
+   `name` is still returned, composed, because lists and the CSV want one
+   string to show. */
+export function splitName(m) {
+    if (m.firstName || m.lastName) {
+        return { firstName: m.firstName || "", lastName: m.lastName || "" };
+    }
+    const whole = String(m.name || "").trim();
+    if (!whole) return { firstName: "", lastName: "" };
+    const i = whole.lastIndexOf(" ");
+    return i < 0 ? { firstName: whole, lastName: "" }
+                 : { firstName: whole.slice(0, i).trim(), lastName: whole.slice(i + 1).trim() };
+}
+
+export function displayName(m) {
+    const { firstName, lastName } = splitName(m);
+    return [firstName, lastName].filter(Boolean).join(" ");
+}
+
 export function publicMember(m) {
     const { smsCodeHash, smsCodeExp, smsCodeTries, ...rest } = m;
-    return { ...rest, status: deriveStatus(m) };
+    const parts = splitName(m);
+    return { ...rest, ...parts, name: displayName(m), status: deriveStatus(m) };
 }
 
 /* Who gets a given communication. Excludes anything not positively

@@ -23,6 +23,7 @@ import {
     str, email, phone, zip, isoDate, isId, newId, nowIso, withinTextingHours, smsSegments,
     rateLimit, signToken, verifyToken, newCode, hashCode,
     getMember, findByEmail, findByPhone, allMembers, deriveStatus, publicMember, audienceFor,
+    splitName, displayName,
     renderEmail, renderSms, markdownToHtml, twilioConfig, sha1Base64Hmac,
     allGroups, publicGroup, allBoard,
 } from "./lib.mjs";
@@ -499,7 +500,8 @@ function validateMemberInput(b) {
         method,
         email: email(b.email, wantEmail) || undefined,
         phone: phone(b.phone, wantSms) || undefined,
-        name: str(b.name, "Name", LIMITS.name) || undefined,
+        firstName: str(b.firstName, "First name", LIMITS.firstName) || undefined,
+        lastName: str(b.lastName, "Last name", LIMITS.lastName) || undefined,
         area: str(b.area, "Area", LIMITS.area) || undefined,
         zip: zip(b.zip, false) || undefined,
         groupId: (function () { const g = str(b.groupId, "Firewise group", 40); return g && isId(g) ? g : undefined; })(),
@@ -551,6 +553,8 @@ async function updateMember(id, b, who) {
     if (v.phone && v.phone !== m.phone) { const o = await findByPhone(v.phone); if (o && o.memberId !== id) throw new ValidationError("Someone else already has that mobile number."); }
     const now = nowIso();
     const next = { ...m, ...v, updatedAt: now, updatedBy: who };
+    // Saving through the editor settles the split permanently for this person.
+    if (v.firstName || v.lastName) delete next.name;
     // A changed address is an unconfirmed address.
     if (v.email !== m.email) next.emailStatus = v.email ? "pending" : undefined;
     if (v.phone !== m.phone) { next.smsStatus = v.phone ? "pending" : undefined; delete next.smsCodeHash; delete next.smsCodeExp; delete next.smsCodeTries; }
@@ -585,7 +589,7 @@ async function exportMembers() {
     // Resolve group ids to names: a CSV full of opaque ids helps nobody.
     const groups = Object.fromEntries((await allGroups()).map((g) => [g.groupId, g.name]));
     const rows = (await allMembers()).map(publicMember).map((m) => ({ ...m, groupName: m.groupId ? groups[m.groupId] || "(deleted group)" : "" }));
-    const cols = ["name", "email", "phone", "method", "status", "emailStatus", "smsStatus", "area", "zip", "groupName", "interest", "createdAt", "confirmedAt", "unsubscribedAt", "unsubscribedVia", "notes"];
+    const cols = ["firstName", "lastName", "name", "email", "phone", "method", "status", "emailStatus", "smsStatus", "area", "zip", "groupName", "interest", "createdAt", "confirmedAt", "unsubscribedAt", "unsubscribedVia", "notes"];
     const esc = (v) => { const s = v == null ? "" : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
     const csv = [cols.join(",")].concat(rows.map((r) => cols.map((c) => esc(r[c])).join(","))).join("\r\n");
     return { statusCode: 200, headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename="members-${new Date().toISOString().slice(0, 10)}.csv"`, "cache-control": "no-store", "access-control-allow-origin": ENV.siteOrigin }, body: csv };
