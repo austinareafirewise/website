@@ -52,6 +52,50 @@ aws cloudformation deploy --region us-east-2 --template-file /tmp/cms-packaged.y
 Run from the repository root. `package` uploads `lambda/cms/` and rewrites the
 `Code:` reference; `deploy` applies it. A code-only change takes about a minute.
 
+### Members and communications (stack `aafa-comms`, template [`comms-stack.yaml`](comms-stack.yaml))
+
+| Resource | Identifier |
+| --- | --- |
+| Tables | `aafa-members`, `aafa-communications`, `aafa-deliveries`, `aafa-groups`, `aafa-board`, `aafa-ratelimit` |
+| Send queue | `aafa-send`, with `aafa-send-dlq` after three failures |
+| Functions | `aafa-comms-api`, `aafa-comms-sender`, `aafa-comms-events` |
+| Email | SES identity `austinareafirewise.org`, configuration set `aafa-comms`, events to SNS `aafa-comms-events` |
+| Signing key | Secrets Manager `aafa/comms/signing-key` — rotating it invalidates every outstanding confirm/unsubscribe/manage link |
+| SMS | `SmsProvider` parameter: `off` (current), `aws`, or `twilio` |
+
+Design and reasoning: [`../docs/07-members-and-communications-design.md`](../docs/07-members-and-communications-design.md).
+
+#### Deploying a change
+
+```bash
+export AWS_PROFILE=austinareafirewise
+aws cloudformation package --region us-east-2 --template-file infra/comms-stack.yaml \
+  --s3-bucket aafa-deploy-artifacts-773005956573 --s3-prefix comms \
+  --output-template-file /tmp/comms-packaged.yaml
+aws cloudformation deploy --region us-east-2 --template-file /tmp/comms-packaged.yaml \
+  --stack-name aafa-comms --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
+```
+
+Parameters already set on the stack persist when not passed again. The ones
+that matter:
+
+| Parameter | Current | Note |
+| --- | --- | --- |
+| `PostalAddress` | P.O. Box 4211-A, Austin, TX 78731 | CAN-SPAM requires it in every email. The sender refuses to broadcast while it is blank. |
+| `ReplyTo` | vicki@vickilandon.com | An interim personal address. While blank, every email tells recipients the mailbox is unmonitored; setting it removes that line. Replace when the organisation has its own mailbox. |
+| `SmsProvider` | `off` | Becomes `aws` with `SmsOrigination` set to the toll-free number once carriers approve it. |
+
+#### Things only a person can do
+
+- **SES production access** — requested, `ReviewDetails.Status: PENDING`. Until
+  granted, sign-ups are refused with an explanation; the gate lifts on its own
+  because the check is made at runtime.
+- **Toll-free number** — not yet requested. 1-3 weeks of carrier verification.
+  Numbers are already being collected and held unconfirmed.
+- **A real mailbox on the domain** — there is no MX record, so mail to
+  anything@austinareafirewise.org bounces today. `ReplyTo` points at a personal
+  address as a stopgap.
+
 #### Board members
 
 ```bash
