@@ -154,3 +154,11 @@ code { background: #f1f1ec; padding: 1px 5px; border-radius: 4px; font-size: .9e
 
 #rec-form .field { margin-bottom: 14px; }
 #rec-form textarea { width: 100%; }
+
+
+/* A confirmation of something already done. Narrow, because it says one
+   thing, and its button is the only thing to do. */
+.modal-narrow { max-width: 460px; }
+#notice-modal h2 { font-size: 1.4rem; margin-bottom: .4em; }
+#notice-modal p { margin-bottom: 0; color: var(--muted); }
+#notice-modal .admin-buttons { margin-top: 20px; }

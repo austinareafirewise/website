@@ -263,9 +263,16 @@
         api(id ? "PUT" : "POST", basePath(kind) + (id ? "/" + id : ""), body)
             .then(function (j) {
                 $("rec-modal").hidden = true;
+                var who = body.name || [body.firstName, body.lastName].filter(Boolean).join(" ") || body.email || body.phone || "The record";
+                var extra = "";
                 if (j.confirmationsSent && j.confirmationsSent.length) {
-                    flash("members", "Saved. A confirmation was sent by " + j.confirmationsSent.join(" and ") + " — they are not on the list until they confirm.");
+                    extra = " A confirmation was sent by " + j.confirmationsSent.join(" and ") +
+                            " — they are not on the list until they confirm it.";
+                } else if (kind === "member" && !id) {
+                    extra = " They are not on the list until they confirm.";
                 }
+                notify(id ? "Saved" : "Added",
+                    "\u201c" + who + "\u201d has been " + (id ? "updated." : "added as a " + LABEL[kind] + ".") + extra);
                 return refresh(kind);
             })
             .catch(function (e) { $("rec-msg").className = "form-status show err"; $("rec-msg").textContent = e.message; })
@@ -281,20 +288,22 @@
         if (!window.confirm("Delete " + what + "?" + extra)) return;
         api("DELETE", basePath(kind) + "/" + id).then(function (j) {
             $("rec-modal").hidden = true;
-            if (j.message) flash(sectionFor(kind), j.message);
-            else if (j.membersUpdated) flash("groups", "Group deleted. " + j.membersUpdated + " sign-up(s) kept, with the group removed.");
+            var tail = j.message ? " " + j.message
+                : j.membersUpdated ? " " + j.membersUpdated + " sign-up(s) were kept, with the group removed from them."
+                : "";
+            notify("Deleted", "\u201c" + what + "\u201d has been removed." + tail);
             return refresh(kind);
         }).catch(function (e) { $("rec-msg").className = "form-status show err"; $("rec-msg").textContent = e.message; });
     }
 
     function sectionFor(kind) { return kind === "member" ? "members" : kind === "group" ? "groups" : kind === "person" ? "board" : "comms"; }
 
-    function flash(section, text) {
-        var host = $(section === "members" ? "member-list" : section === "groups" ? "group-list" : section === "board" ? "person-list" : "comm-list");
-        var n = el("div", { class: "form-status show ok", text: text });
-        host.parentNode.insertBefore(n, host);
-        setTimeout(function () { n.remove(); }, 12000);
+    function notify(title, text) {
+        if (window.AAFA_ADMIN && window.AAFA_ADMIN.notify) window.AAFA_ADMIN.notify(title, text);
+        else window.alert(title + "\n\n" + text);   // never fail silently
     }
+
+    var LABEL = { member: "member", group: "Firewise group", person: "board member", comm: "message" };
 
     /* ------------------------------------------------------------ */
     /* Lists                                                         */
@@ -348,7 +357,7 @@
                 var resend = el("button", { type: "button", class: "btn btn-outline btn-small", text: "Resend" });
                 resend.addEventListener("click", function () {
                     resend.disabled = true;
-                    api("POST", "/members/" + m.memberId + "/resend").then(function (j) { flash("members", j.message); })
+                    api("POST", "/members/" + m.memberId + "/resend").then(function (j) { notify("Confirmation resent", j.message); })
                         .catch(function (e) { window.alert(e.message); }).finally(function () { resend.disabled = false; });
                 });
                 acts.appendChild(resend);
@@ -357,7 +366,10 @@
                 var un = el("button", { type: "button", class: "btn btn-outline btn-small", text: "Unsubscribe" });
                 un.addEventListener("click", function () {
                     if (!window.confirm("Unsubscribe " + (m.name || m.email || "this person") + "? They stop receiving messages but their record is kept.")) return;
-                    api("POST", "/members/" + m.memberId + "/unsubscribe").then(function () { return refresh("member"); }).catch(function (e) { window.alert(e.message); });
+                    api("POST", "/members/" + m.memberId + "/unsubscribe").then(function () {
+                        notify("Unsubscribed", "\u201c" + (m.name || m.email || "That person") + "\u201d will not receive further messages. Their record is kept so they are not added back by mistake.");
+                        return refresh("member");
+                    }).catch(function (e) { window.alert(e.message); });
                 });
                 acts.appendChild(un);
             }
@@ -470,7 +482,22 @@
                     }
                     b.disabled = true;
                     api("POST", "/comms/" + c.commId + path, note ? { note: note } : undefined)
-                        .then(function (j) { if (j.message) flash("comms", j.message); return refresh("comm"); })
+                        .then(function (j) {
+                            var titles = {
+                                "/submit": "Sent for review", "/approve": "Approved", "/reject": "Changes requested",
+                                "/withdraw": "Withdrawn", "/test": "Test sent", "/send": "Sending"
+                            };
+                            var texts = {
+                                "/submit": "\u201c" + c.name + "\u201d is waiting for another board member to approve it. You cannot approve your own message.",
+                                "/approve": "\u201c" + c.name + "\u201d is approved and ready to send. Nothing goes out until someone presses Send.",
+                                "/reject": "\u201c" + c.name + "\u201d has gone back to the author with your note.",
+                                "/withdraw": "\u201c" + c.name + "\u201d is a draft again and can be edited.",
+                                "/test": j.message || "Test sent to you only.",
+                                "/send": j.message || "Sending has started."
+                            };
+                            notify(titles[path] || "Done", texts[path] || j.message || "Done.");
+                            return refresh("comm");
+                        })
                         .catch(function (e) { window.alert(e.message); b.disabled = false; });
                 });
                 acts.appendChild(b);
@@ -499,7 +526,10 @@
             if (c.status === "sent") {
                 var dup = el("button", { type: "button", class: "btn btn-outline btn-small", text: "Duplicate" });
                 dup.addEventListener("click", function () {
-                    api("POST", "/comms/" + c.commId + "/duplicate").then(function () { return refresh("comm"); }).catch(function (e) { window.alert(e.message); });
+                    api("POST", "/comms/" + c.commId + "/duplicate").then(function (j) {
+                        notify("Duplicated", "A new draft has been created from \u201c" + c.name + "\u201d. The original is unchanged.");
+                        return refresh("comm");
+                    }).catch(function (e) { window.alert(e.message); });
                 });
                 acts.appendChild(dup);
             }

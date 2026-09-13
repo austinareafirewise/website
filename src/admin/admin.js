@@ -155,6 +155,29 @@
     window.AAFA_ADMIN = window.AAFA_ADMIN || {};
     window.AAFA_ADMIN.showContent = function () { show("screen-list"); };
 
+    /* Confirmation that something has already happened.
+       Focus moves to OK so a keyboard user can dismiss it without hunting,
+       and returns to wherever it came from afterwards. Escape closes it,
+       because a dialog reporting success should never be able to trap
+       anyone. */
+    var noticeReturn = null;
+    function notify(title, text) {
+        noticeReturn = document.activeElement;
+        $("notice-title").textContent = title;
+        $("notice-text").textContent = text;
+        $("notice-modal").hidden = false;
+        $("notice-ok").focus();
+    }
+    function closeNotice() {
+        $("notice-modal").hidden = true;
+        if (noticeReturn && noticeReturn.focus) { try { noticeReturn.focus(); } catch (e) { /* gone from the DOM */ } }
+        noticeReturn = null;
+    }
+    window.AAFA_ADMIN.notify = notify;
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !$("notice-modal").hidden) closeNotice();
+    });
+
     function msg(kind, text, el) {
         var box = el || $("msg");
         box.className = "form-status show " + kind;
@@ -377,6 +400,11 @@
             updateStatusLine();
             if (!quiet) {
                 var st = stateOf(current);
+                notify(wasNew ? "Added" : "Saved", status === "draft"
+                    ? "Saved as a draft. Visitors cannot see it. Use Preview to check it, then Publish when it is ready."
+                    : st === "live" ? "Published. It is on the site now — allow up to a minute to appear."
+                    : st === "scheduled" ? "Published. It will appear on the site on " + fmt(current.startsAt) + " on its own."
+                    : "Saved. Its stop date has passed, so it is not showing. Change the dates to bring it back.");
                 msg("ok", status === "draft"
                     ? "Saved as a draft. Visitors cannot see it. Use Preview to check it, then Publish when it is ready."
                     : st === "live" ? "Published. It is on the site now — allow up to a minute to appear."
@@ -401,10 +429,12 @@
     function removeItem() {
         if (!confirmDelete(current)) return;
         setBusy(true);
+        var deletedTitle = current.title || "That item";
         api("DELETE", "/items/" + current.id).then(function () {
             items = items.filter(function (x) { return x.id !== current.id; });
             current = null; dirty = false;
             renderList(); show("screen-list");
+            notify("Deleted", "\u201c" + deletedTitle + "\u201d has been removed from the site.");
         }).catch(function (e) { msg("err", e.message); }).finally(function () { setBusy(false); });
     }
 
@@ -418,6 +448,7 @@
         api("DELETE", "/items/" + item.id).then(function () {
             items = items.filter(function (x) { return x.id !== item.id; });
             renderList();
+            notify("Deleted", "\u201c" + (item.title || "That item") + "\u201d has been removed.");
         }).catch(function (e) {
             button.disabled = false;
             button.textContent = "Delete";
@@ -632,6 +663,7 @@
         cc.addEventListener("pointercancel", cropUp);
         $("crop-cancel").addEventListener("click", function () { $("crop-modal").hidden = true; crop = null; });
         $("crop-ok").addEventListener("click", confirmCrop);
+        $("notice-ok").addEventListener("click", closeNotice);
     }
 
     /* ============================================================ */

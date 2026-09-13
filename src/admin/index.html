@@ -212,6 +212,19 @@
         </div>
     </main>
 
+    <!-- Confirmation of something that has already happened. Deliberately
+         not auto-dismissing: a board member who looks away while saving
+         should still find out it worked when they look back. -->
+    <div class="modal" id="notice-modal" hidden role="alertdialog" aria-modal="true" aria-labelledby="notice-title" aria-describedby="notice-text">
+        <div class="modal-box modal-narrow">
+            <h2 id="notice-title">Saved</h2>
+            <p id="notice-text"></p>
+            <div class="admin-buttons">
+                <button type="button" class="btn btn-primary" id="notice-ok">OK</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Cropper -->
     <div class="modal" id="crop-modal" hidden role="dialog" aria-modal="true" aria-labelledby="crop-title">
         <div class="modal-box">
