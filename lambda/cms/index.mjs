@@ -317,7 +317,7 @@ function str(v, label, max, required = false) {
     if (v == null) v = "";
     if (typeof v !== "string") throw new ValidationError(`${label} must be text.`);
     // Strip control characters other than newline and tab.
-    v = v.replace(/[ --]/g, "").trim();
+    v = v.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim();
     if (required && !v) throw new ValidationError(`${label} is required.`);
     if (v.length > max) throw new ValidationError(`${label} is too long (limit ${max} characters).`);
     return v;
@@ -332,9 +332,16 @@ function int(v) {
    sends Date.prototype.toISOString(), which always emits milliseconds
    ("2026-10-15T00:00:00.000Z"). An earlier version of this pattern omitted
    it, so every date the browser produced was rejected as invalid while
-   hand-written test payloads passed. Keep .\d{1,3} here. */
+   hand-written test payloads passed.
+
+   The digit count is deliberately loose. ISO 8601 allows any number of
+   fractional digits, and other clients emit more than three — Python's
+   isoformat() gives six. Being strict about the count buys nothing: the
+   Date.parse check below is what actually decides whether this is a real
+   instant, and it is what rejects things like 2026-13-45T99:99:99.000Z
+   that match these characters but are not dates. */
 function isoDate(v, label) {
-    if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?([+-]\d{2}:\d{2}|Z)$/.test(v) || Number.isNaN(Date.parse(v))) {
+    if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?([+-]\d{2}:\d{2}|Z)$/.test(v) || Number.isNaN(Date.parse(v))) {
         throw new ValidationError(`${label} needs a valid date and time.`);
     }
     return new Date(v).toISOString();
