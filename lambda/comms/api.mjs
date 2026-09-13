@@ -137,7 +137,10 @@ async function signup(event) {
     const wantEmail = method !== "sms", wantSms = method !== "email";
     const e = email(b.email, wantEmail);
     const p = phone(b.phone, wantSms);
-    const name = str(b.name, "Name", LIMITS.name);
+    // Both optional, as they were when this was one field. Someone giving
+    // only a first name is normal and fine.
+    const firstName = str(b.firstName, "First name", LIMITS.firstName);
+    const lastName = str(b.lastName, "Last name", LIMITS.lastName);
     const area = str(b.area, "Area", LIMITS.area);
     const zipCode = zip(b.zip, false);
     // The group is optional on purpose: most of the county has no Firewise
@@ -169,7 +172,8 @@ async function signup(event) {
     if (wantEmail) { m.email = e; if (m.emailStatus !== "confirmed") m.emailStatus = "pending"; }
     if (wantSms) { m.phone = p; if (m.smsStatus !== "confirmed") m.smsStatus = "pending"; }
     m.method = method;
-    if (name) m.name = name;
+    if (firstName) m.firstName = firstName;
+    if (lastName) m.lastName = lastName;
     if (area) m.area = area;
     if (zipCode) m.zip = zipCode;
     if (groupId) m.groupId = groupId;
