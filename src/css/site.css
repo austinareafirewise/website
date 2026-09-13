@@ -624,8 +624,12 @@ section { padding: 52px 0; }
     border-radius: var(--radius);
     padding: 26px;
     box-shadow: var(--shadow);
-    max-width: 640px;
 }
+
+/* The form fills the page width, so its fields sit two to a row rather than
+   stretching a name box across a desktop screen. */
+.signup .field-row { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.signup textarea { min-height: 120px; }
 
 .field { margin-bottom: 15px; }
 
@@ -743,10 +747,14 @@ section { padding: 52px 0; }
 
 /* Meeting notice: green, not orange. Orange on this site means alert. */
 #notice-slot { background: var(--sage-200); border-bottom: 1px solid var(--line); padding: 22px 0; }
+/* Full width of the page, like every other section. The paragraphs inside
+   keep a readable measure of their own — a line of text running the whole
+   width of a desktop screen is hard to track back to the start of. */
 .notice {
     background: var(--card); border: 1px solid var(--line); border-left: 6px solid var(--green-700);
-    border-radius: 10px; padding: 18px 22px; max-width: 72ch;
+    border-radius: 10px; padding: 20px 24px;
 }
+.notice p, .notice ul, .notice ol { max-width: 78ch; }
 .notice + .notice { margin-top: 14px; }
 .notice-kicker { text-transform: uppercase; letter-spacing: .12em; font-size: .76rem; font-weight: 700; color: var(--green-500); margin: 0 0 4px; }
 .notice h2 { font-size: 1.45rem; margin-bottom: .2em; }
@@ -830,3 +838,5 @@ section { padding: 52px 0; }
 .prose h2 { font-size: 1.35rem; margin-top: 1.6em; }
 .prose ul { padding-left: 22px; }
 .prose li { margin-bottom: 6px; }
+
+.opt-note { font-weight: 400; color: var(--muted); font-size: .88rem; }

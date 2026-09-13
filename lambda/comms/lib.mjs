@@ -22,6 +22,8 @@ export const ENV = {
     members: process.env.MEMBERS_TABLE,
     comms: process.env.COMMS_TABLE,
     deliveries: process.env.DELIVERIES_TABLE,
+    groups: process.env.GROUPS_TABLE,
+    board: process.env.BOARD_TABLE,
     ratelimit: process.env.RATELIMIT_TABLE,
     siteOrigin: process.env.SITE_ORIGIN,
     apiUrl: (process.env.API_URL || "").replace(/\/$/, ""),
@@ -35,6 +37,7 @@ export const ENV = {
     smsOrigination: process.env.SMS_ORIGINATION || "",
     twilioParam: process.env.TWILIO_PARAM || "",
     queueUrl: process.env.SEND_QUEUE_URL,
+    userPoolId: process.env.USER_POOL_ID || "",
 };
 
 /* ------------------------------------------------------------------ */
@@ -42,7 +45,8 @@ export const ENV = {
 /* ------------------------------------------------------------------ */
 
 export const LIMITS = {
-    name: 120, area: 120, notes: 1000,
+    name: 120, area: 120, notes: 1000, zip: 10,
+    groupName: 120, groupArea: 300, groupAbout: 2000, role: 80, personName: 120,
     commName: 120, subject: 150, emailBody: 20000, smsBody: 480,
     smsSegmentChars: 160, smsMaxSegments: 3,
 };
@@ -50,6 +54,15 @@ export const LIMITS = {
 export const INTERESTS = new Set(["updates", "firewise", "presentation", "evacuation", "volunteer", "other"]);
 export const METHODS = new Set(["email", "sms", "both"]);
 export const AUDIENCES = new Set(["all", "email", "sms"]);
+
+/* Where a Firewise group is in the NFPA recognition process. "prospective"
+   matters as much as "recognised" — a neighbourhood that has started but not
+   finished is exactly who the Alliance exists to help. */
+export const GROUP_STATUSES = new Set(["prospective", "in-progress", "recognized", "lapsed", "inactive"]);
+
+/* Board service. "past" is kept rather than deleted so the record of who
+   served, and when, survives. */
+export const BOARD_STATUSES = new Set(["current", "past"]);
 
 /* Consent wording shown beside the signup button. Stored verbatim with each
    record so the organisation can show exactly what a person agreed to. If
@@ -145,6 +158,15 @@ export function phone(v, required) {
         throw new ValidationError("That mobile number doesn't look like a US number.");
     }
     return "+1" + ten;
+}
+
+/* US ZIP, five digits or ZIP+4. Stored as typed minus the separator. */
+export function zip(v, required) {
+    v = str(v, "ZIP code", LIMITS.zip, required);
+    if (!v) return "";
+    const d = v.replace(/[^0-9]/g, "");
+    if (d.length !== 5 && d.length !== 9) throw new ValidationError("That ZIP code doesn't look right — five digits, or nine for ZIP+4.");
+    return d.length === 9 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
 }
 
 export function isoDate(v, label) {
@@ -441,3 +463,42 @@ export function sha1Base64Hmac(keyStr, data) {
 }
 
 export function sha256Hex(s) { return createHash("sha256").update(s).digest("hex"); }
+
+
+/* ------------------------------------------------------------------ */
+/* Firewise groups and Alliance board members                          */
+/* ------------------------------------------------------------------ */
+
+export async function allGroups() {
+    const out = [];
+    let ExclusiveStartKey;
+    do {
+        const page = await ddb.send(new ScanCommand({ TableName: ENV.groups, ExclusiveStartKey }));
+        out.push(...(page.Items || []));
+        ExclusiveStartKey = page.LastEvaluatedKey;
+    } while (ExclusiveStartKey);
+    return out.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+}
+
+/* What an anonymous visitor may see: enough to choose their neighbourhood
+   from a dropdown, and nothing about who leads it or how to reach them.
+   Leadership names and contact details are board-only, because a public
+   list of volunteers' phone numbers is not something to publish by
+   accident. */
+export function publicGroup(g) {
+    return { groupId: g.groupId, name: g.name, area: g.area || "", status: g.status };
+}
+
+export async function allBoard() {
+    const out = [];
+    let ExclusiveStartKey;
+    do {
+        const page = await ddb.send(new ScanCommand({ TableName: ENV.board, ExclusiveStartKey }));
+        out.push(...(page.Items || []));
+        ExclusiveStartKey = page.LastEvaluatedKey;
+    } while (ExclusiveStartKey);
+    return out.sort((a, b) => {
+        if (a.status !== b.status) return a.status === "current" ? -1 : 1;
+        return String(a.name || "").localeCompare(String(b.name || ""));
+    });
+}

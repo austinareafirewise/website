@@ -48,26 +48,47 @@
                 "Meanwhile, register for official emergency alerts at Warn Central Texas.");
         }
         var smsOn = !!o.sms;
-        ["m-sms", "m-both"].forEach(function (id) { var el = document.getElementById(id); if (el) el.hidden = !smsOn; });
+        // The text options are offered even before the number is live: the
+        // API takes the number and holds it unconfirmed rather than refusing
+        // the sign-up, and the hint below the choices explains that.
+        ["m-sms", "m-both"].forEach(function (id) { var el = document.getElementById(id); if (el) el.hidden = false; });
         var note = document.getElementById("sms-soon");
         if (note) note.hidden = smsOn;
         syncFields();
     }).catch(function () { /* leave the email-only default */ });
+
+    /* The Firewise groups the board has defined. The whole field stays
+       hidden until at least one exists, rather than offering an empty
+       dropdown that makes the site look unfinished. */
+    fetch(api + "/groups/public").then(function (r) { return r.json(); }).then(function (j) {
+        var groups = (j && j.groups) || [];
+        if (!groups.length) return;
+        var sel = document.getElementById("su-group");
+        groups.forEach(function (g) {
+            var o = document.createElement("option");
+            o.value = g.groupId;
+            o.textContent = g.name + (g.area ? " — " + g.area : "");
+            sel.appendChild(o);
+        });
+        document.getElementById("wrap-group").hidden = false;
+    }).catch(function () { /* no dropdown; the free-text neighborhood still works */ });
 
     function method() {
         var r = form.querySelector('input[name="method"]:checked');
         return r ? r.value : "email";
     }
 
-    /* Only ask for what the chosen method needs. */
+    /* Both fields stay on screen; what changes is which is required and how
+       the optional one is labelled. Hiding a field the moment someone picks a
+       method makes the form jump about under them. */
     function syncFields() {
         var m = method();
-        var emailWrap = document.getElementById("wrap-email"), phoneWrap = document.getElementById("wrap-phone");
-        if (emailWrap) emailWrap.hidden = m === "sms";
-        if (phoneWrap) phoneWrap.hidden = m === "email";
         var e = form.elements.email, p = form.elements.phone;
         if (e) e.required = m !== "sms";
         if (p) p.required = m !== "email";
+        var eo = document.getElementById("email-opt"), po = document.getElementById("phone-opt");
+        if (eo) eo.hidden = m !== "sms";
+        if (po) po.hidden = m !== "email";
     }
     Array.prototype.forEach.call(form.querySelectorAll('input[name="method"]'), function (r) { r.addEventListener("change", syncFields); });
     syncFields();
@@ -83,6 +104,8 @@
             phone: m !== "email" ? form.elements.phone.value.trim() : "",
             name: form.elements.name.value.trim(),
             area: form.elements.area ? form.elements.area.value.trim() : "",
+            zip: form.elements.zip ? form.elements.zip.value.trim() : "",
+            groupId: form.elements.groupId ? form.elements.groupId.value : "",
             interest: form.elements.interest.value,
             consent: !!(form.elements.consent && form.elements.consent.checked)
         };

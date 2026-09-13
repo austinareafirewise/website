@@ -18,12 +18,13 @@
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import {
     ddb, GetCommand, PutCommand, UpdateCommand, DeleteCommand, QueryCommand, ScanCommand,
-    ENV, LIMITS, INTERESTS, METHODS, AUDIENCES, CONSENT,
+    ENV, LIMITS, INTERESTS, METHODS, AUDIENCES, CONSENT, GROUP_STATUSES, BOARD_STATUSES,
     ValidationError, respond, redirect, parseBody, clientIp, editor,
-    str, email, phone, isoDate, isId, newId, nowIso, withinTextingHours, smsSegments,
+    str, email, phone, zip, isoDate, isId, newId, nowIso, withinTextingHours, smsSegments,
     rateLimit, signToken, verifyToken, newCode, hashCode,
     getMember, findByEmail, findByPhone, allMembers, deriveStatus, publicMember, audienceFor,
     renderEmail, renderSms, markdownToHtml, twilioConfig, sha1Base64Hmac,
+    allGroups, publicGroup, allBoard,
 } from "./lib.mjs";
 import { sendEmail, sendPlainEmail, emailEnabled } from "./email.mjs";
 import { sendSms, smsEnabled, classifyKeyword } from "./sms.mjs";
@@ -35,6 +36,7 @@ export const handler = async (event) => {
     try {
         // ---- Public ----
         if (route === "GET /signup/options") return respond(200, { sms: smsEnabled(), email: await emailEnabled(), consent: CONSENT });
+        if (route === "GET /groups/public") return respond(200, { groups: (await allGroups()).filter((g) => g.status !== "inactive").map(publicGroup) }, { "cache-control": "public, max-age=300" });
         if (route === "POST /signup") return await signup(event);
         if (route === "POST /confirm") return await confirmEmail(event);
         if (route === "POST /confirm-code") return await confirmCode(event);
@@ -57,6 +59,16 @@ export const handler = async (event) => {
         if (route === "DELETE /members/{id}") return await deleteMember(id, who);
         if (route === "POST /members/{id}/unsubscribe") return await boardUnsubscribe(id, who);
         if (route === "POST /members/{id}/resend") return await resendConfirmations(id);
+
+        if (route === "GET /groups") return respond(200, { groups: await allGroups() });
+        if (route === "POST /groups") return await saveGroup(null, parseBody(event), who);
+        if (route === "PUT /groups/{id}") return await saveGroup(id, parseBody(event), who);
+        if (route === "DELETE /groups/{id}") return await deleteGroup(id);
+
+        if (route === "GET /board") return respond(200, { board: await allBoard(), logins: await boardLogins() });
+        if (route === "POST /board") return await savePerson(null, parseBody(event), who);
+        if (route === "PUT /board/{id}") return await savePerson(id, parseBody(event), who);
+        if (route === "DELETE /board/{id}") return await deletePerson(id);
 
         if (route === "GET /comms") return respond(200, { comms: await allComms() });
         if (route === "POST /comms") return await createComm(parseBody(event), who);
@@ -95,10 +107,19 @@ async function signup(event) {
     const b = parseBody(event);
     if (b.company) return respond(200, { message: GENERIC_SIGNUP });          // honeypot
 
-    const method = str(b.method, "Contact method", 10, true);
+    let method = str(b.method, "Contact method", 10, true);
     if (!METHODS.has(method)) throw new ValidationError("Choose email, text, or both.");
-    if ((method === "sms" || method === "both") && !smsEnabled()) {
-        throw new ValidationError("Text sign-up isn't available yet. Choose email for now.");
+    // Texting is not live until a carrier-verified number exists. Rather than
+    // refusing the sign-up, take the number and hold it unconfirmed: the
+    // person has given consent, and when the number is approved they get a
+    // confirmation code like anyone else. Nothing is ever texted to a number
+    // that has not confirmed, so holding it costs them nothing.
+    const smsLive = smsEnabled();
+    let smsDeferred = false;
+    if (!smsLive && (method === "sms" || method === "both")) {
+        if (!b.email) throw new ValidationError("Text messages aren't switched on yet, so we need an email address too for now.");
+        method = "both";
+        smsDeferred = true;
     }
     // Refuse before storing anything, rather than failing after.
     if (method !== "sms" && !(await emailEnabled())) {
@@ -113,6 +134,17 @@ async function signup(event) {
     const p = phone(b.phone, wantSms);
     const name = str(b.name, "Name", LIMITS.name);
     const area = str(b.area, "Area", LIMITS.area);
+    const zipCode = zip(b.zip, false);
+    // The group is optional on purpose: most of the county has no Firewise
+    // group yet, and those neighbourhoods are the ones most worth reaching.
+    // An unrecognised id is dropped rather than rejected, so a group deleted
+    // between page load and submit does not lose the sign-up.
+    let groupId = str(b.groupId, "Firewise group", 40);
+    if (groupId && !isId(groupId)) groupId = "";
+    if (groupId) {
+        const g = await ddb.send(new GetCommand({ TableName: ENV.groups, Key: { groupId } }));
+        if (!g.Item) groupId = "";
+    }
     const interest = str(b.interest, "Interest", 20);
     if (interest && !INTERESTS.has(interest)) throw new ValidationError("Interest is not one of the options.");
 
@@ -133,6 +165,8 @@ async function signup(event) {
     m.method = method;
     if (name) m.name = name;
     if (area) m.area = area;
+    if (zipCode) m.zip = zipCode;
+    if (groupId) m.groupId = groupId;
     if (interest) m.interest = interest;
     m.consent = consent;
     m.unsubscribedAt = undefined; m.unsubscribedVia = undefined;   // a fresh signup supersedes an old opt-out
@@ -143,7 +177,7 @@ async function signup(event) {
     else delete m.pendingExpires;
 
     const codeOut = {};
-    if (wantSms && m.smsStatus !== "confirmed") {
+    if (wantSms && !smsDeferred && m.smsStatus !== "confirmed") {
         const code = newCode();
         m.smsCodeHash = await hashCode(code, m.memberId);
         m.smsCodeExp = Math.floor(Date.now() / 1000) + 15 * 60;
@@ -160,7 +194,9 @@ async function signup(event) {
     }
 
     return respond(200, {
-        message: GENERIC_SIGNUP,
+        message: smsDeferred
+            ? GENERIC_SIGNUP + " We have your mobile number too — we'll text you to confirm it once our number is approved by the carriers."
+            : GENERIC_SIGNUP,
         // The browser needs this to submit the text code; it is an opaque id
         // that grants nothing on its own.
         ...(codeOut.code ? { memberId: m.memberId, codeSent: true } : {}),
@@ -424,6 +460,8 @@ function validateMemberInput(b) {
         phone: phone(b.phone, wantSms) || undefined,
         name: str(b.name, "Name", LIMITS.name) || undefined,
         area: str(b.area, "Area", LIMITS.area) || undefined,
+        zip: zip(b.zip, false) || undefined,
+        groupId: (function () { const g = str(b.groupId, "Firewise group", 40); return g && isId(g) ? g : undefined; })(),
         interest: str(b.interest, "Interest", 20) || undefined,
         notes: str(b.notes, "Notes", LIMITS.notes) || undefined,
     };
@@ -503,11 +541,162 @@ async function resendConfirmations(id) {
 }
 
 async function exportMembers() {
-    const rows = (await allMembers()).map(publicMember);
-    const cols = ["name", "email", "phone", "method", "status", "emailStatus", "smsStatus", "area", "interest", "createdAt", "confirmedAt", "unsubscribedAt", "unsubscribedVia", "notes"];
+    // Resolve group ids to names: a CSV full of opaque ids helps nobody.
+    const groups = Object.fromEntries((await allGroups()).map((g) => [g.groupId, g.name]));
+    const rows = (await allMembers()).map(publicMember).map((m) => ({ ...m, groupName: m.groupId ? groups[m.groupId] || "(deleted group)" : "" }));
+    const cols = ["name", "email", "phone", "method", "status", "emailStatus", "smsStatus", "area", "zip", "groupName", "interest", "createdAt", "confirmedAt", "unsubscribedAt", "unsubscribedVia", "notes"];
     const esc = (v) => { const s = v == null ? "" : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
     const csv = [cols.join(",")].concat(rows.map((r) => cols.map((c) => esc(r[c])).join(","))).join("\r\n");
     return { statusCode: 200, headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename="members-${new Date().toISOString().slice(0, 10)}.csv"`, "cache-control": "no-store", "access-control-allow-origin": ENV.siteOrigin }, body: csv };
+}
+
+/* ================================================================== */
+/* Board: Firewise groups                                                */
+/* ================================================================== */
+
+function validateGroup(b) {
+    const status = str(b.status, "Status", 20, true);
+    if (!GROUP_STATUSES.has(status)) throw new ValidationError("Status must be prospective, in progress, recognized, lapsed or inactive.");
+    const out = {
+        name: str(b.name, "Group name", LIMITS.groupName, true),
+        status,
+        area: str(b.area, "Area it covers", LIMITS.groupArea) || undefined,
+        about: str(b.about, "About", LIMITS.groupAbout) || undefined,
+        zips: (Array.isArray(b.zips) ? b.zips : String(b.zips || "").split(","))
+            .map((z) => { const t = String(z).trim(); return t ? zip(t, false) : ""; }).filter(Boolean).slice(0, 20),
+        households: b.households === "" || b.households == null ? undefined : Number(b.households),
+        recognizedYear: b.recognizedYear === "" || b.recognizedYear == null ? undefined : Number(b.recognizedYear),
+        renewalDue: b.renewalDue ? isoDate(b.renewalDue, "Renewal due") : undefined,
+        website: str(b.website, "Website", 300) || undefined,
+        notes: str(b.notes, "Notes", LIMITS.notes) || undefined,
+        leaders: (Array.isArray(b.leaders) ? b.leaders : []).slice(0, 10).map((l, i) => ({
+            name: str(l?.name, `Leader ${i + 1} name`, LIMITS.personName, true),
+            role: str(l?.role, `Leader ${i + 1} role`, LIMITS.role) || undefined,
+            email: l?.email ? email(l.email) : undefined,
+            phone: l?.phone ? phone(l.phone) : undefined,
+        })),
+    };
+    if (out.website && !/^https:\/\/\S+$/.test(out.website)) throw new ValidationError("The website must start with https://");
+    if (out.households !== undefined && (!Number.isInteger(out.households) || out.households < 0 || out.households > 100000)) {
+        throw new ValidationError("Households must be a whole number.");
+    }
+    if (out.recognizedYear !== undefined && (!Number.isInteger(out.recognizedYear) || out.recognizedYear < 2000 || out.recognizedYear > 2100)) {
+        throw new ValidationError("Recognized year must be a four-digit year.");
+    }
+    if (out.status === "recognized" && out.recognizedYear === undefined) {
+        throw new ValidationError("A recognized group needs the year it was recognized.");
+    }
+    return out;
+}
+
+async function saveGroup(id, b, who) {
+    const v = validateGroup(b);
+    const now = nowIso();
+    let existing = null;
+    if (id) {
+        if (!isId(id)) return respond(404, { error: "That group no longer exists." });
+        existing = (await ddb.send(new GetCommand({ TableName: ENV.groups, Key: { groupId: id } }))).Item;
+        if (!existing) return respond(404, { error: "That group no longer exists." });
+    }
+    const g = {
+        groupId: id || newId(), ...v,
+        createdAt: existing?.createdAt || now, createdBy: existing?.createdBy || who,
+        updatedAt: now, updatedBy: who,
+    };
+    for (const k of Object.keys(g)) if (g[k] === undefined) delete g[k];
+    await ddb.send(new PutCommand({ TableName: ENV.groups, Item: g }));
+    return respond(200, { group: g });
+}
+
+/* Deleting a group would orphan the members who chose it, so the members
+   are cleaned up first — the group reference goes, the person stays. */
+async function deleteGroup(id) {
+    if (!isId(id)) return respond(404, { error: "That group no longer exists." });
+    const g = (await ddb.send(new GetCommand({ TableName: ENV.groups, Key: { groupId: id } }))).Item;
+    if (!g) return respond(404, { error: "That group no longer exists." });
+    const affected = (await allMembers()).filter((m) => m.groupId === id);
+    for (const m of affected) {
+        await ddb.send(new UpdateCommand({ TableName: ENV.members, Key: { memberId: m.memberId },
+            UpdateExpression: "REMOVE groupId SET updatedAt = :now", ExpressionAttributeValues: { ":now": nowIso() } }));
+    }
+    await ddb.send(new DeleteCommand({ TableName: ENV.groups, Key: { groupId: id } }));
+    return respond(200, { deleted: id, membersUpdated: affected.length });
+}
+
+/* ================================================================== */
+/* Board: Alliance board members                                         */
+/* ================================================================== */
+
+/* Which Cognito accounts can actually sign in, so the board list can show
+   who has website access and who does not. Read-only; adding and removing
+   logins stays a deliberate command-line act. */
+async function boardLogins() {
+    if (!ENV.userPoolId) return [];
+    try {
+        const { CognitoIdentityProviderClient, ListUsersInGroupCommand } = await import("@aws-sdk/client-cognito-identity-provider");
+        const c = new CognitoIdentityProviderClient({});
+        const r = await c.send(new ListUsersInGroupCommand({ UserPoolId: ENV.userPoolId, GroupName: "board", Limit: 60 }));
+        return (r.Users || []).map((u) => (u.Attributes || []).find((a) => a.Name === "email")?.Value).filter(Boolean).map((e) => e.toLowerCase());
+    } catch (e) {
+        console.error("could not list logins:", e.message);
+        return [];
+    }
+}
+
+function validatePerson(b) {
+    const status = str(b.status, "Status", 20, true);
+    if (!BOARD_STATUSES.has(status)) throw new ValidationError("Status must be current or past.");
+    const out = {
+        name: str(b.name, "Name", LIMITS.personName, true),
+        role: str(b.role, "Role", LIMITS.role) || undefined,
+        status,
+        email: b.email ? email(b.email) : undefined,
+        phone: b.phone ? phone(b.phone) : undefined,
+        groupId: (function () { const g = str(b.groupId, "Firewise group", 40); return g && isId(g) ? g : undefined; })(),
+        termStart: b.termStart ? isoDate(b.termStart, "Term start") : undefined,
+        termEnd: b.termEnd ? isoDate(b.termEnd, "Term end") : undefined,
+        notes: str(b.notes, "Notes", LIMITS.notes) || undefined,
+    };
+    if (out.termStart && out.termEnd && Date.parse(out.termEnd) <= Date.parse(out.termStart)) {
+        throw new ValidationError("Term end must be after term start.");
+    }
+    if (out.status === "past" && !out.termEnd) throw new ValidationError("A past board member needs a term end date.");
+    return out;
+}
+
+async function savePerson(id, b, who) {
+    const v = validatePerson(b);
+    const now = nowIso();
+    let existing = null;
+    if (id) {
+        if (!isId(id)) return respond(404, { error: "That person is no longer on the board list." });
+        existing = (await ddb.send(new GetCommand({ TableName: ENV.board, Key: { personId: id } }))).Item;
+        if (!existing) return respond(404, { error: "That person is no longer on the board list." });
+    }
+    const p = {
+        personId: id || newId(), ...v,
+        createdAt: existing?.createdAt || now, createdBy: existing?.createdBy || who,
+        updatedAt: now, updatedBy: who,
+    };
+    for (const k of Object.keys(p)) if (p[k] === undefined) delete p[k];
+    await ddb.send(new PutCommand({ TableName: ENV.board, Item: p }));
+    return respond(200, { person: p });
+}
+
+/* Removing a board record does not touch their website login — those are
+   separate on purpose, and revoking access is a Cognito action. The
+   response says so, so nobody assumes deleting here locked someone out. */
+async function deletePerson(id) {
+    if (!isId(id)) return respond(404, { error: "That person is no longer on the board list." });
+    const p = (await ddb.send(new GetCommand({ TableName: ENV.board, Key: { personId: id } }))).Item;
+    if (!p) return respond(404, { error: "That person is no longer on the board list." });
+    await ddb.send(new DeleteCommand({ TableName: ENV.board, Key: { personId: id } }));
+    const logins = await boardLogins();
+    const stillHasLogin = p.email && logins.includes(p.email);
+    return respond(200, { deleted: id, stillHasLogin,
+        message: stillHasLogin
+            ? "Removed from the board list. They can still sign in to edit the site — removing that is a separate step."
+            : "Removed from the board list." });
 }
 
 /* ================================================================== */
