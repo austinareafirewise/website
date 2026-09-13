@@ -10,6 +10,49 @@
     }
 
     /* ---------------------------------------------------------------
+       External links open in a new tab.
+
+       The target attribute is in the markup, so it works without this
+       script. What this adds is the announcement: opening a new tab
+       without warning is a WCAG 3.2.2 failure, and sighted visitors get
+       the arrow from the .ext class while screen-reader users get nothing
+       from a CSS ::after.
+
+       Done here rather than in each of the fifty-odd links, so a link
+       added later inherits it without anyone remembering to. The guard
+       matters: content.js already appends this text to the link button it
+       builds, and running twice would announce it twice.
+       --------------------------------------------------------------- */
+
+    function announceNewTab(root) {
+        var links = (root || document).querySelectorAll('a[target="_blank"]');
+        for (var i = 0; i < links.length; i++) {
+            var a = links[i];
+            if (a.getAttribute("data-newtab-noted")) continue;
+            if (a.querySelector(".sr-only")) { a.setAttribute("data-newtab-noted", "1"); continue; }
+            var note = document.createElement("span");
+            note.className = "sr-only";
+            note.textContent = " (opens in a new tab)";
+            a.appendChild(note);
+            a.setAttribute("data-newtab-noted", "1");
+        }
+    }
+
+    announceNewTab(document);
+
+    /* Board-published content arrives after this script runs, so re-run
+       when the slots it fills change. */
+    if (window.MutationObserver) {
+        ["notice-slot", "home-news", "news-root"].forEach(function (id) {
+            var slot = document.getElementById(id);
+            if (slot) {
+                new MutationObserver(function () { announceNewTab(slot); })
+                    .observe(slot, { childList: true, subtree: true });
+            }
+        });
+    }
+
+    /* ---------------------------------------------------------------
        Text size control.
 
        Sets --text-scale on <html>; the stylesheet multiplies the root

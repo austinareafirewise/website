@@ -186,7 +186,8 @@
             target: "_blank", rel: "noopener",
             text: item.linkText || "More information"
         });
-        a.appendChild(el("span", { class: "sr-only", text: " (opens in a new tab)" }));
+        /* The "(opens in a new tab)" note is added by site.js, which does it
+           for every target="_blank" link on the page including these. */
         return el("p", { class: "content-link" }, [a]);
     }
 
