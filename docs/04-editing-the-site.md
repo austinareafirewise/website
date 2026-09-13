@@ -99,13 +99,31 @@ end.
 On a phone every picture goes full width whatever you chose, because a picture
 and two words of text side by side is worse than either on its own.
 
+If the photo is on its side, **Turn left** or **Turn right** above the frame
+rotates it a quarter turn at a time. The frame goes back to the middle after
+each turn.
+
 The picture is saved straight away. Under each picture you can change **Where
-it sits** at any time, or click **Remove** to take it out; either way, save or
-publish afterwards to keep the change.
+it sits** at any time, use **Rotate / re-crop** to turn or re-frame one that is
+already there — it keeps its description, credit and position — or click
+**Remove** to take it out; either way, save or publish afterwards to keep the
+change.
 
 Only the cropped part is kept, and it is re-made on your computer before it
 is sent, which also removes the location and camera information phones hide
 inside photos.
+
+---
+
+## Help, on the screen
+
+Every section has its own help. The **? Help** button at the right-hand end of
+the section tabs opens the help for whichever section you are in, and once it
+is open you can switch to any other topic — including **How the site works**,
+which is worth ten minutes once.
+
+Beside the Markdown checkbox there is a **What is Markdown?** button. Hover
+over it or click it and it shows what to type next to what visitors will see.
 
 ---
 

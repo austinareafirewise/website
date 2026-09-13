@@ -41,6 +41,11 @@
             <button type="button" class="tab" data-section="comms">Messages</button>
             <button type="button" class="tab" data-section="groups">Firewise groups</button>
             <button type="button" class="tab" data-section="board">Board</button>
+            <!-- Help for whichever section is showing. Reads the selected tab
+                 when it opens, so it never needs telling which one that is. -->
+            <button type="button" class="tab help-tab" id="help-open" aria-haspopup="dialog">
+                <span class="help-mark" aria-hidden="true">?</span> Help
+            </button>
         </div>
     </nav>
 
@@ -104,11 +109,14 @@
                 <div class="field field-check" id="wrap-markdown">
                     <label><input type="checkbox" id="f-markdown"> Text uses Markdown</label>
                     <p class="hint">
-                        For people who know it: <code>## Heading</code>, <code>**bold**</code>,
-                        <code>*italic*</code>, <code>- bullet</code>, <code>1. numbered</code>,
-                        <code>&gt; quote</code>, <code>[label](https://…)</code>. Anything else shows
-                        as typed. Leave this off if unsure.
+                        Markdown is a way of typing headings, <strong>bold</strong> and bullet
+                        points using ordinary punctuation. Leave this off and your text appears
+                        exactly as you typed it.
+                        <button type="button" class="pill" id="md-help" aria-expanded="false"
+                            aria-controls="md-popover">What is Markdown?</button>
                     </p>
+                    <!-- Filled from the help text below, on hover or on click. -->
+                    <div class="popover" id="md-popover" role="group" aria-label="Markdown examples" hidden></div>
                 </div>
 
                 <div class="admin-two">
@@ -225,12 +233,34 @@
         </div>
     </div>
 
+    <!-- Help. One dialog; the text for every section lives in #help-source
+         below and is copied in when it opens. Written as markup rather than
+         built in JavaScript so it can be edited by anyone who can edit a web
+         page, and so it can carry real headings, lists and examples. -->
+    <div class="modal" id="help-modal" hidden role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <div class="modal-box">
+            <h2 id="help-title">Help</h2>
+            <!-- Every topic, so somebody who opened the help for one section
+                 can read another without closing it and switching tabs. -->
+            <div class="help-topics" id="help-topics" role="group" aria-label="Help topics"></div>
+            <div class="help-body" id="help-body"></div>
+            <div class="admin-buttons">
+                <button type="button" class="btn btn-primary" id="help-close">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Cropper -->
     <div class="modal" id="crop-modal" hidden role="dialog" aria-modal="true" aria-labelledby="crop-title">
         <div class="modal-box">
             <h2 id="crop-title">Choose what shows</h2>
             <p class="hint">Drag the frame to move it. Drag the corner to resize. The frame keeps the same shape as every other picture on the site.</p>
             <div class="crop-stage"><canvas id="crop-canvas"></canvas></div>
+            <div class="crop-tools">
+                <button type="button" class="btn btn-outline btn-small" id="crop-left">↺ Turn left</button>
+                <button type="button" class="btn btn-outline btn-small" id="crop-right">↻ Turn right</button>
+                <span class="hint">Use these if the photo came out on its side. Each press is a quarter turn.</span>
+            </div>
             <div class="admin-two">
                 <div class="field">
                     <label for="p-alt">What is in the picture <span class="req">(required, for people who cannot see it)</span></label>
@@ -269,6 +299,480 @@
             </div>
             <iframe id="preview-frame" title="Site preview"></iframe>
         </div>
+    </div>
+
+
+    <!-- ==============================================================
+         Help text. Hidden; copied into the dialog (or the Markdown
+         popover) when it is asked for. data-help matches the nav tab's
+         data-section, so the "?" needs no lookup table.
+         ============================================================== -->
+    <div id="help-source" hidden>
+
+        <section data-help="content" data-title="News &amp; notices">
+            <p class="help-lede">
+                This is where everything a visitor reads on the website comes from:
+                the meeting notice at the top of the home page, and the news articles.
+            </p>
+
+            <h3>The two kinds</h3>
+            <ul>
+                <li><strong>Meeting notice</strong> — a short band across the top of the home
+                    page, above the big headline. For a meeting, a chipper day, a seminar:
+                    something happening on a date. Keep it to a few sentences.</li>
+                <li><strong>News article</strong> — a full page of its own on the News page,
+                    with room for pictures. Tick <em>Show the title in the News section on the
+                    home page</em> and the headline also appears on the home page.</li>
+            </ul>
+
+            <h3>Draft, Preview, Publish</h3>
+            <ol>
+                <li><strong>Save as draft</strong> keeps your work. Visitors never see a draft.
+                    A draft can be unfinished — no title yet, no dates yet, nothing but a
+                    picture you wanted to keep. Save it and come back.</li>
+                <li><strong>Preview</strong> opens the real page with your item in place, exactly
+                    as a visitor would see it. Use it every time.</li>
+                <li><strong>Publish</strong> puts it on the site. This is the step that insists on
+                    a title, some text and both dates.</li>
+            </ol>
+            <p>
+                <strong>Take off the site</strong> turns a published item back into a draft —
+                it is not deleted. <strong>Delete</strong> removes it for good, and asks first.
+                <strong>Duplicate</strong> makes a copy to start the next one from, which is the
+                easy way to do a monthly meeting notice.
+            </p>
+
+            <h3>Show from, Show until</h3>
+            <p>
+                Both are required to publish, and both are Central time. The item appears on the
+                site at the first time and disappears at the second, on its own — nobody has to
+                remember to take it down. A published item whose start time has not arrived shows
+                in the list as <em>Scheduled</em>.
+            </p>
+            <p class="help-note">
+                Allow up to a minute for a change to reach the public site.
+            </p>
+
+            <h3>Pictures</h3>
+            <p>
+                News articles take up to three. Drop one on the dotted box, drag the frame to
+                choose what shows, and say what is in the picture — that sentence is what someone
+                using a screen reader hears instead of seeing it, so it is required.
+            </p>
+            <p>
+                Each picture sits either <strong>across the whole width</strong> or
+                <strong>beside the text</strong>, left or right, with the writing flowing round
+                it. Pictures are spread down the article in the order you add them: the first
+                above the first paragraph, the next a couple of paragraphs below. You can change
+                where one sits at any time from its card — no need to upload it again. On a phone
+                every picture goes full width, because a picture and two words beside it is worse
+                than either alone.
+            </p>
+            <p>
+                If a photo comes out on its side, use <strong>Turn left</strong> or <strong>Turn
+                right</strong> above the frame — each press is a quarter turn, and the frame goes
+                back to the middle afterwards. A picture already on the article can be turned too:
+                use <strong>Rotate / re-crop</strong> on its card and it is replaced where it
+                stands, keeping its description, credit and position.
+            </p>
+            <p>
+                Only the cropped part is kept, and it is re-made on your own computer before it is
+                sent, which strips the location and camera information phones hide inside photos.
+            </p>
+
+            <h3>Link to another website</h3>
+            <p>
+                Optional. Adds a button under the text — registration, an agency notice, a map.
+                It must start with <code>https://</code>, and it opens in a new tab so the visitor
+                still has our site behind them.
+            </p>
+
+            <h3>Markdown</h3>
+            <p>
+                Leave the Markdown box unticked and your text appears exactly as you typed it,
+                with a new paragraph wherever you left a blank line. That is enough for most
+                notices. Tick it if you want headings, bold or bullet points — the
+                <em>What is Markdown?</em> button beside the box shows how.
+            </p>
+        </section>
+
+        <section data-help="members" data-title="Members">
+            <p class="help-lede">
+                Everyone who asked to hear from us: from the sign-up form on the home page, or
+                added here by hand.
+            </p>
+
+            <h3>How somebody joins</h3>
+            <p>
+                Filling in the form is not enough on its own. We send one message asking them to
+                confirm, and nothing else is ever sent until they do. That is a legal requirement
+                for email and for texts, and it is also what keeps our messages out of spam
+                folders. Somebody who signed up but has not confirmed shows as
+                <strong>Pending</strong>; if they never confirm, their record is deleted
+                automatically after a week.
+            </p>
+
+            <h3>What the statuses mean</h3>
+            <ul>
+                <li><strong>Confirmed</strong> — they answered the confirmation. They receive
+                    messages.</li>
+                <li><strong>Pending</strong> — signed up, has not confirmed yet. They receive
+                    nothing. Use <strong>Resend</strong> if they say it never arrived, and tell
+                    them to look in their spam folder.</li>
+                <li><strong>Unsubscribed</strong> — they asked to stop, or replied STOP to a text.
+                    Their record is kept on purpose, so that a later form submission cannot quietly
+                    put them back on the list.</li>
+                <li><strong>Bounced</strong> — the address does not exist, or rejected us
+                    permanently. Nothing more is sent there. Continuing to mail addresses that
+                    bounce is what gets a whole domain blocked.</li>
+            </ul>
+
+            <h3>Adding someone by hand</h3>
+            <p>
+                Only for somebody who actually asked — a paper sign-up sheet at a meeting, or a
+                request in person. The form makes you write down <strong>how consent was
+                obtained</strong>, and that sentence is stored with their record as the evidence.
+                They still get the confirmation message; nobody can be marked confirmed by hand.
+            </p>
+            <p class="help-note">
+                Never add an address from a directory, a neighbourhood list, or another
+                organisation's roster. That is what the law calls an imported list, and one
+                complaint from it can cost us the ability to send anything at all.
+            </p>
+
+            <h3>Unsubscribe, or delete?</h3>
+            <p>
+                <strong>Unsubscribe</strong> when they ask to stop hearing from us: messages stop
+                immediately and the record stays, so they cannot be re-added by accident.
+                <strong>Delete</strong> only when they ask to be erased entirely — it removes the
+                record and the consent evidence with it.
+            </p>
+
+            <h3>The other buttons</h3>
+            <p>
+                <strong>Search</strong> matches name, email, phone and neighbourhood.
+                <strong>Download CSV</strong> gives you the whole list as a spreadsheet — it is
+                personal information, so keep it off shared drives and delete your copy when you
+                are done with it.
+            </p>
+        </section>
+
+        <section data-help="comms" data-title="Messages">
+            <p class="help-lede">
+                Email and text messages to the membership. Nothing here is sent by one person
+                alone: somebody writes it, somebody else approves it, and only then can it go.
+            </p>
+
+            <h3>The order things happen</h3>
+            <ol>
+                <li><strong>Draft</strong> — write it. Only you see it. Edit it as often as you
+                    like.</li>
+                <li><strong>Send me a test</strong> — sends the real message to you alone. Do this
+                    before every submission. It is the only way to see what it actually looks like
+                    on a phone.</li>
+                <li><strong>Submit for review</strong> — hands it to the rest of the board. You can
+                    still <strong>Withdraw</strong> it.</li>
+                <li><strong>Approve</strong> — done by a different board member. You cannot approve
+                    your own message; the button is not there for the person who wrote it. Anyone
+                    else can <strong>Request changes</strong> instead, with a note, which sends it
+                    back as a draft.</li>
+                <li><strong>Send now</strong> — the last step, and it asks first.</li>
+            </ol>
+            <p class="help-note">
+                A message that has gone out cannot be recalled, corrected or deleted. Read it once
+                more before pressing Send.
+            </p>
+
+            <h3>Who it goes to</h3>
+            <p>
+                <strong>Email subscribers</strong>, <strong>text subscribers</strong>, or
+                <strong>everyone</strong>. People chose which when they signed up, so someone who
+                only wanted email never gets a text. Unconfirmed, unsubscribed and bounced people
+                are skipped automatically.
+            </p>
+
+            <h3>Writing it</h3>
+            <ul>
+                <li><strong>Name</strong> is for your own list. It is never sent.</li>
+                <li><strong>Email subject</strong> and <strong>Email message</strong> — the message
+                    accepts Markdown. The unsubscribe link and our postal address are added for
+                    you; both are required by law and neither can be removed.</li>
+                <li><strong>Text message</strong> — short. "Reply STOP to stop" is added for you.
+                    Watch the count shown beside the box: a long text is billed and delivered as
+                    several, and links and emoji eat the allowance fast.</li>
+                <li><strong>Send at</strong> — leave it blank to send when approved, or set a time.
+                    Texts should land between 8am and 9pm; outside those hours is both rude and
+                    against the rules.</li>
+            </ul>
+
+            <h3>Afterwards</h3>
+            <p>
+                A sent message stays in the list with the date it went and who approved it.
+                <strong>Duplicate</strong> starts a new draft from it, which is how to do a
+                recurring reminder without retyping it.
+            </p>
+        </section>
+
+        <section data-help="groups" data-title="Firewise groups">
+            <p class="help-lede">
+                The neighbourhood groups the Alliance works with. This list is also the dropdown
+                people choose from on the public sign-up form, so what you write here is read by
+                residents.
+            </p>
+
+            <h3>Status, and what it changes</h3>
+            <ul>
+                <li><strong>Prospective</strong> — interested, nothing started yet.</li>
+                <li><strong>In progress</strong> — working towards recognition.</li>
+                <li><strong>Recognized Firewise USA site</strong> — recognised, and current. Put the
+                    year in; it is required for this status.</li>
+                <li><strong>Lapsed</strong> — was recognised, the renewal is overdue.</li>
+                <li><strong>Inactive</strong> — hides the group from the sign-up form. Use this
+                    rather than deleting a group that no longer meets: deleting loses its history.</li>
+            </ul>
+
+            <h3>Filling it in</h3>
+            <p>
+                <strong>Area it covers</strong> should read the way a resident would describe where
+                they live — streets, a subdivision, "everything north of the creek" — not a formal
+                boundary. That is the line somebody uses to work out whether the group is theirs.
+                <strong>ZIP codes</strong> are comma separated. <strong>Households</strong> is the
+                number the group counts for its Firewise paperwork.
+            </p>
+
+            <h3>Leadership</h3>
+            <p>
+                Add the people who actually run the group, with a role and a way to reach them.
+                This is the Alliance's own record of who to call, not a public directory — nothing
+                in the group record is shown on the website except the group's name in the sign-up
+                dropdown.
+            </p>
+
+            <h3>Renewal due</h3>
+            <p>
+                Firewise USA recognition has to be renewed. Put the date here so the board can see
+                what is coming; a group that goes past it should be moved to <strong>Lapsed</strong>
+                until it is renewed.
+            </p>
+
+            <h3>Deleting a group</h3>
+            <p>
+                People who chose that group when they signed up are not deleted with it — their
+                records are kept and simply lose the group. The dialog tells you how many were
+                affected.
+            </p>
+        </section>
+
+        <section data-help="board" data-title="Board">
+            <p class="help-lede">
+                Who is on the board of the Alliance, with roles and terms. This is the
+                organisation's own record.
+            </p>
+
+            <h3>A board record is not a login</h3>
+            <p>
+                These two things are deliberately separate. Adding somebody here does
+                <strong>not</strong> let them edit the website, and removing them does
+                <strong>not</strong> take that away. Website access is granted and removed
+                separately, by whoever manages the AWS account, so that the roster can be kept
+                accurate by anyone without accidentally handing out or cutting off access.
+            </p>
+            <p class="help-note">
+                When somebody leaves the board, do both: set them to <strong>Past board
+                member</strong> here, and ask whoever manages the account to remove their login.
+            </p>
+
+            <h3>Current and past</h3>
+            <p>
+                Set <strong>Past board member</strong> rather than deleting somebody who has served
+                — the record of who held which office and when is worth keeping, and a past member
+                needs an end date. Delete only a record that should never have existed, such as a
+                duplicate.
+            </p>
+
+            <h3>The other fields</h3>
+            <p>
+                <strong>Role</strong> is free text — chair, treasurer, secretary, member at large.
+                <strong>Their Firewise group</strong> is optional and only records which
+                neighbourhood group they belong to, if any; it does not give them anything.
+                Email and phone are for the board's own use and are not published.
+            </p>
+        </section>
+
+
+        <section data-help="how" data-title="How the site works">
+            <p class="help-lede">
+                Worth ten minutes once. Most questions about "why did it do that" are answered by
+                knowing these few things.
+            </p>
+
+            <h3>Two separate halves</h3>
+            <p>
+                Editing and reading are deliberately kept apart. What you do here goes through a
+                sign-in, an API and a database. The public website does none of that — it reads a
+                single file of already-published content and some pictures, and nothing else.
+            </p>
+            <p>
+                That is the reason the site stays up. If this admin area is broken, offline, or
+                being attacked, visitors see no difference at all: the site keeps serving whatever
+                was last published. On a page people may open during an actual fire, having no
+                moving parts on the public side is the property that matters most.
+            </p>
+
+            <h3>What "published" actually does</h3>
+            <p>
+                Pressing Publish rewrites one file that the public site reads. It contains every
+                published item whose stop date has not yet passed — including ones scheduled for
+                next month. Your browser shows only the ones whose window includes right now, which
+                is why a notice scheduled for next Tuesday appears on Tuesday without anybody doing
+                anything. No timer runs anywhere.
+            </p>
+            <p class="help-note">
+                Because scheduled items sit in that public file early, somebody determined enough
+                could read next week's notice a week early. For meetings and chipper days that is
+                harmless. It does mean <strong>nothing confidential should ever be typed into this
+                system</strong> — not a member's private circumstances, not an address someone
+                wants kept quiet, not anything about an incident. If something must be held back,
+                leave it as a draft: drafts are never in the public file.
+            </p>
+
+            <h3>The four states an item can be in</h3>
+            <ul>
+                <li><strong>Draft</strong> — saved, never public. Can be previewed.</li>
+                <li><strong>Scheduled</strong> — published, start date still to come. It appears on
+                    its own.</li>
+                <li><strong>Live</strong> — published and inside its window. On the site now.</li>
+                <li><strong>Ended</strong> — stop date passed. Hidden from visitors, kept for the
+                    record. Delete it when you no longer want it in the list.</li>
+            </ul>
+            <p>
+                Drafts and ended items sit greyed at the bottom of the list. Anything not live is
+                labelled as such, on purpose.
+            </p>
+
+            <h3>Why a change takes a minute</h3>
+            <p>
+                The published file is cached for about a minute so the site stays fast. A change can
+                take that long to show up for visitors, and refreshing your own browser harder will
+                not hurry it. Preview does not go through the cache, so it is always current.
+            </p>
+
+            <h3>Where each thing appears</h3>
+            <ul>
+                <li><strong>Meeting notices</strong> — a green band at the top of the home page,
+                    above the headline. Several active notices stack, newest first. Green rather
+                    than orange because on this site orange means alert, and a meeting is not
+                    one.</li>
+                <li><strong>Home News section</strong> — titles only, under the headline, for
+                    articles ticked <em>Show on home page</em>. It exists to draw attention, not to
+                    be the news.</li>
+                <li><strong>News page</strong> — every live article, and a page of its own for each
+                    one with a shareable web address.</li>
+            </ul>
+
+            <h3>What happens to a picture</h3>
+            <p>
+                Cropping happens on your own computer, before anything is sent. What leaves your
+                machine is the cropped result at two sizes; the original file never does. That has a
+                side effect worth knowing: re-making the picture <strong>strips the hidden
+                information phones bury in photos, including GPS coordinates</strong>. A board
+                member's photo of a chipper day will not publish the location of their driveway.
+            </p>
+
+            <h3>Why there is no formatting toolbar</h3>
+            <p>
+                Everything typed here reaches the website as text, never as page code. That is a
+                deliberate wall: it means an editor account in the wrong hands still cannot put
+                anything harmful into the site. Markdown does not change it — the website reads the
+                punctuation itself and builds the headings and lists, and anything it does not
+                recognise is shown exactly as typed. It is also why a meeting notice stays plain.
+            </p>
+
+            <h3>If something looks wrong</h3>
+            <ul>
+                <li><strong>A change has not appeared</strong> — give it a minute, then check the
+                    item is <em>Live</em> and not <em>Draft</em> or <em>Scheduled</em>.</li>
+                <li><strong>An item vanished from the site</strong> — its stop date almost certainly
+                    passed. It is still in the list, under Ended.</li>
+                <li><strong>Signed in but nothing works</strong> — sign out and back in; the
+                    sign-in expires after a while.</li>
+                <li><strong>An error you cannot get past</strong> — nothing is changed when a save
+                    fails, so it is safe to leave it and ask for help.</li>
+            </ul>
+        </section>
+
+        <!-- Shown in the popover beside the Markdown checkbox, and available in
+             the dialog as well. The right-hand column is the real thing: what is
+             drawn there is what the website draws. -->
+        <section data-help="markdown" data-title="Markdown — what to type">
+            <p class="help-lede">
+                Markdown is a way of typing headings, bold text and bullet points using ordinary
+                punctuation, instead of a toolbar. Tick the box, type the left-hand column, and the
+                website shows the right-hand column.
+            </p>
+
+            <div class="md-table">
+                <div class="md-row md-head"><div>You type</div><div>Visitors see</div></div>
+
+                <div class="md-row">
+                    <div><code>## Chipper day</code></div>
+                    <div><span class="md-h2">Chipper day</span></div>
+                </div>
+                <div class="md-row">
+                    <div><code>### Saturday</code></div>
+                    <div><span class="md-h3">Saturday</span></div>
+                </div>
+                <div class="md-row">
+                    <div><code>**Bring gloves**</code></div>
+                    <div><strong>Bring gloves</strong></div>
+                </div>
+                <div class="md-row">
+                    <div><code>*before nine*</code></div>
+                    <div><em>before nine</em></div>
+                </div>
+                <div class="md-row">
+                    <div>
+                        <code>- Cedar</code><br>
+                        <code>- Oak limbs</code>
+                    </div>
+                    <div><ul class="md-demo"><li>Cedar</li><li>Oak limbs</li></ul></div>
+                </div>
+                <div class="md-row">
+                    <div>
+                        <code>1. Clear the gutters</code><br>
+                        <code>2. Move the woodpile</code>
+                    </div>
+                    <div><ol class="md-demo"><li>Clear the gutters</li><li>Move the woodpile</li></ol></div>
+                </div>
+                <div class="md-row">
+                    <div><code>&gt; Burn bans change fast.</code></div>
+                    <div><blockquote class="md-demo">Burn bans change fast.</blockquote></div>
+                </div>
+                <div class="md-row">
+                    <div><code>[the county page](https://www.traviscountytx.gov/)</code></div>
+                    <div><a href="https://www.traviscountytx.gov/" target="_blank" rel="noopener">the county page</a></div>
+                </div>
+            </div>
+
+            <h3>Things worth knowing</h3>
+            <ul>
+                <li>Leave a <strong>blank line between paragraphs</strong>. One line break on its
+                    own does nothing — this is the mistake everybody makes first.</li>
+                <li>The <code>#</code> and <code>-</code> must be at the <strong>start of the
+                    line</strong>, with a space after them.</li>
+                <li>Links must start with <code>https://</code>. Anything else is left as plain
+                    text.</li>
+                <li>Anything the website does not recognise is shown exactly as you typed it. A
+                    stray asterisk is a stray asterisk, not an error.</li>
+                <li>Untick the box and the whole lot appears literally, punctuation and all. If
+                    the article is plain sentences, leave it unticked.</li>
+            </ul>
+
+            <p class="help-note">
+                Use <strong>Preview</strong> before publishing. It shows the real page, and it is
+                quicker than wondering.
+            </p>
+        </section>
     </div>
 
     <script src="../js/config.js"></script>

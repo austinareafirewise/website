@@ -178,6 +178,139 @@
         if (e.key === "Escape" && !$("notice-modal").hidden) closeNotice();
     });
 
+    /* ============================================================ */
+    /* Help                                                          */
+    /*                                                               */
+    /* One dialog, and a small popover for the Markdown pill. Both    */
+    /* copy their text out of #help-source, so the help is markup an  */
+    /* editor can read and change rather than strings in here.        */
+    /* ============================================================ */
+
+    function helpBlock(topic) {
+        return document.querySelector('#help-source [data-help="' + topic + '"]');
+    }
+
+    /* The topic buttons, built from whatever is in #help-source. Adding a
+       topic to the markup is enough; nothing here needs to know about it. */
+    function renderHelpTopics(current) {
+        var row = $("help-topics");
+        row.textContent = "";
+        Array.prototype.forEach.call(document.querySelectorAll("#help-source [data-help]"), function (sec) {
+            var topic = sec.getAttribute("data-help");
+            var b = node("button", {
+                type: "button",
+                class: "help-topic" + (topic === current ? " on" : ""),
+                text: sec.getAttribute("data-title") || topic
+            });
+            if (topic === current) b.setAttribute("aria-current", "true");
+            b.addEventListener("click", function () { showHelp(topic); });
+            row.appendChild(b);
+        });
+    }
+
+    function showHelp(topic) {
+        var src = helpBlock(topic);
+        if (!src) return;
+        $("help-title").textContent = src.getAttribute("data-title") || "Help";
+        renderHelpTopics(topic);
+        var body = $("help-body");
+        body.textContent = "";
+        body.appendChild(src.cloneNode(true));
+        body.scrollTop = 0;
+    }
+
+    var helpReturn = null;
+    function openHelp(topic) {
+        if (!helpBlock(topic)) return;
+        helpReturn = document.activeElement;
+        showHelp(topic);
+        $("help-modal").hidden = false;
+        $("help-close").focus();
+    }
+
+    function closeHelp() {
+        $("help-modal").hidden = true;
+        $("help-body").textContent = "";
+        $("help-topics").textContent = "";
+        if (helpReturn && helpReturn.focus) { try { helpReturn.focus(); } catch (e) { /* gone */ } }
+        helpReturn = null;
+    }
+
+    /* Which section the "?" is about: whichever tab is current. Asking the
+       DOM rather than tracking it here keeps this working no matter which
+       file changed the section last. */
+    function currentSection() {
+        var tab = document.querySelector('.admin-nav .tab[aria-current="page"]');
+        return tab ? tab.getAttribute("data-section") : "content";
+    }
+
+    $("help-open").addEventListener("click", function () { openHelp(currentSection()); });
+    $("help-close").addEventListener("click", closeHelp);
+    $("help-modal").addEventListener("click", function (e) {
+        // The backdrop, not the box.
+        if (e.target === $("help-modal")) closeHelp();
+    });
+
+    /* The Markdown pill. Hovering opens it, moving away closes it again —
+       unless it was opened with a click or the keyboard, in which case it
+       stays until it is dismissed. Somebody reading an example should not
+       lose it because the mouse drifted. */
+    /* Two timers, not one: opening is delayed so a mouse crossing the pill on
+       its way somewhere else does not flash the panel, and closing is delayed
+       so the mouse can travel from the pill to the panel without it vanishing
+       on the way. One shared timer meant the pill's own handlers cancelled
+       each other. */
+    var mdPinned = false, mdOpenTimer = null, mdCloseTimer = null;
+
+    function mdFill() {
+        var pop = $("md-popover");
+        if (pop.firstChild) return;
+        var src = helpBlock("markdown");
+        if (src) pop.appendChild(src.cloneNode(true));
+    }
+    function mdOpen(pin) {
+        mdFill();
+        if (pin) mdPinned = true;
+        $("md-popover").hidden = false;
+        $("md-help").setAttribute("aria-expanded", "true");
+    }
+    function mdClose() {
+        mdPinned = false;
+        clearTimeout(mdOpenTimer); clearTimeout(mdCloseTimer);
+        $("md-popover").hidden = true;
+        $("md-help").setAttribute("aria-expanded", "false");
+    }
+
+    (function wireMarkdownHelp() {
+        var pill = $("md-help"), pop = $("md-popover");
+
+        pill.addEventListener("click", function () {
+            if (mdPinned) mdClose(); else mdOpen(true);
+        });
+        // Focus opens it too, so the keyboard gets what the mouse gets.
+        pill.addEventListener("focus", function () { mdOpen(false); });
+
+        [pill, pop].forEach(function (n) {
+            n.addEventListener("mouseenter", function () {
+                clearTimeout(mdCloseTimer);
+                if ($("md-popover").hidden) mdOpenTimer = setTimeout(function () { mdOpen(false); }, 250);
+            });
+            n.addEventListener("mouseleave", function () {
+                clearTimeout(mdOpenTimer);
+                if (mdPinned) return;
+                mdCloseTimer = setTimeout(function () {
+                    if (!mdPinned && !pop.contains(document.activeElement) && document.activeElement !== pill) mdClose();
+                }, 250);
+            });
+        });
+    })();
+
+    document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape") return;
+        if (!$("help-modal").hidden) { closeHelp(); return; }
+        if (!$("md-popover").hidden) { mdClose(); $("md-help").focus(); }
+    });
+
     function msg(kind, text, el) {
         var box = el || $("msg");
         box.className = "form-status show " + kind;
@@ -519,15 +652,34 @@
                     p.credit || "No credit line",
                     layoutPicker(p, i)
                 ]),
-                node("div", { class: "pic-actions" }, [node("button", { type: "button", class: "btn btn-outline btn-small", text: "Remove" })])
+                node("div", { class: "pic-actions" }, [
+                    node("button", { type: "button", class: "btn btn-outline btn-small", "data-act": "rotate", text: "Rotate / re-crop" }),
+                    node("button", { type: "button", class: "btn btn-outline btn-small", "data-act": "remove", text: "Remove" })
+                ])
             ]);
-            card.querySelector("button").addEventListener("click", function () {
+            card.querySelector('[data-act="rotate"]').addEventListener("click", function () { recrop(i); });
+            card.querySelector('[data-act="remove"]').addEventListener("click", function () {
                 current.pictures.splice(i, 1); dirty = true; renderPictures(); updateStatusLine();
                 msg("warn", "Picture removed from this article. Save or Publish to make that stick.");
             });
             root.appendChild(card);
         });
         $("dropzone").hidden = pics.length >= LIMITS.pictures;
+    }
+
+    /* Rotate or re-crop a picture that is already on the article: load it back
+       out of the content bucket and hand it to the same cropper. The bucket
+       allows this page's origin to read it, so the canvas stays clean and can
+       still produce a file. */
+    function recrop(i) {
+        var p = (current.pictures || [])[i];
+        if (!p) return;
+        msg("info", "Opening the picture…");
+        var img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = function () { clearMsg(); openCropper(img, i); };
+        img.onerror = function () { msg("err", "That picture could not be opened for editing. Remove it and add it again."); };
+        img.src = cfg.contentBase.replace(/\/$/, "") + "/" + p.key;
     }
 
     function pickFile(file) {
@@ -546,26 +698,71 @@
 
     var crop = null;
 
-    function openCropper(img) {
-        var canvas = $("crop-canvas"), stage = canvas.parentNode;
-        var maxW = Math.min(720, stage.clientWidth || 720);
-        var scale = Math.min(1, maxW / img.naturalWidth, 480 / img.naturalHeight);
-        canvas.width = Math.round(img.naturalWidth * scale);
-        canvas.height = Math.round(img.naturalHeight * scale);
+    /* replaceIndex: the picture being re-cropped or rotated, or null for a new
+       one. Rotation works on a copy of the source rather than on the crop
+       maths, so everything downstream -- the frame, the preview, the encoder
+       -- carries on as if the photo had arrived the right way up. */
+    function openCropper(img, replaceIndex) {
+        var existing = replaceIndex == null ? null : current.pictures[replaceIndex];
+        crop = { src: img, img: img, rotation: 0, replace: replaceIndex == null ? null : replaceIndex,
+                 scale: 1, x: 0, y: 0, w: 0, h: 0, drag: null };
+        layoutCropper();
 
-        // Largest 3:2 frame that fits, centred.
-        var w = canvas.width, h = w / CROP_RATIO;
-        if (h > canvas.height) { h = canvas.height; w = h * CROP_RATIO; }
-        crop = { img: img, scale: scale, x: (canvas.width - w) / 2, y: (canvas.height - h) / 2, w: w, h: h, drag: null };
-
-        $("p-alt").value = ""; $("p-credit").value = "";
+        $("crop-title").textContent = existing ? "Rotate or re-crop" : "Choose what shows";
+        $("crop-ok").textContent = existing ? "Save this picture" : "Add this picture";
+        $("p-alt").value = existing ? existing.alt || "" : "";
+        $("p-credit").value = existing ? existing.credit || "" : "";
         // Second and third pictures default to beside the text: an article
         // with three full-width bands in it is mostly bands.
-        $("p-layout").value = (current.pictures || []).length === 0 ? "full" : "right";
+        $("p-layout").value = existing ? existing.layout || "full"
+            : (current.pictures || []).length === 0 ? "full" : "right";
         clearMsg($("crop-msg"));
         $("crop-modal").hidden = false;
-        drawCrop();
         $("p-alt").focus();
+    }
+
+    /* Size the canvas to whatever crop.img currently is, and put the largest
+       3:2 frame in the middle of it. Called on open and after every turn. */
+    function layoutCropper() {
+        var canvas = $("crop-canvas"), stage = canvas.parentNode;
+        var iw = crop.img.naturalWidth || crop.img.width;
+        var ih = crop.img.naturalHeight || crop.img.height;
+        var maxW = Math.min(720, stage.clientWidth || 720);
+        var scale = Math.min(1, maxW / iw, 480 / ih);
+        canvas.width = Math.round(iw * scale);
+        canvas.height = Math.round(ih * scale);
+
+        var w = canvas.width, h = w / CROP_RATIO;
+        if (h > canvas.height) { h = canvas.height; w = h * CROP_RATIO; }
+        crop.scale = scale;
+        crop.x = (canvas.width - w) / 2;
+        crop.y = (canvas.height - h) / 2;
+        crop.w = w; crop.h = h; crop.drag = null;
+        drawCrop();
+    }
+
+    /* A quarter turn. The frame is reset rather than turned with the picture:
+       after a 90-degree turn the old frame is over a different part of it, and
+       moving it back would be more confusing than starting from the middle. */
+    function rotateCrop(degrees) {
+        if (!crop) return;
+        crop.rotation = (crop.rotation + degrees + 360) % 360;
+        crop.img = crop.rotation === 0 ? crop.src : turned(crop.src, crop.rotation);
+        layoutCropper();
+        msg("info", "Turned a quarter turn. The frame has gone back to the middle.", $("crop-msg"));
+    }
+
+    function turned(img, degrees) {
+        var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+        var sideways = degrees === 90 || degrees === 270;
+        var c = document.createElement("canvas");
+        c.width = sideways ? h : w;
+        c.height = sideways ? w : h;
+        var ctx = c.getContext("2d");
+        ctx.translate(c.width / 2, c.height / 2);
+        ctx.rotate(degrees * Math.PI / 180);
+        ctx.drawImage(img, -w / 2, -h / 2);
+        return c;
     }
 
     function drawCrop() {
@@ -647,13 +844,19 @@
             };
             return Promise.all([put(grant.uploadUrl, full.blob), put(grant.thumbUploadUrl, thumb.blob)]).then(function () {
                 current.pictures = current.pictures || [];
-                current.pictures.push({ key: grant.key, thumbKey: grant.thumbKey, width: full.w, height: full.h, alt: alt, credit: credit, layout: layout });
+                var pic = { key: grant.key, thumbKey: grant.thumbKey, width: full.w, height: full.h, alt: alt, credit: credit, layout: layout };
+                // Re-cropping replaces the picture where it stood, so the
+                // order of the article does not change under the editor. The
+                // old files are cleaned up by the API on save.
+                if (crop.replace != null) current.pictures.splice(crop.replace, 1, pic);
+                else current.pictures.push(pic);
                 return save(current.status === "published" ? "published" : "draft", true);
             });
         }).then(function () {
+            var replaced = crop.replace != null;
             $("crop-modal").hidden = true; crop = null;
             renderPictures(); updateStatusLine();
-            msg("ok", "Picture added and saved.");
+            msg("ok", replaced ? "Picture replaced and saved." : "Picture added and saved.");
         }).catch(function (e) {
             // A picture belongs to an article, so the article is saved as a
             // draft first. A draft accepts an empty form, so that save rarely
@@ -724,6 +927,8 @@
         cc.addEventListener("pointerup", cropUp);
         cc.addEventListener("pointercancel", cropUp);
         $("crop-cancel").addEventListener("click", function () { $("crop-modal").hidden = true; crop = null; });
+        $("crop-left").addEventListener("click", function () { rotateCrop(-90); });
+        $("crop-right").addEventListener("click", function () { rotateCrop(90); });
         $("crop-ok").addEventListener("click", confirmCrop);
         $("notice-ok").addEventListener("click", closeNotice);
     }
