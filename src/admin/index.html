@@ -34,6 +34,16 @@
         </div>
     </header>
 
+    <nav class="admin-nav" id="admin-nav" aria-label="Admin sections" hidden>
+        <div class="wrap">
+            <button type="button" class="tab" data-section="content" aria-current="page">News &amp; notices</button>
+            <button type="button" class="tab" data-section="members">Members</button>
+            <button type="button" class="tab" data-section="comms">Messages</button>
+            <button type="button" class="tab" data-section="groups">Firewise groups</button>
+            <button type="button" class="tab" data-section="board">Board</button>
+        </div>
+    </nav>
+
     <main id="main" tabindex="-1" class="wrap admin-main">
 
         <!-- Signed-out -->
@@ -60,6 +70,7 @@
             </div>
         </section>
 
+        <div id="section-content" hidden>
         <!-- List -->
         <section id="screen-list" hidden>
             <div class="admin-actions">
@@ -148,6 +159,57 @@
                 <div class="form-status" id="msg" role="status" aria-live="polite"></div>
             </form>
         </section>
+        </div><!-- /section-content -->
+
+        <!-- The four data sections. Each is a list plus an inline editor,
+             rendered by admin-data.js. Kept to one pattern deliberately: a
+             board member who learns one of them has learned all four. -->
+        <div id="section-members" hidden>
+            <div class="admin-actions">
+                <button type="button" class="btn btn-primary btn-small" id="member-new">+ Add someone</button>
+                <button type="button" class="btn btn-outline btn-small" id="member-export">Download CSV</button>
+                <input type="search" id="member-search" placeholder="Search name, email, phone, area" aria-label="Search members">
+            </div>
+            <div id="member-counts" class="counts"></div>
+            <div id="member-list" aria-live="polite"></div>
+        </div>
+
+        <div id="section-comms" hidden>
+            <div class="admin-actions">
+                <button type="button" class="btn btn-primary btn-small" id="comm-new">+ New message</button>
+            </div>
+            <div id="comm-list" aria-live="polite"></div>
+        </div>
+
+        <div id="section-groups" hidden>
+            <div class="admin-actions">
+                <button type="button" class="btn btn-primary btn-small" id="group-new">+ Add a Firewise group</button>
+            </div>
+            <div id="group-list" aria-live="polite"></div>
+        </div>
+
+        <div id="section-board" hidden>
+            <div class="admin-actions">
+                <button type="button" class="btn btn-primary btn-small" id="person-new">+ Add a board member</button>
+            </div>
+            <p class="hint" id="board-note"></p>
+            <div id="person-list" aria-live="polite"></div>
+        </div>
+
+        <!-- One dialog serves every data section; admin-data.js builds the
+             fields for whichever record is being edited. -->
+        <div class="modal" id="rec-modal" hidden role="dialog" aria-modal="true" aria-labelledby="rec-title">
+            <div class="modal-box">
+                <h2 id="rec-title">Edit</h2>
+                <form id="rec-form" novalidate></form>
+                <div class="admin-buttons">
+                    <button type="button" class="btn btn-outline" id="rec-cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="rec-save">Save</button>
+                    <button type="button" class="btn btn-danger" id="rec-delete" hidden>Delete</button>
+                </div>
+                <div class="form-status" id="rec-msg" role="status" aria-live="polite"></div>
+            </div>
+        </div>
     </main>
 
     <!-- Cropper -->
@@ -187,6 +249,7 @@
 
     <script src="../js/config.js"></script>
     <script src="admin.js"></script>
+    <script src="admin-data.js"></script>
 </body>
 
 </html>

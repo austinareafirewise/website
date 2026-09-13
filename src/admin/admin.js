@@ -146,8 +146,14 @@
     var screens = ["screen-signin", "screen-denied", "screen-list", "screen-edit"];
     function show(id) {
         screens.forEach(function (s) { $(s).hidden = s !== id; });
+        // The signed-out and denied screens live outside the section wrapper,
+        // so the wrapper follows whichever of them is showing.
+        var inContent = id === "screen-list" || id === "screen-edit";
+        if ($("section-content")) $("section-content").hidden = !inContent;
         window.scrollTo(0, 0);
     }
+    window.AAFA_ADMIN = window.AAFA_ADMIN || {};
+    window.AAFA_ADMIN.showContent = function () { show("screen-list"); };
 
     function msg(kind, text, el) {
         var box = el || $("msg");
@@ -641,6 +647,9 @@
         if (!ok) { show("screen-signin"); return; }
         $("who-email").textContent = ss(KEYS.email) || "";
         $("who").hidden = false;
+        $("admin-nav").hidden = false;
+        window.AAFA_ADMIN.token = function () { return ss(KEYS.id); };
+        window.AAFA_ADMIN.email = ss(KEYS.email) || "";
         return loadList().catch(function (e) {
             if (e.status === 403) show("screen-denied");
             else if (e.status === 401) show("screen-signin");

@@ -112,3 +112,45 @@ code { background: #f1f1ec; padding: 1px 5px; border-radius: 4px; font-size: .9e
     .item-actions { justify-content: flex-start; }
     .admin-buttons .btn-danger { margin-left: 0; }
 }
+
+
+/* ---------- Section navigation ----------
+   A tab bar rather than more buttons in the header: there are five sections
+   now, they are peers, and which one you are in should be visible without
+   reading the page. */
+.admin-nav {
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 25;
+}
+.admin-nav .wrap { display: flex; gap: 4px; overflow-x: auto; padding-block: 0; }
+.admin-nav .tab {
+    appearance: none; background: none; border: 0; cursor: pointer;
+    font: inherit; font-weight: 600; font-size: .95rem; color: var(--muted);
+    padding: 14px 16px; border-bottom: 3px solid transparent; white-space: nowrap;
+}
+.admin-nav .tab:hover { color: var(--green-900); background: var(--sage-200); }
+.admin-nav .tab[aria-current="page"] { color: var(--green-900); border-bottom-color: var(--orange); }
+
+.counts { color: var(--muted); font-size: .93rem; margin-bottom: 16px; }
+
+.admin-actions input[type="search"] {
+    flex: 1 1 240px; min-width: 200px; padding: 8px 12px;
+    border: 1px solid #c9c9bf; border-radius: 8px; font: inherit; font-size: .95rem;
+}
+
+/* Statuses beyond the content ones */
+.item.confirmed { border-left-color: var(--green-500); }
+.item.pending { border-left-color: var(--orange); }
+.item.unsubscribed, .item.bounced { border-left-color: #b8b8ae; opacity: .75; }
+.item.confirmed .badge { background: #E4F0E6; color: #1d5b2c; }
+.item.pending .badge { background: var(--alert-bg); color: var(--orange-dark); }
+
+/* Leadership rows inside the group editor */
+.leaders { display: grid; gap: 8px; margin-bottom: 10px; }
+.leader-row { display: grid; gap: 8px; grid-template-columns: 1.2fr 1fr 1.4fr 1fr auto; align-items: center; }
+.leader-row input { padding: 8px 10px; border: 1px solid #c9c9bf; border-radius: 7px; font: inherit; font-size: .92rem; }
+@media (max-width: 760px) { .leader-row { grid-template-columns: 1fr; } }
+
+#rec-form .field { margin-bottom: 14px; }
+#rec-form textarea { width: 100%; }
