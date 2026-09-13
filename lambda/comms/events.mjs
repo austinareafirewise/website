@@ -8,7 +8,8 @@
  */
 
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
-import { ddb, UpdateCommand, ScanCommand, DeleteCommand, ENV, findByEmail, nowIso } from "./lib.mjs";
+import { ddb, UpdateCommand, ScanCommand, DeleteCommand, ENV, findByEmail, nowIso, signToken } from "./lib.mjs";
+import { sendPlainEmail, emailEnabled } from "./email.mjs";
 import { handleInboundKeyword, updateDeliveryByProviderId } from "./api.mjs";
 
 const sqs = new SQSClient({});
@@ -85,6 +86,32 @@ async function tick() {
             await sqs.send(new SendMessageCommand({ QueueUrl: ENV.queueUrl, MessageBody: JSON.stringify({ commId: c.commId }) }));
         } catch (e) { if (e.name !== "ConditionalCheckFailedException") throw e; }
     }
+    // People who signed up while email could not be sent. Once SES is out of
+    // the sandbox this clears itself; until then it costs one cheap check
+    // every five minutes.
+    if (await emailEnabled()) {
+        const waiting = await ddb.send(new ScanCommand({ TableName: ENV.members,
+            FilterExpression: "confirmationDeferred = :t AND attribute_exists(email)",
+            ExpressionAttributeValues: { ":t": true } }));
+        for (const m of waiting.Items || []) {
+            try {
+                const t = await signToken("confirm-email", m.memberId, 7 * 86400);
+                const url = `${ENV.siteOrigin}/manage.html?c=${t}`;
+                await sendPlainEmail({
+                    to: m.email,
+                    subject: `Confirm your ${ENV.orgName} updates`,
+                    text: `Thanks for signing up for updates from the ${ENV.orgName}. Sorry for the delay — our email setup has just been approved.\n\nConfirm your email address by opening this link:\n${url}\n\nIf you did not sign up, ignore this message and nothing will be sent.\n\n${ENV.orgName}, ${ENV.postalAddress}`,
+                });
+                await ddb.send(new UpdateCommand({ TableName: ENV.members, Key: { memberId: m.memberId },
+                    UpdateExpression: "REMOVE confirmationDeferred SET pendingExpires = :p, updatedAt = :now",
+                    ExpressionAttributeValues: { ":p": Math.floor(Date.now() / 1000) + 7 * 86400, ":now": nowIso() } }));
+                console.log("sent deferred confirmation to", m.memberId);
+            } catch (e) {
+                console.error("deferred confirmation failed for", m.memberId, e.message);
+            }
+        }
+    }
+
     // Signups that never confirmed. DynamoDB TTL also does this, lazily; the
     // sweep keeps the members list honest between TTL passes.
     const stale = await ddb.send(new ScanCommand({ TableName: ENV.members,

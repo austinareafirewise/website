@@ -39,14 +39,10 @@
 
     /* Show or hide the text choices depending on what the API says. */
     fetch(api + "/signup/options").then(function (r) { return r.json(); }).then(function (o) {
-        // Email still being verified: say so plainly instead of letting
-        // someone fill the form in and hit an error.
-        if (o.email === false) {
-            var b = form.querySelector("button[type=submit]");
-            if (b) { b.disabled = true; b.textContent = "Sign-ups open shortly"; }
-            setStatus("info", "Sign-ups open in a day or two — we're finishing the setup that lets us email you. " +
-                "Meanwhile, register for official emergency alerts at Warn Central Texas.");
-        }
+        // Sign-ups are always accepted. When email sending is still being
+        // approved the record is held and the confirmation follows, and the
+        // API's own reply says so — no second copy of that wording here to
+        // drift out of step with it.
         var smsOn = !!o.sms;
         // All three choices are in the markup and visible without JavaScript;
         // this only swaps the hint underneath, because what happens to a

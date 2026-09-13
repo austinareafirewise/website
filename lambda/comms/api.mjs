@@ -121,10 +121,14 @@ async function signup(event) {
         method = "both";
         smsDeferred = true;
     }
-    // Refuse before storing anything, rather than failing after.
-    if (method !== "sms" && !(await emailEnabled())) {
-        throw new ValidationError("Sign-ups aren't open quite yet — our email is still being set up. Please try again in a day or two.");
-    }
+    // Email may not be sendable yet — a new SES account sits in a sandbox
+    // until AWS grants production access. Refusing the sign-up was the wrong
+    // answer: it turns away people who want to be on the list, and it makes
+    // the opt-in described in our SES application look like it does not
+    // exist. Accept them, hold the record unconfirmed, and send the
+    // confirmation the moment sending works. The tick in events.mjs does
+    // that without anyone remembering to.
+    const emailSendable = method === "sms" ? true : await emailEnabled();
     if (b.consent !== true && b.consent !== "true" && b.consent !== "on") {
         throw new ValidationError("Please tick the box to agree to receive messages.");
     }
@@ -174,8 +178,19 @@ async function signup(event) {
     m.updatedAt = now; m.updatedBy = "form";
     // TTL only while nothing is confirmed. A confirmed record must never
     // carry this attribute, or DynamoDB's TTL sweep would delete a member.
-    if (!m.confirmedAt) m.pendingExpires = Math.floor(Date.now() / 1000) + 7 * 86400;
-    else delete m.pendingExpires;
+    // Set before the expiry is computed and before the record is written:
+    // the flag decides how long the record lives, and both have to be in the
+    // item that actually goes to the table.
+    if (wantEmail && !emailSendable) m.confirmationDeferred = true;
+    else delete m.confirmationDeferred;
+
+    if (!m.confirmedAt) {
+        // Seven days is right for someone who simply never clicked. A record
+        // waiting on us rather than on them gets thirty, so our own delay
+        // cannot quietly delete a sign-up.
+        const days = m.confirmationDeferred ? 30 : 7;
+        m.pendingExpires = Math.floor(Date.now() / 1000) + days * 86400;
+    } else delete m.pendingExpires;
 
     const codeOut = {};
     if (wantSms && !smsDeferred && m.smsStatus !== "confirmed") {
@@ -198,7 +213,7 @@ async function signup(event) {
     // existing record is kept, because deleting it would take away a
     // subscription they already had.
     try {
-        if (wantEmail && m.emailStatus !== "confirmed") await sendEmailConfirmation(m);
+        if (wantEmail && emailSendable && m.emailStatus !== "confirmed") await sendEmailConfirmation(m);
         if (codeOut.code) {
             await sendSms(m.phone, `${ENV.orgName}: your confirmation code is ${codeOut.code}. It expires in 15 minutes. Reply STOP to stop.`, "transactional");
         }
@@ -208,6 +223,15 @@ async function signup(event) {
         throw new ValidationError(
             "We could not send your confirmation just now, so nothing was saved. " +
             "This is our problem, not yours — please try again later.", 503);
+    }
+
+    if (wantEmail && !emailSendable) {
+        return respond(200, {
+            message: "Thanks — you're on the list. Our email sending is still being approved, " +
+                "so your confirmation will arrive in a day or two rather than right away. " +
+                "Nothing is sent to you until you confirm.",
+            ...(codeOut.code ? { memberId: m.memberId, codeSent: true } : {}),
+        });
     }
 
     return respond(200, {
