@@ -63,7 +63,7 @@ async function sendOne(commId) {
                     await ddb.send(new DeleteCommand({ TableName: ENV.deliveries, Key: key }));
                     counts.deferredSms++; continue;
                 }
-                const res = await sendSms(r.to, renderSms(c));
+                const res = await sendSms(r.to, renderSms(c), "promotional");
                 await mark(key, "sent", res.providerId);
                 counts.sms++; counts.sent++;
             }

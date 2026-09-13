@@ -21,21 +21,28 @@ export function smsEnabled() {
          : false;
 }
 
-export async function sendSms(to, body) {
+/* kind: "transactional" for a confirmation code someone is waiting for,
+   "promotional" for a board broadcast. This is a declaration to the
+   carriers about what the message is, not a routing preference — telling
+   them a newsletter is transactional to get better handling is the kind of
+   misdeclaration that costs a sender its number. It also matches what we
+   told SES about the email side. */
+export async function sendSms(to, body, kind) {
     if (!smsEnabled()) throw new Error("Text messaging is not switched on yet.");
-    return ENV.smsProvider === "twilio" ? sendTwilio(to, body) : sendAws(to, body);
+    const messageType = kind === "promotional" ? "PROMOTIONAL" : "TRANSACTIONAL";
+    return ENV.smsProvider === "twilio" ? sendTwilio(to, body) : sendAws(to, body, messageType);
 }
 
 /* ---------------- AWS ---------------- */
 
 let aws = null;
-async function sendAws(to, body) {
+async function sendAws(to, body, messageType) {
     aws = aws || new PinpointSMSVoiceV2Client({});
     const r = await aws.send(new SendTextMessageCommand({
         DestinationPhoneNumber: to,
         OriginationIdentity: ENV.smsOrigination,
         MessageBody: body,
-        MessageType: "TRANSACTIONAL",
+        MessageType: messageType || "TRANSACTIONAL",
     }));
     return { providerId: r.MessageId };
 }
