@@ -18,3 +18,7 @@ npm-debug.log*
 .env.local
 .secret-*
 .twilio
+
+# Working files: screenshots gathered for carrier and SES paperwork
+signup-form.png
+*.screenshot.png

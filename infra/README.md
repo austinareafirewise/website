@@ -90,8 +90,29 @@ that matter:
 - **SES production access** — requested, `ReviewDetails.Status: PENDING`. Until
   granted, sign-ups are refused with an explanation; the gate lifts on its own
   because the check is made at runtime.
-- **Toll-free number** — not yet requested. 1-3 weeks of carrier verification.
-  Numbers are already being collected and held unconfirmed.
+- **Toll-free number** — `+1 833 408 8708` requested ($2/month), two-way
+  wired to the events topic. Carrier verification
+  `registration-4ae3068ea8004f68b2e3ce5d34e78bba` submitted; 1-3 weeks.
+  Check with:
+
+  ```bash
+  aws pinpoint-sms-voice-v2 describe-registrations --region us-east-2 \
+    --registration-ids registration-4ae3068ea8004f68b2e3ce5d34e78bba \
+    --query 'Registrations[0].RegistrationStatus'
+  ```
+
+  Declared as NON_PROFIT, public announcements, digital-form opt-in, 1,000
+  messages a month. Numbers are already being collected and held unconfirmed
+  in the meantime.
+
+- **Two more SMS gates after that.** The account's SMS tier is SANDBOX
+  (texts only reach verified numbers) and the monthly text spend limit is $1,
+  about 110 segments. Both are support cases, and both must be lifted before
+  a real broadcast can go out.
+
+- **Twilio is wired as an alternative** but its number is not 10DLC
+  registered — a live test returned carrier error 30034. Switching is one
+  parameter (`SmsProvider=twilio`) once that registration exists.
 - **A real mailbox on the domain** — there is no MX record, so mail to
   anything@austinareafirewise.org bounces today. `ReplyTo` points at a personal
   address as a stopgap.
