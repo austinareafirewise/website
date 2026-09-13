@@ -803,3 +803,30 @@ section { padding: 52px 0; }
     background: #9c2b16; color: #fff; text-align: center; padding: 10px 20px; font-size: .95rem;
     position: sticky; top: 0; z-index: 50;
 }
+
+
+/* ---------- Sign-up form additions ---------- */
+.label-text { display: block; font-weight: 600; font-size: .92rem; margin-bottom: 8px; }
+.choice-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.choice {
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px;
+    border: 1px solid #c9c9bf; border-radius: 8px; background: #fff; cursor: pointer; font-weight: 600;
+}
+.choice input { width: 20px; height: 20px; margin: 0; }
+.choice:has(input:checked) { border-color: var(--green-700); background: var(--sage-200); }
+.field-check.consent label { display: flex; gap: 12px; align-items: flex-start; font-weight: 400; font-size: .93rem; color: var(--muted); cursor: pointer; }
+.field-check.consent input { width: 22px; height: 22px; flex: 0 0 auto; margin-top: 2px; }
+.code-box { margin-top: 16px; padding: 16px; border: 1px dashed var(--sage); border-radius: 10px; }
+.code-box label { display: block; font-weight: 600; margin-bottom: 8px; }
+.code-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.code-row input { width: 140px; padding: 11px 13px; font-size: 1.3rem; letter-spacing: .2em; border: 1px solid #c9c9bf; border-radius: 8px; }
+.rule { border: 0; border-top: 1px solid var(--line); margin: 22px 0; }
+.btn-danger { background: #fff; border-color: #9c2b16; color: #9c2b16; }
+.btn-danger:hover { background: #FBE4E0; color: #9c2b16; }
+.admin-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; align-items: center; }
+
+/* ---------- Prose pages (privacy) ---------- */
+.prose { max-width: 72ch; }
+.prose h2 { font-size: 1.35rem; margin-top: 1.6em; }
+.prose ul { padding-left: 22px; }
+.prose li { margin-bottom: 6px; }

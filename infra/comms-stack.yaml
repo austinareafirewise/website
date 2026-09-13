@@ -1,0 +1,515 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >
+  Members and communications for the Alliance website: the signup list with
+  double opt-in, board-managed member records, and reviewed broadcasts by
+  email (Amazon SES) and text (AWS End User Messaging, or Twilio). Adds
+  routes to the API created by the aafa-cms stack. See
+  docs/07-members-and-communications-design.md.
+
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: {default: Site}
+        Parameters: [SiteOrigin, HostedZoneId, MailDomain]
+      - Label: {default: Email}
+        Parameters: [FromAddress, ReplyTo, PostalAddress, OrgName]
+      - Label: {default: Text messages}
+        Parameters: [SmsProvider, SmsOrigination, TwilioParameterName]
+
+
+Parameters:
+  SiteOrigin:
+    Type: String
+    Default: https://www.austinareafirewise.org
+    AllowedPattern: "^https://[a-z0-9.-]+$"
+  HostedZoneId:
+    Type: AWS::Route53::HostedZone::Id
+    Description: The zone for MailDomain, so DKIM and mail-from records can be written.
+  MailDomain:
+    Type: String
+    Default: austinareafirewise.org
+    Description: Domain email is sent from. Verified in SES by this stack.
+  FromAddress:
+    Type: String
+    Default: updates@austinareafirewise.org
+    Description: Must be at MailDomain. No mailbox needs to exist for sending.
+  ReplyTo:
+    Type: String
+    Default: ""
+    Description: >
+      A real, read mailbox for replies. Leave blank until one exists; emails
+      then say the sender mailbox is not monitored.
+  PostalAddress:
+    Type: String
+    Description: >
+      Printed in every email. CAN-SPAM requires a valid postal address; a PO
+      box is fine. The sender refuses to broadcast while this is blank.
+  OrgName:
+    Type: String
+    Default: Austin Area Firewise Alliance
+  SmsProvider:
+    Type: String
+    Default: "off"
+    AllowedValues: ["off", "aws", "twilio"]
+    Description: >
+      "off" until a number is approved. "aws" uses End User Messaging with the
+      toll-free number in SmsOrigination. "twilio" uses credentials in the
+      SSM SecureString named below, which you create by hand.
+  SmsOrigination:
+    Type: String
+    Default: ""
+    Description: The verified toll-free number (E.164, +18XXXXXXXXX) or its ARN. AWS provider only.
+  TwilioParameterName:
+    Type: String
+    Default: /aafa/comms/twilio
+    Description: >
+      SSM SecureString holding {"accountSid","authToken","from","statusCallback"}.
+      Created outside this template so the secret never passes through it.
+
+
+Resources:
+
+  # ==================================================================
+  # Tables. The members list cannot be rebuilt from git; it is retained if
+  # the stack is ever deleted, and has point-in-time recovery.
+  # ==================================================================
+
+  MembersTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: aafa-members
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - {AttributeName: memberId, AttributeType: S}
+        - {AttributeName: email, AttributeType: S}
+        - {AttributeName: phone, AttributeType: S}
+      KeySchema:
+        - {AttributeName: memberId, KeyType: HASH}
+      GlobalSecondaryIndexes:
+        - IndexName: email-index
+          KeySchema: [{AttributeName: email, KeyType: HASH}]
+          Projection: {ProjectionType: ALL}
+        - IndexName: phone-index
+          KeySchema: [{AttributeName: phone, KeyType: HASH}]
+          Projection: {ProjectionType: ALL}
+      TimeToLiveSpecification: {AttributeName: pendingExpires, Enabled: true}
+      PointInTimeRecoverySpecification: {PointInTimeRecoveryEnabled: true}
+      Tags: [{Key: project, Value: website}]
+
+  CommsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: aafa-communications
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions: [{AttributeName: commId, AttributeType: S}]
+      KeySchema: [{AttributeName: commId, KeyType: HASH}]
+      PointInTimeRecoverySpecification: {PointInTimeRecoveryEnabled: true}
+      Tags: [{Key: project, Value: website}]
+
+  DeliveriesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: aafa-deliveries
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - {AttributeName: commId, AttributeType: S}
+        - {AttributeName: recipient, AttributeType: S}
+        - {AttributeName: providerId, AttributeType: S}
+      KeySchema:
+        - {AttributeName: commId, KeyType: HASH}
+        - {AttributeName: recipient, KeyType: RANGE}
+      GlobalSecondaryIndexes:
+        - IndexName: provider-index
+          KeySchema: [{AttributeName: providerId, KeyType: HASH}]
+          Projection: {ProjectionType: KEYS_ONLY}
+      Tags: [{Key: project, Value: website}]
+
+  RateLimitTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: aafa-ratelimit
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions: [{AttributeName: pk, AttributeType: S}]
+      KeySchema: [{AttributeName: pk, KeyType: HASH}]
+      TimeToLiveSpecification: {AttributeName: ttl, Enabled: true}
+
+  # ==================================================================
+  # Signing key for confirmation, unsubscribe and manage links. Generated
+  # here; never typed by anyone; read by the functions at cold start.
+  # ==================================================================
+
+  SigningSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: aafa/comms/signing-key
+      Description: HMAC key for member links. Rotating it invalidates every outstanding link.
+      GenerateSecretString: {PasswordLength: 48, ExcludePunctuation: true}
+
+  # ==================================================================
+  # Email: SES identity for the domain, DKIM and mail-from records in
+  # Route 53, and a configuration set that reports events to SNS.
+  # ==================================================================
+
+  EmailIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Ref MailDomain
+      DkimSigningAttributes: {NextSigningKeyLength: RSA_2048_BIT}
+      MailFromAttributes:
+        MailFromDomain: !Sub "mail.${MailDomain}"
+        BehaviorOnMxFailure: USE_DEFAULT_VALUE
+      ConfigurationSetAttributes: {ConfigurationSetName: !Ref ConfigSet}
+
+  Dkim1:
+    Type: AWS::Route53::RecordSet
+    Properties: {HostedZoneId: !Ref HostedZoneId, Name: !GetAtt EmailIdentity.DkimDNSTokenName1, Type: CNAME, TTL: "1800", ResourceRecords: [!GetAtt EmailIdentity.DkimDNSTokenValue1]}
+  Dkim2:
+    Type: AWS::Route53::RecordSet
+    Properties: {HostedZoneId: !Ref HostedZoneId, Name: !GetAtt EmailIdentity.DkimDNSTokenName2, Type: CNAME, TTL: "1800", ResourceRecords: [!GetAtt EmailIdentity.DkimDNSTokenValue2]}
+  Dkim3:
+    Type: AWS::Route53::RecordSet
+    Properties: {HostedZoneId: !Ref HostedZoneId, Name: !GetAtt EmailIdentity.DkimDNSTokenName3, Type: CNAME, TTL: "1800", ResourceRecords: [!GetAtt EmailIdentity.DkimDNSTokenValue3]}
+
+  # Custom MAIL FROM so bounces and SPF align with our own domain.
+  MailFromMx:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub "mail.${MailDomain}"
+      Type: MX
+      TTL: "1800"
+      ResourceRecords: [!Sub "10 feedback-smtp.${AWS::Region}.amazonses.com"]
+  MailFromSpf:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub "mail.${MailDomain}"
+      Type: TXT
+      TTL: "1800"
+      ResourceRecords: ['"v=spf1 include:amazonses.com ~all"']
+  # DMARC in monitoring mode: tells receivers the domain signs its mail and
+  # asks for reports, without yet instructing them to reject failures.
+  Dmarc:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub "_dmarc.${MailDomain}"
+      Type: TXT
+      TTL: "1800"
+      ResourceRecords: ['"v=DMARC1; p=none; adkim=s; aspf=s"']
+
+  ConfigSet:
+    Type: AWS::SES::ConfigurationSet
+    Properties:
+      Name: aafa-comms
+      ReputationOptions: {ReputationMetricsEnabled: true}
+      SendingOptions: {SendingEnabled: true}
+
+  EventsTopic:
+    Type: AWS::SNS::Topic
+    Properties: {TopicName: aafa-comms-events}
+
+  EventsTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics: [!Ref EventsTopic]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowSes
+            Effect: Allow
+            Principal: {Service: ses.amazonaws.com}
+            Action: sns:Publish
+            Resource: !Ref EventsTopic
+            Condition: {StringEquals: {"AWS:SourceAccount": !Ref "AWS::AccountId"}}
+          - Sid: AllowSmsVoice
+            Effect: Allow
+            Principal: {Service: sms-voice.amazonaws.com}
+            Action: sns:Publish
+            Resource: !Ref EventsTopic
+            Condition: {StringEquals: {"AWS:SourceAccount": !Ref "AWS::AccountId"}}
+
+  ConfigSetEvents:
+    Type: AWS::SES::ConfigurationSetEventDestination
+    Properties:
+      ConfigurationSetName: !Ref ConfigSet
+      EventDestination:
+        Name: to-sns
+        Enabled: true
+        MatchingEventTypes: [BOUNCE, COMPLAINT, DELIVERY, REJECT, RENDERING_FAILURE]
+        SnsDestination: {TopicARN: !Ref EventsTopic}
+
+  # ==================================================================
+  # Queue for broadcasts. A message is one communication; the sender works
+  # through its recipients. Anything that fails three times parks in the
+  # dead-letter queue rather than looping.
+  # ==================================================================
+
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties: {QueueName: aafa-send-dlq, MessageRetentionPeriod: 1209600}
+
+  SendQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: aafa-send
+      VisibilityTimeout: 960
+      RedrivePolicy: {deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn, maxReceiveCount: 3}
+
+  # ==================================================================
+  # Functions
+  # ==================================================================
+
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: aafa-comms-function
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement: [{Effect: Allow, Principal: {Service: lambda.amazonaws.com}, Action: sts:AssumeRole}]
+      ManagedPolicyArns: [!Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
+      Policies:
+        - PolicyName: comms
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [dynamodb:GetItem, dynamodb:PutItem, dynamodb:UpdateItem, dynamodb:DeleteItem, dynamodb:Query, dynamodb:Scan]
+                Resource:
+                  - !GetAtt MembersTable.Arn
+                  - !Sub "${MembersTable.Arn}/index/*"
+                  - !GetAtt CommsTable.Arn
+                  - !GetAtt DeliveriesTable.Arn
+                  - !Sub "${DeliveriesTable.Arn}/index/*"
+                  - !GetAtt RateLimitTable.Arn
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !Ref SigningSecret
+              - Effect: Allow
+                Action: ssm:GetParameter
+                Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${TwilioParameterName}"
+              - Effect: Allow
+                Action: [ses:SendEmail, ses:SendRawEmail]
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:identity/${MailDomain}"
+                  - !Sub "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${ConfigSet}"
+              - Effect: Allow
+                Action: [sms-voice:SendTextMessage]
+                Resource: "*"
+              - Effect: Allow
+                Action: [sqs:SendMessage, sqs:ReceiveMessage, sqs:DeleteMessage, sqs:GetQueueAttributes]
+                Resource: !GetAtt SendQueue.Arn
+
+  ApiFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: aafa-comms-api
+      Description: Signup, confirmation, manage, members, communications.
+      Runtime: nodejs22.x
+      Handler: api.handler
+      Architectures: [arm64]
+      MemorySize: 256
+      Timeout: 20
+      Role: !GetAtt FunctionRole.Arn
+      Code: ../lambda/comms
+      Environment:
+        Variables:
+          MEMBERS_TABLE: !Ref MembersTable
+          COMMS_TABLE: !Ref CommsTable
+          DELIVERIES_TABLE: !Ref DeliveriesTable
+          RATELIMIT_TABLE: !Ref RateLimitTable
+          SITE_ORIGIN: !Ref SiteOrigin
+          API_URL: !ImportValue aafa-cms-ApiUrl
+          ORG_NAME: !Ref OrgName
+          POSTAL_ADDRESS: !Ref PostalAddress
+          FROM_ADDRESS: !Ref FromAddress
+          REPLY_TO: !Ref ReplyTo
+          SES_CONFIG_SET: !Ref ConfigSet
+          SIGNING_SECRET_ARN: !Ref SigningSecret
+          SMS_PROVIDER: !Ref SmsProvider
+          SMS_ORIGINATION: !Ref SmsOrigination
+          TWILIO_PARAM: !Ref TwilioParameterName
+          SEND_QUEUE_URL: !Ref SendQueue
+
+  SenderFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: aafa-comms-sender
+      Description: Works a broadcast through its recipients from the queue.
+      Runtime: nodejs22.x
+      Handler: sender.handler
+      Architectures: [arm64]
+      MemorySize: 256
+      Timeout: 900
+      # No ReservedConcurrentExecutions: this account's total concurrency is
+      # 10 (the default for a new account) and AWS will not let the
+      # unreserved pool drop below 10. The send rate is bounded on the queue
+      # instead, below. Correctness does not depend on either: the sender
+      # claims each delivery row with a conditional write, so a message
+      # delivered twice by SQS cannot send to anyone twice.
+      Role: !GetAtt FunctionRole.Arn
+      Code: ../lambda/comms
+      Environment:
+        Variables:
+          MEMBERS_TABLE: !Ref MembersTable
+          COMMS_TABLE: !Ref CommsTable
+          DELIVERIES_TABLE: !Ref DeliveriesTable
+          RATELIMIT_TABLE: !Ref RateLimitTable
+          SITE_ORIGIN: !Ref SiteOrigin
+          API_URL: !ImportValue aafa-cms-ApiUrl
+          ORG_NAME: !Ref OrgName
+          POSTAL_ADDRESS: !Ref PostalAddress
+          FROM_ADDRESS: !Ref FromAddress
+          REPLY_TO: !Ref ReplyTo
+          SES_CONFIG_SET: !Ref ConfigSet
+          SIGNING_SECRET_ARN: !Ref SigningSecret
+          SMS_PROVIDER: !Ref SmsProvider
+          SMS_ORIGINATION: !Ref SmsOrigination
+          TWILIO_PARAM: !Ref TwilioParameterName
+          SEND_QUEUE_URL: !Ref SendQueue
+
+  EventsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: aafa-comms-events
+      Description: SES and SMS events, and the five-minute tick.
+      Runtime: nodejs22.x
+      Handler: events.handler
+      Architectures: [arm64]
+      MemorySize: 256
+      Timeout: 60
+      Role: !GetAtt FunctionRole.Arn
+      Code: ../lambda/comms
+      Environment:
+        Variables:
+          MEMBERS_TABLE: !Ref MembersTable
+          COMMS_TABLE: !Ref CommsTable
+          DELIVERIES_TABLE: !Ref DeliveriesTable
+          RATELIMIT_TABLE: !Ref RateLimitTable
+          SITE_ORIGIN: !Ref SiteOrigin
+          API_URL: !ImportValue aafa-cms-ApiUrl
+          ORG_NAME: !Ref OrgName
+          POSTAL_ADDRESS: !Ref PostalAddress
+          FROM_ADDRESS: !Ref FromAddress
+          REPLY_TO: !Ref ReplyTo
+          SES_CONFIG_SET: !Ref ConfigSet
+          SIGNING_SECRET_ARN: !Ref SigningSecret
+          SMS_PROVIDER: !Ref SmsProvider
+          SMS_ORIGINATION: !Ref SmsOrigination
+          TWILIO_PARAM: !Ref TwilioParameterName
+          SEND_QUEUE_URL: !Ref SendQueue
+
+  ApiLogs:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: !Sub "/aws/lambda/${ApiFunction}", RetentionInDays: 90}
+  SenderLogs:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: !Sub "/aws/lambda/${SenderFunction}", RetentionInDays: 90}
+  EventsLogs:
+    Type: AWS::Logs::LogGroup
+    Properties: {LogGroupName: !Sub "/aws/lambda/${EventsFunction}", RetentionInDays: 90}
+
+  SendQueueMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt SendQueue.Arn
+      FunctionName: !Ref SenderFunction
+      BatchSize: 1
+      # Two is the lowest AWS accepts. It bounds how many broadcasts run at
+      # once without reserving account-wide concurrency.
+      ScalingConfig: {MaximumConcurrency: 2}
+
+  EventsSubscription:
+    Type: AWS::SNS::Subscription
+    Properties: {TopicArn: !Ref EventsTopic, Protocol: lambda, Endpoint: !GetAtt EventsFunction.Arn}
+  EventsInvokeFromSns:
+    Type: AWS::Lambda::Permission
+    Properties: {FunctionName: !Ref EventsFunction, Action: lambda:InvokeFunction, Principal: sns.amazonaws.com, SourceArn: !Ref EventsTopic}
+
+  Tick:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: aafa-comms-tick
+      ScheduleExpression: rate(5 minutes)
+      Targets: [{Id: events, Arn: !GetAtt EventsFunction.Arn, Input: '{"tick":true}'}]
+  TickInvoke:
+    Type: AWS::Lambda::Permission
+    Properties: {FunctionName: !Ref EventsFunction, Action: lambda:InvokeFunction, Principal: events.amazonaws.com, SourceArn: !GetAtt Tick.Arn}
+
+  # ==================================================================
+  # Routes on the existing API
+  # ==================================================================
+
+  Integration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !ImportValue aafa-cms-ApiId
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt ApiFunction.Arn
+      PayloadFormatVersion: "2.0"
+      TimeoutInMillis: 25000
+
+  InvokeFromApi:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ApiFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub
+        - "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiId}/*"
+        - {ApiId: !ImportValue aafa-cms-ApiId}
+
+  # Public — no authorizer. Each is rate-limited inside the function.
+  RSignupOptions: {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "GET /signup/options", Target: !Sub "integrations/${Integration}"}}
+  RSignup:        {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /signup", Target: !Sub "integrations/${Integration}"}}
+  RConfirm:       {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /confirm", Target: !Sub "integrations/${Integration}"}}
+  RConfirmCode:   {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /confirm-code", Target: !Sub "integrations/${Integration}"}}
+  RUnsubGet:      {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "GET /unsubscribe", Target: !Sub "integrations/${Integration}"}}
+  RUnsubPost:     {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /unsubscribe", Target: !Sub "integrations/${Integration}"}}
+  RManageReq:     {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /manage/request", Target: !Sub "integrations/${Integration}"}}
+  RManageGet:     {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "GET /manage", Target: !Sub "integrations/${Integration}"}}
+  RManagePost:    {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /manage", Target: !Sub "integrations/${Integration}"}}
+  RTwilio:        {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /hooks/twilio", Target: !Sub "integrations/${Integration}"}}
+
+  # Board — Cognito JWT, board group checked in the function.
+  RMembersList:   {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "GET /members", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RMembersExport: {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "GET /members/export", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RMembersCreate: {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /members", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RMembersUpdate: {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "PUT /members/{id}", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RMembersDelete: {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "DELETE /members/{id}", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RMembersUnsub:  {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /members/{id}/unsubscribe", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RMembersResend: {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /members/{id}/resend", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RCommsList:     {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "GET /comms", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RCommsCreate:   {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /comms", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RCommsGet:      {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "GET /comms/{id}", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RCommsUpdate:   {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "PUT /comms/{id}", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RCommsDelete:   {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "DELETE /comms/{id}", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RCommsSubmit:   {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /comms/{id}/submit", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RCommsApprove:  {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /comms/{id}/approve", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RCommsReject:   {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /comms/{id}/reject", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RCommsWithdraw: {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /comms/{id}/withdraw", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RCommsTest:     {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /comms/{id}/test", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RCommsSend:     {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /comms/{id}/send", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RCommsDup:      {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /comms/{id}/duplicate", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+  RCommsDeliv:    {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "GET /comms/{id}/deliveries", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
+
+
+Outputs:
+  EventsTopicArn:
+    Description: Give this to the SMS number's two-way and event configuration when it exists.
+    Value: !Ref EventsTopic
+  SendQueueUrl:
+    Value: !Ref SendQueue
+  FromAddress:
+    Value: !Ref FromAddress
+  DkimStatusCheck:
+    Description: Run to see whether SES has verified the domain (SUCCESS) yet.
+    Value: !Sub "aws sesv2 get-email-identity --region ${AWS::Region} --email-identity ${MailDomain} --query '{verified:VerifiedForSendingStatus,dkim:DkimAttributes.Status}'"

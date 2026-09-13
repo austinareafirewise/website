@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Change how we contact you — Austin Area Firewise Alliance</title>
+    <meta name="description"
+        content="Confirm, change, pause, or stop updates from the Austin Area Firewise Alliance.">
+    <meta name="robots" content="noindex">
+    <link rel="canonical" href="https://www.austinareafirewise.org/manage.html">
+    <link rel="icon" href="img/aafa-logo.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Oswald:wght@500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/site.css">
+    <script>
+        try {
+            var s = localStorage.getItem("aafa-text-scale");
+            if (s) { document.documentElement.style.setProperty("--text-scale", s); }
+        } catch (e) { /* private mode: fall back to the default size */ }
+    </script>
+</head>
+
+<body data-page="manage">
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <div class="emergency">
+        <strong>In a fire emergency, call 911.</strong>
+        Official emergency alerts for this region come from
+        <a class="ext" href="https://warncentraltexas.org/" target="_blank" rel="noopener">Warn Central Texas</a> — register your phone.
+    </div>
+
+    <header class="site-header">
+        <div class="wrap">
+            <a class="brand" href="index.html">
+                <img src="img/aafa-logo.svg" alt="">
+                <span class="brand-text">Austin Area<br>Firewise Alliance
+                    <span>Travis County, Texas</span>
+                </span>
+            </a>
+            <nav class="site-nav" aria-label="Main">
+                <a href="index.html">Home</a>
+                <a href="news.html">News</a>
+                <a href="prepare-your-home.html" aria-label="Prepare your home">Prepare</a>
+                <a href="firewise-communities.html">Communities</a>
+                <a href="evacuation.html">Evacuation</a>
+                <a href="about.html">About</a>
+            </nav>
+
+            <div class="text-size" role="group" aria-label="Text size">
+                <span class="label" aria-hidden="true">Text size</span>
+                <button type="button" class="s1" data-scale="1" aria-pressed="true">A</button>
+                <button type="button" class="s2" data-scale="1.15" aria-pressed="false">A</button>
+                <button type="button" class="s3" data-scale="1.3" aria-pressed="false">A</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="main" tabindex="-1">
+        <div class="page-head">
+            <div class="wrap">
+                <p class="kicker">Your updates</p>
+                <h1>Change how we contact you</h1>
+                <p>
+                    Confirm a sign-up, switch between email and text, pause, or remove yourself.
+                    Nobody needs to approve any of it.
+                </p>
+            </div>
+        </div>
+
+        <section>
+            <div class="wrap">
+                <!-- Everything below is shown or hidden by js/manage.js depending on
+                     what brought the person here: a confirmation link, an unsubscribe
+                     link, a manage link, or nothing (they typed the address). -->
+
+                <div class="form-status" id="notice" role="status" aria-live="polite"></div>
+
+                <!-- Text-code confirmation, for people added by a board member -->
+                <div class="signup" id="code-box" hidden>
+                    <h2>Confirm your mobile number</h2>
+                    <p>Enter the six-digit code from the text we sent you.</p>
+                    <div class="field">
+                        <label for="code">Code</label>
+                        <input type="text" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+                    </div>
+                    <button type="button" class="btn btn-primary" id="code-go">Confirm</button>
+                </div>
+
+                <!-- Options, once we know who this is -->
+                <div class="signup" id="options" hidden>
+                    <h2>Your subscription</h2>
+                    <p id="summary"></p>
+
+                    <div class="field">
+                        <span class="label-text">Contact me by</span>
+                        <div class="choice-row" role="radiogroup" aria-label="Contact method">
+                            <label class="choice"><input type="radio" name="method" value="email"> Email</label>
+                            <label class="choice" id="choice-sms"><input type="radio" name="method" value="sms"> Text</label>
+                            <label class="choice" id="choice-both"><input type="radio" name="method" value="both"> Both</label>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="switch-go">Save</button>
+
+                    <hr class="rule">
+
+                    <div class="admin-buttons">
+                        <button type="button" class="btn btn-outline" id="pause-go">Pause all messages</button>
+                        <button type="button" class="btn btn-outline" id="resume-go" hidden>Resume messages</button>
+                        <button type="button" class="btn btn-danger" id="remove-go">Remove me entirely</button>
+                    </div>
+                    <p class="hint">
+                        Pause keeps your details so you can resume later. Remove deletes them; if you
+                        change your mind you would sign up again from scratch.
+                    </p>
+                </div>
+
+                <!-- Request a link, for people who arrived without one -->
+                <div class="signup" id="request-box" hidden>
+                    <h2>Get a link to manage your updates</h2>
+                    <p>
+                        Enter the email address <em>or</em> mobile number you signed up with. We will
+                        send a link there. It works for two hours.
+                    </p>
+                    <div class="field">
+                        <label for="req-email">Email address</label>
+                        <input type="email" id="req-email" autocomplete="email" placeholder="you@example.com">
+                    </div>
+                    <div class="field" id="req-phone-wrap">
+                        <label for="req-phone">or mobile number</label>
+                        <input type="tel" id="req-phone" autocomplete="tel" placeholder="(512) 555-1234">
+                    </div>
+                    <button type="button" class="btn btn-primary" id="req-go">Send me a link</button>
+                    <p class="hint">
+                        You can also unsubscribe with the link at the bottom of any email, or by
+                        replying STOP to any text. See the <a href="privacy.html">privacy statement</a>.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="wrap">
+            <div class="legal">
+                <p>
+                    The Austin Area Firewise Alliance is an independent volunteer organization,
+                    P.O. Box 4211-A, Austin, TX 78731. <a href="privacy.html">Privacy statement</a>.
+                </p>
+                <p>&copy; <span id="year">2026</span> Austin Area Firewise Alliance.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/site.js"></script>
+    <script src="js/manage.js"></script>
+</body>
+
+</html>

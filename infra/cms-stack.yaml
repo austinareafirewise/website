@@ -375,6 +375,19 @@ Outputs:
   ApiUrl:
     Description: Goes into src/js/config.js as AAFA_CMS.apiUrl.
     Value: !GetAtt Api.ApiEndpoint
+    Export: {Name: aafa-cms-ApiUrl}
+
+  # Exported so the comms stack can add routes to this same API rather than
+  # standing up a second one with a second address and a second authorizer.
+  ApiIdExport:
+    Value: !Ref Api
+    Export: {Name: aafa-cms-ApiId}
+  AuthorizerIdExport:
+    Value: !Ref Authorizer
+    Export: {Name: aafa-cms-AuthorizerId}
+  UserPoolIdExport:
+    Value: !Ref UserPool
+    Export: {Name: aafa-cms-UserPoolId}
 
   ContentBucketDomain:
     Description: Give this to the site stack's ContentBucketDomain parameter.

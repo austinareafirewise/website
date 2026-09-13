@@ -282,26 +282,38 @@
         <section id="updates">
             <div class="wrap">
                 <div class="section-head">
-                    <h2>Get updates · Ask a question</h2>
+                    <h2>Get updates</h2>
                     <p>
-                        Preparedness reminders ahead of fire season, Firewise recognition news, and
-                        answers when agencies respond to our questions. The list is not shared or
-                        sold, and there is no charge for anything the Alliance does.
+                        Preparedness reminders ahead of fire season, meeting notices, Firewise
+                        recognition news, and answers when agencies respond to our questions. By
+                        email, by text, or both. The list is never shared or sold.
                     </p>
                 </div>
 
                 <div class="callout">
                     <p>
-                        <strong>This form is not a way to report a fire or request emergency help.</strong>
-                        Nobody monitors it around the clock. If you see fire or smoke, call 911.
+                        <strong>This is not a way to report a fire or request emergency help.</strong>
+                        If you see fire or smoke, call 911.
                     </p>
                 </div>
 
                 <form class="signup" id="signup-form" novalidate>
                     <div class="field">
+                        <span class="label-text">Contact me by</span>
+                        <div class="choice-row" role="radiogroup" aria-label="Contact method">
+                            <label class="choice"><input type="radio" name="method" value="email" checked> Email</label>
+                            <label class="choice" id="m-sms" hidden><input type="radio" name="method" value="sms"> Text message</label>
+                            <label class="choice" id="m-both" hidden><input type="radio" name="method" value="both"> Both</label>
+                        </div>
+                        <p class="hint" id="sms-soon">Text-message updates are coming once our number is approved. Email for now.</p>
+                    </div>
+                    <div class="field" id="wrap-email">
                         <label for="su-email">Email address</label>
-                        <input type="email" id="su-email" name="email" autocomplete="email" required
-                            placeholder="you@example.com">
+                        <input type="email" id="su-email" name="email" autocomplete="email" placeholder="you@example.com">
+                    </div>
+                    <div class="field" id="wrap-phone" hidden>
+                        <label for="su-phone">Mobile number</label>
+                        <input type="tel" id="su-phone" name="phone" autocomplete="tel" placeholder="(512) 555-1234">
                     </div>
                     <div class="field">
                         <label for="su-name">Name <span style="font-weight:400">(optional)</span></label>
@@ -314,19 +326,15 @@
                             placeholder="e.g. Northwest Hills, Lakeway, Bee Cave, unincorporated west county">
                     </div>
                     <div class="field">
-                        <label for="su-interest">I'm writing about</label>
+                        <label for="su-interest">I'm interested in</label>
                         <select id="su-interest" name="interest">
-                            <option value="updates">Just add me to the update list</option>
+                            <option value="updates">Alliance updates</option>
                             <option value="firewise">Starting or renewing a Firewise community</option>
-                            <option value="presentation">Requesting a presentation for our group</option>
+                            <option value="presentation">A presentation for our group</option>
                             <option value="evacuation">Evacuation planning in my neighborhood</option>
                             <option value="volunteer">Volunteering with the Alliance</option>
                             <option value="other">Something else</option>
                         </select>
-                    </div>
-                    <div class="field">
-                        <label for="su-note">Your question <span style="font-weight:400">(optional)</span></label>
-                        <textarea id="su-note" name="note" rows="4"></textarea>
                     </div>
 
                     <!-- Honeypot. Real people never see this; bots fill it in. -->
@@ -335,11 +343,34 @@
                         <input type="text" id="su-company" name="company" tabindex="-1" autocomplete="off">
                     </div>
 
-                    <button class="btn btn-primary" type="submit">Send</button>
+                    <!-- Consent. This exact wording is stored with the record; see
+                         docs/07-members-and-communications-design.md. Not a hidden
+                         checkbox and not pre-ticked, on purpose. -->
+                    <div class="field field-check consent">
+                        <label>
+                            <input type="checkbox" name="consent" id="su-consent">
+                            <span>By signing up you agree to receive occasional messages from the Austin Area
+                            Firewise Alliance about wildfire preparedness and Alliance activities. Message
+                            frequency varies. Message and data rates may apply. Reply STOP to any text to
+                            stop, HELP for help. Unsubscribe from email with the link in any message. See our
+                            <a href="privacy.html">privacy statement</a>.</span>
+                        </label>
+                    </div>
+
+                    <button class="btn btn-primary" type="submit">Sign up</button>
                     <p class="hint">
-                        Used only to send Alliance updates and to answer what you asked.
+                        Nothing is sent until you confirm. You can stop at any time — every message
+                        says how.
                     </p>
                     <div class="form-status" id="signup-status" role="status" aria-live="polite"></div>
+
+                    <div id="signup-code" class="code-box" hidden>
+                        <label for="signup-code-input">Six-digit code from the text</label>
+                        <div class="code-row">
+                            <input type="text" id="signup-code-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+                            <button type="button" class="btn btn-green" id="signup-code-go">Confirm number</button>
+                        </div>
+                    </div>
                 </form>
             </div>
         </section>
@@ -381,6 +412,13 @@
                         <li><a class="ext" href="https://www.nfpa.org/firewise" target="_blank" rel="noopener">Firewise USA (NFPA)</a></li>
                     </ul>
                 </div>
+                <div>
+                    <h4>Your details</h4>
+                    <ul>
+                        <li><a href="privacy.html">Privacy statement</a></li>
+                        <li><a href="manage.html">Change how we contact you</a></li>
+                    </ul>
+                </div>
             </div>
             <div class="legal">
                 <p>
@@ -403,6 +441,7 @@
     <script src="js/config.js"></script>
     <script src="js/site.js"></script>
     <script src="js/content.js"></script>
+    <script src="js/signup.js"></script>
 </body>
 
 </html>
