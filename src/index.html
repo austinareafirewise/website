@@ -88,7 +88,17 @@
         <div id="notice-slot" hidden></div>
 
         <section class="hero">
-            <div class="wrap">
+            <div class="wrap hero-grid">
+
+                <!-- Travis County's burn ban, read from the county's own page
+                     every half hour and filled in by js/content.js. Empty and
+                     hidden in the markup: nothing on this page waits on it,
+                     and if the status cannot be read the hero is simply the
+                     hero. First in the source so it is also first on a phone,
+                     where the grid stacks. -->
+                <aside class="burn-ban" id="burn-ban" aria-label="Travis County burn ban status" hidden></aside>
+
+                <div class="hero-copy">
                 <p class="kicker">Travis County, Texas</p>
                 <h1>Wildfire moves fast.<br>Prepare before it happens.</h1>
                 <p class="lede">
@@ -102,6 +112,7 @@
                     <a class="btn btn-green" href="firewise-communities.html">Start a Firewise community</a>
                     <a class="btn btn-outline ext" href="https://warncentraltexas.org/" target="_blank" rel="noopener">Sign up for alerts</a>
                     <a class="btn btn-outline" href="#updates">Get Alliance updates</a>
+                </div>
                 </div>
             </div>
         </section>

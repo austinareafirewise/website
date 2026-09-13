@@ -395,6 +395,60 @@ section[id] { scroll-margin-top: 92px; }
 
 .hero .lede { font-size: 1.16rem; color: var(--muted); max-width: 64ch; }
 
+/* ---------- Burn ban notice in the hero ----------
+   The county's status, top right on a wide screen and above the headline on a
+   phone -- which is also its source order, so what a screen reader hears and
+   what a phone shows are the same thing. Red for a ban, green for none; the
+   words say which either way, since colour alone is not a status. */
+
+.hero-grid { display: grid; gap: 24px; }
+
+@media (min-width: 880px) {
+    .hero-grid {
+        grid-template-columns: minmax(0, 1fr) 300px;
+        align-items: start;
+    }
+    .hero-copy { grid-column: 1; grid-row: 1; }
+    .burn-ban  { grid-column: 2; grid-row: 1; }
+}
+
+.burn-ban {
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--sage-text);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    background: var(--card);
+    font-size: .95rem;
+}
+
+/* 7.2:1 and 7.6:1 for the headings on their own backgrounds; the body text
+   below them is --ink, which is over 13:1 on both. */
+.burn-ban.is-ban   { background: #fdeceb; border-color: #f0c8c4; border-left-color: #c0392b; }
+.burn-ban.is-clear { background: #e9f2ea; border-color: #cadfce; border-left-color: var(--green-500); }
+
+.burn-ban h2 {
+    font-size: 1rem;
+    line-height: 1.3;
+    margin: 0 0 6px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.burn-ban.is-ban h2   { color: #96231a; }
+.burn-ban.is-clear h2 { color: var(--green-700); }
+
+.burn-ban p { margin: 0 0 8px; color: var(--ink); }
+.burn-ban p:last-child { margin-bottom: 0; }
+
+.burn-ban a {
+    color: var(--orange-darker);
+    font-weight: 600;
+}
+
+/* Who said so and when. Small, but it is the part that tells a reader whether
+   to trust the line above it. */
+.burn-ban .burn-ban-source { font-size: .84rem; color: #4a4a4a; }
+
 .cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
 
 /* Interior page header, smaller than the home hero. */

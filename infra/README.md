@@ -49,8 +49,22 @@ aws cloudformation deploy --region us-east-2 --template-file /tmp/cms-packaged.y
   --stack-name aafa-cms --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
 ```
 
-Run from the repository root. `package` uploads `lambda/cms/` and rewrites the
-`Code:` reference; `deploy` applies it. A code-only change takes about a minute.
+Run from the repository root. `package` uploads `lambda/cms/` and `lambda/burnban/`
+and rewrites their `Code:` references; `deploy` applies it. A code-only change
+takes about a minute.
+
+#### Burn ban watch
+
+The same stack carries `aafa-burnban`, a function on a 30-minute EventBridge
+schedule that reads the Travis County Fire Marshal's burn ban page and writes
+`burnban.json` into the content bucket. The home page renders a notice in the
+hero from that file and links back to the county.
+
+It publishes nothing it cannot recognise, so a redesign of the county's page
+makes the notice go away rather than go wrong; the notice also hides itself
+once the file is more than six hours old. If the notice disappears, look at
+`/aws/lambda/aafa-burnban` — the alert text it read is logged on every run,
+and the wording it accepts is at the top of `lambda/burnban/index.mjs`.
 
 ### Members and communications (stack `aafa-comms`, template [`comms-stack.yaml`](comms-stack.yaml))
 

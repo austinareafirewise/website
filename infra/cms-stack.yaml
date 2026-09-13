@@ -225,7 +225,83 @@ Resources:
             Action: s3:GetObject
             Resource:
               - !Sub "${ContentBucket.Arn}/content.json"
+              - !Sub "${ContentBucket.Arn}/burnban.json"
               - !Sub "${ContentBucket.Arn}/images/*"
+
+  # ==================================================================
+  # Burn ban watch
+  #
+  # Travis County publishes the burn ban on its own page and nowhere machine
+  # readable, so this reads that page every half hour and writes burnban.json
+  # next to the published content. The home page renders a notice from it.
+  # The function publishes nothing when it cannot recognise the page, so a
+  # county redesign makes the notice disappear rather than lie: see the head
+  # of lambda/burnban/index.mjs.
+  # ==================================================================
+
+  BurnBanRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: aafa-burnban-function
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: lambda.amazonaws.com}
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      Policies:
+        - PolicyName: publish-burn-ban
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              # One key. This function reads a web page and writes one file;
+              # it has no reason to touch the board's content or pictures.
+              - Effect: Allow
+                Action: [s3:PutObject]
+                Resource: !Sub "${ContentBucket.Arn}/burnban.json"
+
+  BurnBanFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: aafa-burnban
+      Description: Reads the Travis County burn ban page and publishes burnban.json.
+      Runtime: nodejs22.x
+      Handler: index.handler
+      Architectures: [arm64]
+      MemorySize: 256
+      Timeout: 25
+      Role: !GetAtt BurnBanRole.Arn
+      Code: ../lambda/burnban
+      Environment:
+        Variables:
+          CONTENT_BUCKET: !Ref ContentBucket
+          CONTENT_KEY: burnban.json
+          SOURCE_URL: https://www.traviscountytx.gov/fire-marshal/burn-ban
+          CONTACT_URL: !Ref SiteOrigin
+      Tags:
+        - {Key: project, Value: website}
+
+  BurnBanLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${BurnBanFunction}"
+      RetentionInDays: 90
+
+  # Half-hourly. Often enough that the notice is right the same morning a ban
+  # is signed, seldom enough to be a polite visitor to a county web server.
+  BurnBanSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: aafa-burnban-check
+      Description: Check the Travis County burn ban page.
+      ScheduleExpression: rate(30 minutes)
+      Targets: [{Id: burnban, Arn: !GetAtt BurnBanFunction.Arn}]
+
+  BurnBanInvoke:
+    Type: AWS::Lambda::Permission
+    Properties: {FunctionName: !Ref BurnBanFunction, Action: lambda:InvokeFunction, Principal: events.amazonaws.com, SourceArn: !GetAtt BurnBanSchedule.Arn}
 
   # ==================================================================
   # The API
