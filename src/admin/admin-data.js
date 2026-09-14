@@ -156,7 +156,11 @@
                   help: "markdown", helpLabel: "What is Markdown?",
                   hint: "You can use Markdown for headings, bold and bullet points — press \u201cWhat is Markdown?\u201d above for what to type. Plain sentences are fine too. The unsubscribe link and our postal address are added automatically." },
                 { k: "smsBody", label: "Text message", type: "textarea", hint: "\"Reply STOP to stop\" is added automatically. Watch the segment count — a long text sends as several." },
-                { k: "sendAt", label: "Send at (leave blank for immediately)", type: "datetime-local" }
+                { k: "sendAt", label: "Send at (leave blank for immediately)", type: "datetime-local",
+                  hint: "Leave blank and it goes as soon as somebody approves it and presses Send. " +
+                        "A routine text can only be scheduled between 8am and 9pm Central — a time outside " +
+                        "that is refused. If the window closes before it actually goes out, the email still " +
+                        "goes and the text waits until the morning by itself. An emergency ignores all of this." }
             ];
         }
     };
