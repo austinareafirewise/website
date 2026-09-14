@@ -422,20 +422,40 @@ async function managePost(event) {
         const method = str(b.method, "Contact method", 10, true);
         if (!METHODS.has(method)) throw new ValidationError("Choose email, text, or both.");
         if (method !== "email" && !smsEnabled()) throw new ValidationError("Text messages aren't available yet.");
-        const set = ["updatedAt = :now", "updatedBy = :who", "#m = :method"], vals = { ":now": now, ":who": "manage", ":method": method, ":u": "unsubscribed", ":p": "pending" };
+        // DynamoDB rejects an update that declares a value it does not use, so
+        // each one is added only when something references it. Declaring them
+        // all up front meant choosing "Both" -- which turns nothing off and so
+        // never used :u -- failed every time with a validation error the person
+        // saw as "something went wrong on the server".
+        const set = ["updatedAt = :now", "updatedBy = :who", "#m = :method"];
+        const vals = { ":now": now, ":who": "manage", ":method": method };
+        const need = (key, value) => { vals[key] = value; return key; };
+
         let needEmailConfirm = false, needSms = false;
-        if (method === "sms") set.push("emailStatus = :u");
-        if (method === "email") set.push("smsStatus = :u");
-        if (method !== "sms" && m.email && m.emailStatus !== "confirmed") { set.push("emailStatus = :p"); needEmailConfirm = true; }
-        if (method !== "email" && m.phone && m.smsStatus !== "confirmed") { set.push("smsStatus = :p"); needSms = true; }
+        if (method === "sms") set.push("emailStatus = " + need(":u", "unsubscribed"));
+        if (method === "email") set.push("smsStatus = " + need(":u", "unsubscribed"));
+        if (method !== "sms" && m.email && m.emailStatus !== "confirmed") { set.push("emailStatus = " + need(":p", "pending")); needEmailConfirm = true; }
+        if (method !== "email" && m.phone && m.smsStatus !== "confirmed") { set.push("smsStatus = " + need(":p", "pending")); needSms = true; }
         if (method !== "sms" && !m.email) throw new ValidationError("We don't have an email address for you. Sign up again with one.");
         if (method !== "email" && !m.phone) throw new ValidationError("We don't have a mobile number for you. Sign up again with one.");
         await ddb.send(new UpdateCommand({ TableName: ENV.members, Key: { memberId },
             UpdateExpression: "SET " + set.join(", ") + " REMOVE unsubscribedAt, unsubscribedVia",
             ExpressionAttributeNames: { "#m": "method" }, ExpressionAttributeValues: vals }));
-        if (needEmailConfirm) await sendEmailConfirmation({ ...m, email: m.email });
-        return respond(200, { message: needEmailConfirm || needSms
-            ? "Updated. Check for a confirmation on the channel you added." : "Updated." });
+        // It said "check for a confirmation" and then sent only the email one,
+        // so somebody adding a number was told to watch a phone nothing had
+        // been sent to. Both channels go through the same sender now, which
+        // also means one failing does not stop the other.
+        const sentNow = (needEmailConfirm || needSms)
+            ? await sendConfirmationsFor({ ...m, method, emailStatus: needEmailConfirm ? "pending" : m.emailStatus, smsStatus: needSms ? "pending" : m.smsStatus })
+            : [];
+        const failedNow = sentNow.failed || [];
+        return respond(200, {
+            message: sentNow.length
+                ? "Updated. Check for a confirmation by " + Array.from(sentNow).join(" and ") + "."
+                : failedNow.length
+                    ? "Updated, but the confirmation could not be sent just now. Try again shortly."
+                    : "Updated.",
+        });
     }
     throw new ValidationError("Unknown action.");
 }
