@@ -1,6 +1,7 @@
 # Add someone to the list
 <!-- lesson-id: add-someone-to-the-list -->
 <!-- sections: members -->
+<!-- primary-for: members -->
 <!-- order: 40 -->
 <!-- minutes: 3 -->
 <!-- description: How people join, what the statuses mean, and the one rule about adding somebody yourself. -->

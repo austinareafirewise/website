@@ -1,6 +1,7 @@
 # Post a meeting notice
 <!-- lesson-id: post-a-meeting-notice -->
 <!-- sections: content -->
+<!-- primary-for: content -->
 <!-- order: 20 -->
 <!-- minutes: 3 -->
 <!-- description: Getting a meeting, seminar or chipper day onto the top of the home page. -->

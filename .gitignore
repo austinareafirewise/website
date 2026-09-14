@@ -19,6 +19,12 @@ npm-debug.log*
 .secret-*
 .twilio
 
+# The OpenAI key the narration generator reads. Named explicitly rather than
+# left to a wildcard: a live secret is worth an unambiguous rule somebody can
+# find by grepping for the filename.
+openai-api-key.local
+*.local
+
 # Working files: screenshots gathered for carrier and SES paperwork
 signup-form.png
 *.screenshot.png

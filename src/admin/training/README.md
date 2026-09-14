@@ -50,6 +50,34 @@ button cannot.
 Never promise what the screen does not do. If a step says "press Publish and it
 appears", it had better appear.
 
+## Recording the narration
+
+```bash
+node src/admin/training/generate-audio.mjs --list            # what needs recording
+node src/admin/training/generate-audio.mjs --lesson first-time     # dry run
+node src/admin/training/generate-audio.mjs --lesson first-time --go # spends money
+node src/admin/training/generate-audio.mjs --all --go
+node src/admin/training/generate-audio.mjs --restamp         # hashes only, free
+```
+
+Adapted from `rp-desktop`'s `scripts/generate-lesson-audio.ts`, keeping the
+things that script learned the hard way: dry run by default, `ffmpeg` checked
+before the first request rather than after paying for thirty clips, clips
+re-encoded to 64 kbps mono before they reach the repository, and clips nothing
+points at deleted rather than left behind forever.
+
+`--go` calls OpenAI and is billed. Everything else is free.
+
+**The key.** `openai-api-key.local` at the repository root, the key as its only
+contents. It is gitignored **by name** as well as by the `*.local` wildcard —
+a live secret is worth a rule somebody can find by grepping for the filename.
+It is never logged, echoed or included in an error message.
+
+**`audio-hash`** is a fingerprint of the exact words, voice and delivery a clip
+was read from. Change the words and `--list` shows that step as stale, so a
+recording that no longer matches its script can be found instead of quietly
+playing the old version.
+
 ## Checking
 
 ```bash

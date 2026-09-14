@@ -320,15 +320,20 @@
     /* window point at things over here.                             */
     /* ============================================================ */
 
-    /* Which lessons cover which tab. Kept here rather than fetched so the
-       button can appear immediately; training/check.mjs proves each file
-       exists and that its sections are real tabs. */
+    /* The course the Training button opens on each tab. Pressing it starts
+       that lesson rather than offering a list: somebody who wanted a list can
+       reach one from inside the guide, and somebody who pressed Training on
+       the Members screen wanted to be taught the Members screen.
+
+       Kept here rather than fetched so the button can appear without waiting
+       on a download. training/check.mjs proves every tab has exactly one
+       course and that the file says the same thing. */
     var TRAINING = {
-        content: ["first-time", "post-a-meeting-notice", "write-a-news-article"],
-        members: ["first-time", "add-someone-to-the-list"],
-        comms: ["first-time", "send-a-message"],
-        groups: ["first-time", "firewise-groups-and-board"],
-        board: ["first-time", "firewise-groups-and-board"]
+        content: "post-a-meeting-notice",
+        members: "add-someone-to-the-list",
+        comms: "send-a-message",
+        groups: "firewise-groups-and-board",
+        board: "firewise-groups-and-board"
     };
 
     var trainingWindow = null;
@@ -336,13 +341,14 @@
     function updateTrainingButton() {
         var tab = document.querySelector('.admin-nav .tab[aria-current="page"]');
         var name = tab ? tab.getAttribute("data-section") : "content";
-        $("train-open").hidden = !(TRAINING[name] && TRAINING[name].length);
+        $("train-open").hidden = !TRAINING[name];
     }
 
     function openTraining() {
         var tab = document.querySelector('.admin-nav .tab[aria-current="page"]');
         var name = tab ? tab.getAttribute("data-section") : "content";
-        var url = "training.html?section=" + encodeURIComponent(name);
+        var url = "training.html?section=" + encodeURIComponent(name) +
+                  "&lesson=" + encodeURIComponent(TRAINING[name] || "");
         // Reuse the window if it is already open, so pressing the button twice
         // does not leave two guides disagreeing about where you are.
         if (trainingWindow && !trainingWindow.closed) {

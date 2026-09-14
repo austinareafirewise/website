@@ -32,6 +32,7 @@ const classes = new Set(
 const problems = [];
 const seenIds = new Map();
 const seenOrder = new Map();
+const primaries = new Map();   // section -> the lesson the Training button opens
 
 /* A target is a plain #id or .class. Anything fancier is refused rather than
    half-checked: a selector this cannot verify is a selector that can rot. */
@@ -65,6 +66,16 @@ function parseLesson(file) {
             problems.push(`${file}: lesson-id "${meta["lesson-id"]}" is already used by ${seenIds.get(meta["lesson-id"])}`);
         }
         seenIds.set(meta["lesson-id"], file);
+    }
+    if (meta["primary-for"]) {
+        for (const name of meta["primary-for"].split(",").map((x) => x.trim()).filter(Boolean)) {
+            if (!SECTIONS.has(name)) problems.push(`${file}: primary-for names "${name}", which is not a tab`);
+            if (!(meta.sections || "").split(",").map((x) => x.trim()).includes(name)) {
+                problems.push(`${file}: primary-for "${name}" is not in its own sections list`);
+            }
+            if (primaries.has(name)) problems.push(`${file}: ${primaries.get(name)} is already the course for "${name}"`);
+            primaries.set(name, file);
+        }
     }
     if (meta.sections) {
         for (const name of meta.sections.split(",").map((x) => x.trim()).filter(Boolean)) {
@@ -118,6 +129,10 @@ const lessons = files.map(parseLesson);
 
 for (const l of lessons) {
     console.log(`${l.file.padEnd(32)} ${String(l.steps).padStart(2)} steps   order ${l.meta.order || "?"}   ${l.meta.minutes || "?"} min`);
+}
+
+for (const name of SECTIONS) {
+    if (!primaries.has(name)) problems.push(`no lesson is marked "primary-for: ${name}", so the Training button on that tab has nothing to open`);
 }
 
 if (problems.length) {
