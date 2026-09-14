@@ -46,7 +46,9 @@
         var parts = [];
         if (m.email) parts.push("email " + m.email + (m.emailStatus === "confirmed" ? "" : " (" + (m.emailStatus || "not set") + ")"));
         if (m.phone) parts.push("mobile " + m.phone + (m.smsStatus === "confirmed" ? "" : " (" + (m.smsStatus || "not set") + ")"));
-        $("summary").textContent = (m.name ? m.name + " — " : "") + "we have your " + parts.join(" and ") + ". Status: " + m.status + ".";
+        // Without a name the sentence used to open with a lower-case "we".
+        $("summary").textContent = (m.name ? m.name + " — we have your " : "We have your ")
+            + parts.join(" and ") + ". Status: " + m.status + ".";
         $("choice-sms").hidden = !m.smsAvailable;
         $("choice-both").hidden = !m.smsAvailable;
         var method = m.emailStatus === "confirmed" && m.smsStatus === "confirmed" ? "both" : m.smsStatus === "confirmed" ? "sms" : "email";

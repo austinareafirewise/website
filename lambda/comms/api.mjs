@@ -379,7 +379,11 @@ async function manageGet(event) {
     const mask = (s) => s ? s.replace(/^(.{2}).*(@.*)$/, "$1…$2") : "";
     return respond(200, {
         member: {
-            name: m.name || "", email: mask(m.email), phone: m.phone ? "…" + m.phone.slice(-4) : "",
+            // displayName, not the stored name: saving through the board
+            // editor settles a person into firstName/lastName and removes the
+            // single name, so reading m.name gives an empty string for
+            // anybody edited since. This page then greeted them by nobody.
+            name: displayName(m), email: mask(m.email), phone: m.phone ? "…" + m.phone.slice(-4) : "",
             emailStatus: m.emailStatus || null, smsStatus: m.smsStatus || null, status: deriveStatus(m),
             smsAvailable: smsEnabled(),
         },
