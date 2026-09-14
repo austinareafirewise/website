@@ -336,6 +336,7 @@
        course and that the file says the same thing. */
     var TRAINING = {
         content: "post-a-meeting-notice",
+        home: "edit-the-home-page",
         members: "add-someone-to-the-list",
         comms: "send-a-message",
         groups: "firewise-groups-and-board",

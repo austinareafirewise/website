@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PAGE = join(HERE, "..", "index.html");
-const SECTIONS = new Set(["content", "members", "comms", "groups", "board"]);
+const SECTIONS = new Set(["content", "home", "members", "comms", "groups", "board"]);
 const SCREENS = new Set(["list", "editor"]);
 const REQUIRED_META = ["lesson-id", "sections", "order", "minutes", "description"];
 
@@ -172,6 +172,21 @@ if (!files.length) {
 }
 
 const lessons = files.map(parseLesson);
+
+/* The guide cannot list a directory, so training.js names the files it
+   loads. A lesson missing from that list is a lesson nobody can reach, and
+   the only sign of it is its absence -- which is exactly what a person does
+   not notice. */
+const listed = new Set(
+    [...readFileSync(join(HERE, "..", "training.js"), "utf8")
+        .matchAll(/"([a-z0-9-]+\.md)"/g)].map((m) => m[1])
+);
+for (const f of files) {
+    if (!listed.has(f)) problems.push(`${f}: not in the FILES list in admin/training.js, so the guide never loads it`);
+}
+for (const f of listed) {
+    if (!files.includes(f)) problems.push(`admin/training.js lists ${f}, which is not in ${HERE}`);
+}
 
 for (const l of lessons) {
     console.log(`${l.file.padEnd(32)} ${String(l.steps).padStart(2)} steps   order ${l.meta.order || "?"}   ${l.meta.minutes || "?"} min`);

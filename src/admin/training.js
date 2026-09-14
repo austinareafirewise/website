@@ -22,6 +22,7 @@
        named here exist. */
     var FILES = [
         "first-time.md",
+        "edit-the-home-page.md",
         "post-a-meeting-notice.md",
         "write-a-news-article.md",
         "add-someone-to-the-list.md",
