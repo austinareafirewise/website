@@ -76,13 +76,16 @@ hears instead of seeing it, which is why it is required.
 - section: content
 - screen: editor
 - target: #preview
-- audio: post-a-meeting-notice-06-13cee1.mp3
-- audio-hash: 261cff74
+- audio: post-a-meeting-notice-06-6791a0.mp3
+- audio-hash: 43fc35aa
 
-Preview opens the real home page with your notice in place. Not an
-approximation — the actual page, exactly as a visitor will see it.
+Preview opens the real home page with your notice on it. Not an approximation
+— the actual page, with your wording, your picture and your layout.
 
-Use it every time. It takes five seconds and it catches the wrong date.
+It shows the notice whatever its dates say, so it is not a check that the
+notice will be live. What it does show is the date printed on the notice
+itself, which is the "Show from" time you set — so this is where you catch
+having typed the wrong day for the meeting.
 
 ## Publish
 - section: content

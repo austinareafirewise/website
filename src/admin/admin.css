@@ -234,23 +234,22 @@ code { background: #f1f1ec; padding: 1px 5px; border-radius: 4px; font-size: .9e
 .admin-nav .help-tab:hover .help-mark { background: var(--green-900); }
 
 /* ---------- Training ----------
-   Violet, which appears nowhere else on this site. The page is green and
-   orange, and orange already means alert, so a highlight in either would read
-   as part of the screen rather than as something drawn on top of it. A colour
-   with no other job here says "the guide is pointing at this" and cannot be
-   confused with a warning. 7.1:1 on white, so the button's own label is
-   legible rather than merely decorative. */
-:root { --violet: #6D28D9; --violet-deep: #5B21B6; }
+   Violet is reserved for one job: the outline around whatever the guide is
+   pointing at. Nothing else on this site uses it, which is what makes it read
+   as something drawn on top of the page rather than part of it -- so it is
+   not spent on the button, the panel or anything else. The button itself is
+   the site's own orange, like every other piece of chrome here. */
+:root { --violet: #6D28D9; }
 
-.admin-nav .train-tab { margin-left: auto; color: var(--violet); }
+.admin-nav .train-tab { margin-left: auto; color: var(--orange-dark); }
 .admin-nav .help-tab { margin-left: 0; }
 .train-mark {
     display: inline-grid; place-items: center;
     width: 22px; height: 22px; margin-right: 4px; vertical-align: -5px;
-    border-radius: 999px; background: var(--violet); color: #fff;
+    border-radius: 999px; background: var(--orange-dark); color: #fff;
     font-size: .7rem;
 }
-.admin-nav .train-tab:hover .train-mark { background: var(--violet-deep); }
+.admin-nav .train-tab:hover .train-mark { background: var(--orange-darker); }
 
 /* What the guide is pointing at. An outline rather than a background, so it
    works on a button, a field or a whole panel without hiding what is inside
@@ -279,7 +278,7 @@ code { background: #f1f1ec; padding: 1px 5px; border-radius: 4px; font-size: .9e
 .training-window { background: var(--page); }
 .tr-shell { padding: 18px 20px 26px; max-width: 560px; margin: 0 auto; }
 .tr-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
-.tr-kicker { text-transform: uppercase; letter-spacing: .12em; font-size: .7rem; font-weight: 700; color: var(--violet); margin: 0 0 2px; }
+.tr-kicker { text-transform: uppercase; letter-spacing: .12em; font-size: .7rem; font-weight: 700; color: var(--orange-dark); margin: 0 0 2px; }
 .tr-shell h1 { font-size: 1.2rem; margin: 0; }
 .tr-shell h2 { font-size: 1.05rem; margin: 0 0 8px; color: var(--green-900); }
 
@@ -287,10 +286,10 @@ code { background: #f1f1ec; padding: 1px 5px; border-radius: 4px; font-size: .9e
 .tr-divider { margin: 8px 0 0; }
 .tr-card {
     display: grid; gap: 2px; text-align: left; cursor: pointer; font: inherit;
-    background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--violet);
+    background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--orange);
     border-radius: 10px; padding: 12px 14px;
 }
-.tr-card:hover { border-color: var(--violet); }
+.tr-card:hover { border-color: var(--orange-dark); }
 .tr-card:focus-visible { outline: 3px solid var(--orange-dark); outline-offset: 2px; }
 .tr-card strong { color: var(--green-900); }
 .tr-meta { font-size: .8rem; color: var(--muted); }
