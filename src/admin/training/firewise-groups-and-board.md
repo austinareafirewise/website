@@ -34,6 +34,7 @@ chose it keep their records but lose the group.
 ## Describe the area as a resident would
 - section: groups
 - screen: editor
+- open: #group-new
 - audio: firewise-groups-and-board-03-d1d306.mp3
 - audio-hash: 137c405d
 

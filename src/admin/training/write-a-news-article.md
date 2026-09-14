@@ -21,6 +21,7 @@ read, it is an article.
 ## Write it
 - section: content
 - screen: editor
+- open: #new-news
 - target: #f-body
 - audio: write-a-news-article-02-9f2328.mp3
 - audio-hash: 1a6c6252
@@ -34,6 +35,7 @@ visitors will see.
 ## Put it on the home page as well
 - section: content
 - screen: editor
+- open: #new-news
 - target: #wrap-home
 - audio: write-a-news-article-03-9b125a.mp3
 - audio-hash: d9b9ea6e
@@ -47,6 +49,7 @@ article is on the home page, none of them stands out.
 ## Pictures
 - section: content
 - screen: editor
+- open: #new-news
 - target: #dropzone
 - audio: write-a-news-article-04-424f2a.mp3
 - audio-hash: 000f4c37
@@ -61,6 +64,7 @@ optional.
 ## Where each picture sits
 - section: content
 - screen: editor
+- open: #new-news
 - target: #pictures
 - audio: write-a-news-article-05-46d0ce.mp3
 - audio-hash: 3ba1440e
@@ -75,6 +79,7 @@ came out on its side.
 ## Preview, then publish
 - section: content
 - screen: editor
+- open: #new-news
 - target: #preview
 - audio: write-a-news-article-06-b31d03.mp3
 - audio-hash: ba4cd413

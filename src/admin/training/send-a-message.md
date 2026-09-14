@@ -33,6 +33,7 @@ text.
 ## Email and text are different
 - section: comms
 - screen: editor
+- open: #comm-new
 - audio: send-a-message-03-6fee0e.mp3
 - audio-hash: b058fe3c
 

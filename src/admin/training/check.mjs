@@ -104,6 +104,13 @@ function parseLesson(file) {
             problems.push(`${where}: screen "${fields.screen}" is not list or editor`);
         }
         if (fields.target) checkTarget(fields.target, where);
+        if (fields.open) checkTarget(fields.open, `${where} [open]`);
+        if (fields.open && fields.screen !== "editor") {
+            problems.push(`${where}: has an "open" but is not marked "screen: editor"`);
+        }
+        if (fields.screen === "editor" && !fields.open) {
+            problems.push(`${where}: is on the editor but nothing says how to get there — add "open: <selector>"`);
+        }
 
         // The words. Spoken over a screen, so length is a real constraint.
         const spoken = chunk

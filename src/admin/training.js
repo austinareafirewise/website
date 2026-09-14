@@ -93,7 +93,11 @@
         var w = admin();
         $("tr-pointing").hidden = true;
         if (!w) return;
-        var found = w.AAFA_ADMIN.trainingFocus(step.fields.section || null, step.fields.target || null);
+        var found = w.AAFA_ADMIN.trainingFocus(
+            step.fields.section || null,
+            step.fields.target || null,
+            step.fields.open || null
+        );
         if (step.fields.target && !found) {
             // Say so rather than leaving somebody hunting for a highlight that
             // is not there.

@@ -362,21 +362,46 @@
         }
     }
 
-    /* Called from the training window. Switches to the tab the step happens on
-       and outlines what it points at. Returns whether the target was actually
-       found, so the guide can say so rather than leaving somebody hunting. */
+    /* Called from the training window. Gets the admin page to the screen the
+       step is about, then outlines what it points at.
+     *
+     * "open" is the step's own selector for the button that gets to a form --
+     * "+ New meeting notice", "+ Add someone". Without it a step describing a
+     * field would talk about the form while the list was still on screen,
+     * which teaches nobody anything.
+     *
+     * It is only pressed when the thing being pointed at is not already
+     * showing, so stepping backwards and forwards through a lesson does not
+     * throw away the form somebody is already looking at. A new form holds
+     * nothing until it is saved, so opening one costs nothing. */
     var trainingMark = null;
-    function trainingFocus(section, selector) {
+
+    function visible(node) {
+        return !!node && !node.hidden && node.getClientRects().length > 0;
+    }
+
+    function find(selector) {
+        if (!selector) return null;
+        try { return document.querySelector(selector); } catch (e) { return null; }
+    }
+
+    function trainingFocus(section, selector, open) {
         if (trainingMark) { trainingMark.classList.remove("training-target"); trainingMark = null; }
+
         if (section) {
             var tab = document.querySelector('.admin-nav .tab[data-section="' + section + '"]');
             var currentTab = document.querySelector('.admin-nav .tab[aria-current="page"]');
             if (tab && tab !== currentTab) tab.click();
         }
+
+        if (open && !visible(find(selector))) {
+            var opener = find(open);
+            if (visible(opener)) opener.click();
+        }
+
         if (!selector) return true;
-        var node;
-        try { node = document.querySelector(selector); } catch (e) { return false; }
-        if (!node || node.hidden || !node.getClientRects().length) return false;
+        var node = find(selector);
+        if (!visible(node)) return false;
         node.classList.add("training-target");
         trainingMark = node;
         node.scrollIntoView({ block: "center", behavior: "smooth" });

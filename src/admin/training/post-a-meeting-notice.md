@@ -21,6 +21,7 @@ Press "New meeting notice" to start one.
 ## The title and the words
 - section: content
 - screen: editor
+- open: #new-notice
 - target: #f-title
 - audio: post-a-meeting-notice-02-af391d.mp3
 - audio-hash: 881e5ced
@@ -35,6 +36,7 @@ the rest of the page down.
 ## What kind of notice it is
 - section: content
 - screen: editor
+- open: #new-notice
 - target: #wrap-tone
 - audio: post-a-meeting-notice-03-385f55.mp3
 - audio-hash: 8b9db79c
@@ -49,6 +51,7 @@ loud if everything uses it.
 ## When it appears, and when it goes
 - section: content
 - screen: editor
+- open: #new-notice
 - target: #f-starts
 - audio: post-a-meeting-notice-04-10bcee.mp3
 - audio-hash: 20dc5ef7
@@ -62,6 +65,7 @@ just after the event.
 ## A picture, if you have one
 - section: content
 - screen: editor
+- open: #new-notice
 - target: #dropzone
 - audio: post-a-meeting-notice-05-d4b218.mp3
 - audio-hash: b93bb66f
@@ -75,6 +79,7 @@ hears instead of seeing it, which is why it is required.
 ## Look at it before anybody else does
 - section: content
 - screen: editor
+- open: #new-notice
 - target: #preview
 - audio: post-a-meeting-notice-06-6791a0.mp3
 - audio-hash: 43fc35aa
@@ -90,6 +95,7 @@ having typed the wrong day for the meeting.
 ## Publish
 - section: content
 - screen: editor
+- open: #new-notice
 - target: #publish
 - audio: post-a-meeting-notice-07-bdc909.mp3
 - audio-hash: 6eba0ae8
