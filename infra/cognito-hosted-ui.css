@@ -1,0 +1,84 @@
+/* Sign-in page for /admin/, styled to match the site.
+
+   This is Cognito's hosted sign-in page, not a page in this repository. It
+   only accepts a fixed list of class names and a fixed list of properties on
+   each of them -- anything else is rejected by the API -- so this is as close
+   to the site as that allowance gets.
+
+   Apply it with the command in infra/README.md. It is not part of a
+   CloudFormation stack: hosted-UI branding has no CloudFormation resource,
+   so it is applied deliberately and kept here so it is reproducible. */
+
+.background-customizable {
+    background-color: #FBFAF7;
+}
+
+.banner-customizable {
+    background-color: #FFFFFF;
+}
+
+.logo-customizable {
+    max-width: 68%;
+    max-height: 68%;
+}
+
+.label-customizable {
+    color: #1D2A21;
+    font-weight: 700;
+}
+
+.textDescription-customizable {
+    color: #1D2A21;
+    font-size: 16px;
+    padding-top: 12px;
+    padding-bottom: 14px;
+}
+
+.inputField-customizable {
+    background-color: #FFFFFF;
+    border-color: #C9C9BF;
+    color: #1D2A21;
+    font-size: 16px;
+}
+
+.inputField-customizable:focus {
+    border-color: #A85512;
+    outline: 0;
+}
+
+/* The site's action colour. --orange-dark, which is the tone the site uses
+   for anything carrying words: 5.29:1 against white. */
+.submitButton-customizable {
+    background-color: #A85512;
+    color: #FFFFFF;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.submitButton-customizable:hover {
+    background-color: #8F4409;
+    color: #FFFFFF;
+}
+
+.errorMessage-customizable {
+    background-color: #FBE4E0;
+    color: #8E2412;
+    border-color: #E7B8AE;
+}
+
+.legalText-customizable {
+    color: #556666;
+    font-size: 12px;
+}
+
+.idpDescription-customizable {
+    color: #556666;
+}
+
+.passwordCheck-notValid-customizable {
+    color: #8E2412;
+}
+
+.passwordCheck-valid-customizable {
+    color: #1D5B2C;
+}
