@@ -514,7 +514,15 @@ export async function allGroups() {
         out.push(...(page.Items || []));
         ExclusiveStartKey = page.LastEvaluatedKey;
     } while (ExclusiveStartKey);
-    return out.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+    // A group's leaders are people, so their names are shaped like every
+    // other person's: first and last. Older rows hold one string and are
+    // split on the way out, never rewritten in place.
+    return out
+        .map((g) => ({
+            ...g,
+            leaders: (g.leaders || []).map((l) => ({ ...l, ...splitName(l), name: displayName(l) })),
+        }))
+        .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
 }
 
 /* What an anonymous visitor may see: enough to choose their neighbourhood
@@ -534,8 +542,15 @@ export async function allBoard() {
         out.push(...(page.Items || []));
         ExclusiveStartKey = page.LastEvaluatedKey;
     } while (ExclusiveStartKey);
-    return out.sort((a, b) => {
-        if (a.status !== b.status) return a.status === "current" ? -1 : 1;
-        return String(a.name || "").localeCompare(String(b.name || ""));
-    });
+    // Board records carry firstName/lastName, the same as members. Older ones
+    // hold a single name; splitName derives the two from it on the way out
+    // rather than rewriting the stored record, so a bad guess at where a
+    // surname starts is never made permanent.
+    return out
+        .map((p) => ({ ...p, ...splitName(p), name: displayName(p) }))
+        .sort((a, b) => {
+            if (a.status !== b.status) return a.status === "current" ? -1 : 1;
+            const byLast = String(a.lastName || "").localeCompare(String(b.lastName || ""));
+            return byLast !== 0 ? byLast : String(a.firstName || "").localeCompare(String(b.firstName || ""));
+        });
 }

@@ -618,12 +618,19 @@ function validateGroup(b) {
         renewalDue: b.renewalDue ? isoDate(b.renewalDue, "Renewal due") : undefined,
         website: str(b.website, "Website", 300) || undefined,
         notes: str(b.notes, "Notes", LIMITS.notes) || undefined,
-        leaders: (Array.isArray(b.leaders) ? b.leaders : []).slice(0, 10).map((l, i) => ({
-            name: str(l?.name, `Leader ${i + 1} name`, LIMITS.personName, true),
-            role: str(l?.role, `Leader ${i + 1} role`, LIMITS.role) || undefined,
-            email: l?.email ? email(l.email) : undefined,
-            phone: l?.phone ? phone(l.phone) : undefined,
-        })),
+        leaders: (Array.isArray(b.leaders) ? b.leaders : []).slice(0, 10).map((l, i) => {
+            const firstName = str(l?.firstName, `Leader ${i + 1} first name`, LIMITS.firstName);
+            const lastName = str(l?.lastName, `Leader ${i + 1} last name`, LIMITS.lastName);
+            if (!firstName && !lastName) throw new ValidationError(`Leader ${i + 1} needs a name.`);
+            return {
+                firstName: firstName || undefined,
+                lastName: lastName || undefined,
+                name: [firstName, lastName].filter(Boolean).join(" "),
+                role: str(l?.role, `Leader ${i + 1} role`, LIMITS.role) || undefined,
+                email: l?.email ? email(l.email) : undefined,
+                phone: l?.phone ? phone(l.phone) : undefined,
+            };
+        }),
     };
     if (out.website && !/^https:\/\/\S+$/.test(out.website)) throw new ValidationError("The website must start with https://");
     if (out.households !== undefined && (!Number.isInteger(out.households) || out.households < 0 || out.households > 100000)) {
@@ -695,8 +702,16 @@ async function boardLogins() {
 function validatePerson(b) {
     const status = str(b.status, "Status", 20, true);
     if (!BOARD_STATUSES.has(status)) throw new ValidationError("Status must be current or past.");
+    // First and last name, the same as a member. A board member is a person on
+    // the same list of people; there is no reason for their name to be shaped
+    // differently. Older records hold one "name" and are split on read.
+    const firstName = str(b.firstName, "First name", LIMITS.firstName);
+    const lastName = str(b.lastName, "Last name", LIMITS.lastName);
+    if (!firstName && !lastName) throw new ValidationError("A board member needs a name.");
     const out = {
-        name: str(b.name, "Name", LIMITS.personName, true),
+        firstName: firstName || undefined,
+        lastName: lastName || undefined,
+        name: [firstName, lastName].filter(Boolean).join(" "),
         role: str(b.role, "Role", LIMITS.role) || undefined,
         status,
         email: b.email ? email(b.email) : undefined,
