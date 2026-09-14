@@ -27,7 +27,8 @@
         "write-a-news-article.md",
         "add-someone-to-the-list.md",
         "send-a-message.md",
-        "firewise-groups-and-board.md"
+        "firewise-groups.md",
+        "alliance-board-roster.md"
     ];
 
     var lessons = [];

@@ -33,6 +33,10 @@ const styledClasses = new Set([...css.matchAll(/\.([A-Za-z][\w-]*)/g)].map((m) =
 
 /* The keys the record editor builds its fields from. */
 const adminData = readFileSync(join(HERE, "..", "admin-data.js"), "utf8");
+/* Ids the admin page only has once a form is drawn -- the repeating rows of a
+   group's own board, for one. They are in the script rather than the markup,
+   so that is where they are looked for. */
+const runtimeIds = new Set([...adminData.matchAll(/\bid:\s*"([A-Za-z][\w-]*)"/g)].map((m) => m[1]));
 const editorFields = new Set([...adminData.matchAll(/\{\s*k:\s*"([A-Za-z][\w]*)"/g)].map((m) => m[1]));
 
 const classes = new Set(
@@ -74,7 +78,9 @@ function checkTarget(target, where) {
             }
             return;
         }
-        if (!ids.has(id)) problems.push(`${where}: no element with id "${id}" in admin/index.html`);
+        if (!ids.has(id) && !runtimeIds.has(id)) {
+            problems.push(`${where}: no element with id "${id}" in admin/index.html, and nothing in admin-data.js builds one`);
+        }
         return;
     }
     if (/^\.[A-Za-z][\w-]*$/.test(target)) {

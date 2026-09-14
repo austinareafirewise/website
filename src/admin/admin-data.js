@@ -122,7 +122,7 @@
                 { k: "website", label: "Website", type: "url", hint: "Must start with https://" },
                 { k: "about", label: "About the group", type: "textarea" },
                 { k: "notes", label: "Notes (board only)", type: "textarea" },
-                { k: "leaders", label: "Leadership", type: "leaders" }
+                { k: "leaders", label: "This group's own board and contacts", type: "leaders" }
             ];
         },
         person: function () {
@@ -222,11 +222,22 @@
                      : { firstName: whole.slice(0, i).trim(), lastName: whole.slice(i + 1).trim() };
     }
 
-    /* Leadership is a repeating group, so it gets its own control rather
-       than being squeezed into a text box people would have to format. */
+    /* The other direction: whatever is stored, read back as one name. */
+    function wholePersonName(p) {
+        var parts = splitPersonName(p);
+        return [parts.firstName, parts.lastName].filter(Boolean).join(" ");
+    }
+
+    /* A Firewise group's own officers -- its chair, its contacts -- which are
+       nothing to do with the Alliance's board of directors on the Board tab.
+       Two different sets of people, and the wording says so everywhere they
+       appear, because a name in the wrong list is not obviously wrong.
+
+       A repeating group, so it gets its own control rather than being
+       squeezed into a text box people would have to format. */
     function leadersField(leaders) {
         var wrap = el("div", { class: "field" });
-        wrap.appendChild(el("label", { text: "Leadership (optional)" }));
+        wrap.appendChild(el("label", { text: "This group's own board and contacts (optional)" }));
         var list = el("div", { id: "leaders-list", class: "leaders" });
         function row(l) {
             var r = el("div", { class: "leader-row" }, [
@@ -251,7 +262,7 @@
         var add = el("button", { type: "button", class: "btn btn-outline btn-small", text: "+ Add a person" });
         add.addEventListener("click", function () { list.appendChild(row({})); });
         wrap.appendChild(add);
-        wrap.appendChild(el("p", { class: "hint", text: "Names and contact details here are never shown on the public site." }));
+        wrap.appendChild(el("p", { class: "hint", text: "The neighborhood group's own officers — not the Alliance board, which is kept on the Board tab. Names and contact details here are never shown on the public site." }));
         return wrap;
     }
 
@@ -487,12 +498,12 @@
             if (g.households) bits.push(g.households + " households");
             if (g.recognizedYear) bits.push("recognized " + g.recognizedYear);
             if (g.renewalDue) bits.push("renewal due " + fmt(g.renewalDue));
-            var leaders = (g.leaders || []).map(function (l) { return l.name + (l.role ? " (" + l.role + ")" : ""); }).join(", ");
+            var leaders = (g.leaders || []).map(function (l) { return wholePersonName(l) + (l.role ? " (" + l.role + ")" : ""); }).filter(Boolean).join(", ");
             var card = el("div", { class: "item " + (g.status === "recognized" ? "live" : g.status === "lapsed" ? "scheduled" : "draft") }, [
                 el("div", null, [
                     el("h3", null, [badge(g.status, g.status === "recognized" ? "live" : ""), g.name]),
                     el("p", { class: "meta", text: bits.join(" · ") }),
-                    el("p", { class: "meta", text: (leaders ? "Leads: " + leaders + " · " : "") + (counts[g.groupId] || 0) + " sign-up(s)" })
+                    el("p", { class: "meta", text: (leaders ? "Their board: " + leaders + " · " : "") + (counts[g.groupId] || 0) + " sign-up(s)" })
                 ]),
                 el("div", { class: "item-actions" })
             ]);
@@ -506,7 +517,8 @@
     function renderBoard() {
         var root = $("person-list"); root.textContent = "";
         var groups = {}; state.groups.forEach(function (g) { groups[g.groupId] = g.name; });
-        $("board-note").textContent = "A board record and a website login are separate things. " +
+        $("board-note").textContent = "The Alliance's own board of directors. A Firewise group's officers are kept on that group's record, under Firewise groups. " +
+            "A board record and a website login are separate things. " +
             "Adding someone here does not give them access to edit the site, and removing them does not take it away — " +
             "that is done separately, by whoever manages the AWS account.";
         if (!state.board.length) {
@@ -523,7 +535,7 @@
             var hasLogin = p.email && state.logins.indexOf(p.email) >= 0;
             var card = el("div", { class: "item " + (p.status === "current" ? "live" : "draft") }, [
                 el("div", null, [
-                    el("h3", null, [badge(p.status === "current" ? "current" : "past", p.status === "current" ? "live" : ""), (p.name || [p.firstName, p.lastName].filter(Boolean).join(" ") || "(no name)") + (p.role ? " — " + p.role : "")]),
+                    el("h3", null, [badge(p.status === "current" ? "current" : "past", p.status === "current" ? "live" : ""), (wholePersonName(p) || "(no name)") + (p.role ? " — " + p.role : "")]),
                     el("p", { class: "meta", text: bits.join(" · ") }),
                     el("p", { class: "meta", text: hasLogin ? "Has a website login" : "No website login" })
                 ]),

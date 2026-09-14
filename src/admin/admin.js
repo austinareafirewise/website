@@ -339,8 +339,8 @@
         home: "edit-the-home-page",
         members: "add-someone-to-the-list",
         comms: "send-a-message",
-        groups: "firewise-groups-and-board",
-        board: "firewise-groups-and-board"
+        groups: "firewise-groups",
+        board: "alliance-board-roster"
     };
 
     var trainingWindow = null;

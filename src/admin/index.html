@@ -41,7 +41,7 @@
             <button type="button" class="tab" data-section="members">Members</button>
             <button type="button" class="tab" data-section="comms">Messages</button>
             <button type="button" class="tab" data-section="groups">Firewise groups</button>
-            <button type="button" class="tab" data-section="board">Board</button>
+            <button type="button" class="tab" data-section="board">Alliance board</button>
             <!-- Help for whichever section is showing. Reads the selected tab
                  when it opens, so it never needs telling which one that is. -->
             <!-- Training for whichever section is showing. Hidden until the
@@ -309,7 +309,7 @@
 
         <div id="section-board" hidden>
             <div class="admin-actions">
-                <button type="button" class="btn btn-primary btn-small" id="person-new">+ Add a board member</button>
+                <button type="button" class="btn btn-primary btn-small" id="person-new">+ Add an Alliance board member</button>
             </div>
             <p class="hint" id="board-note"></p>
             <div id="person-list" aria-live="polite"></div>
@@ -788,10 +788,17 @@
             </p>
         </section>
 
-        <section data-help="board" data-title="Board">
+        <section data-help="board" data-title="Alliance board">
             <p class="help-lede">
                 Who is on the board of the Alliance, with roles and terms. This is the
                 organization's own record.
+            </p>
+
+            <h3>Not the same as a group's officers</h3>
+            <p>
+                A Firewise group has its own chair and contacts. Those belong on that group's
+                record under <strong>Firewise groups</strong>, not here. This tab is the Austin
+                Area Firewise Alliance board of directors and nobody else.
             </p>
 
             <h3>Forgotten password</h3>
