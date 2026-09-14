@@ -132,6 +132,28 @@
                     <p class="hint">This sets the color and the small label above the title.</p>
                 </div>
 
+                <!-- Notices only. Separate from "Show from" on purpose: that
+                     is when the notice appears on the site, this is when the
+                     thing itself happens. -->
+                <div id="wrap-event">
+                    <div class="admin-two">
+                        <div class="field">
+                            <label for="f-event-start">When is it? <span class="opt">(date and start time)</span></label>
+                            <input type="datetime-local" id="f-event-start">
+                        </div>
+                        <div class="field">
+                            <label for="f-event-end">Ends <span class="opt">(optional)</span></label>
+                            <input type="datetime-local" id="f-event-end">
+                        </div>
+                    </div>
+                    <p class="hint">
+                        This is what the notice prints for visitors to read — the meeting, the
+                        chipper day, the seminar. It is <strong>not</strong> when the notice appears
+                        on the site; that is "Show from" below. Leave it blank if the notice is not
+                        about something happening at a particular time.
+                    </p>
+                </div>
+
                 <div class="field field-check" id="wrap-markdown">
                     <label><input type="checkbox" id="f-markdown"> Text uses Markdown</label>
                     <p class="hint">
@@ -431,6 +453,24 @@
             </p>
             <p class="help-note">
                 Allow up to a minute for a change to reach the public site.
+            </p>
+
+            <h3>When is it?</h3>
+            <p>
+                A meeting notice can carry the date and time of the thing itself — the meeting,
+                the chipper day, the seminar — with an optional end time. That is what gets printed
+                on the notice for visitors to read.
+            </p>
+            <p>
+                It is separate from <strong>Show from</strong> and <strong>Show until</strong>,
+                which only decide when the notice is on the website. They pull in opposite
+                directions: you want the notice up weeks before, and you want it to say the real
+                date of the meeting. One field could not do both.
+            </p>
+            <p>
+                It is optional, because not every notice is an event — "chipper day moved",
+                "Walnut Creek is recognized". A notice without it simply prints no time. Publishing
+                a meeting or an event with no time asks you once, in case it was an oversight.
             </p>
 
             <h3>What kind of notice</h3>

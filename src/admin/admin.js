@@ -635,7 +635,10 @@
         $("f-linktext").value = item.linkText || "";
         $("f-home").checked = !!item.showOnHome;
         $("f-tone").value = item.tone || "meeting";
+        $("f-event-start").value = localInput(item.eventStart);
+        $("f-event-end").value = localInput(item.eventEnd);
         $("wrap-tone").hidden = isNews;
+        $("wrap-event").hidden = isNews;
         $("wrap-markdown").hidden = !isNews;
         $("wrap-home").hidden = !isNews;
         // A notice carries one picture, an article three. Both use the same
@@ -670,7 +673,11 @@
         var link = $("f-link").value.trim();
         if (link) { it.link = link; it.linkText = $("f-linktext").value.trim() || "More information"; }
         if (current.kind === "news") { it.showOnHome = $("f-home").checked; it.bodyFormat = $("f-markdown").checked ? "markdown" : "plain"; }
-        else { it.tone = $("f-tone").value; }
+        else {
+            it.tone = $("f-tone").value;
+            it.eventStart = toIso($("f-event-start").value) || "";
+            it.eventEnd = toIso($("f-event-end").value) || "";
+        }
 
         // A draft can be missing anything: the point of saving one is to keep
         // work that is not finished, including an article that is so far
@@ -685,6 +692,8 @@
         if (it.title.length > LIMITS.title) return fail("The title is too long — " + LIMITS.title + " characters at most.", "f-title");
         if (it.body.length > LIMITS.body) return fail("The text is too long — " + LIMITS.body + " characters at most.", "f-body");
         if (it.startsAt && it.endsAt && Date.parse(it.endsAt) <= Date.parse(it.startsAt)) return fail("The stop time must be after the start time.", "f-ends");
+        if (it.eventEnd && !it.eventStart) return fail("There is an end time for the event but no start time.", "f-event-start");
+        if (it.eventStart && it.eventEnd && Date.parse(it.eventEnd) <= Date.parse(it.eventStart)) return fail("The event's end time must be after its start time.", "f-event-end");
         if (it.link && !/^https:\/\/\S+$/.test(it.link)) return fail("The link must start with https://", "f-link");
         if (it.link && it.linkText.length > LIMITS.linkText) return fail("The link button words are too long.", "f-linktext");
         return it;
@@ -709,6 +718,19 @@
             var stop = new Error("invalid");
             stop.reason = lastInvalid;
             return Promise.reject(stop);
+        }
+        // Not required -- plenty of notices are not events -- but a meeting or
+        // an event with no time on it is almost always an oversight, and the
+        // moment to catch it is before it is on the home page rather than
+        // after somebody asks when the meeting is. Asked once, on publish.
+        if (status === "published" && it.kind === "notice" && !it.eventStart &&
+            (it.tone === "meeting" || it.tone === "event")) {
+            var ok = window.confirm(
+                "This notice has no date or time for the event itself, so it will not say when " +
+                "the meeting is.\n\n\"Show from\" only decides when the notice appears on the " +
+                "site.\n\nPublish it without a time?"
+            );
+            if (!ok) { $("f-event-start").focus(); return Promise.reject(Object.assign(new Error("invalid"), { reason: "" })); }
         }
         clearMsg();
         setBusy(true);
@@ -1082,7 +1104,7 @@
         $("preview").addEventListener("click", preview);
         $("preview-close").addEventListener("click", function () { $("preview-modal").hidden = true; $("preview-frame").src = "about:blank"; });
 
-        ["f-title", "f-body", "f-markdown", "f-starts", "f-ends", "f-link", "f-linktext", "f-home", "f-tone"].forEach(function (id) {
+        ["f-title", "f-body", "f-markdown", "f-starts", "f-ends", "f-link", "f-linktext", "f-home", "f-tone", "f-event-start", "f-event-end"].forEach(function (id) {
             $(id).addEventListener("input", function () { dirty = true; updateStatusLine(); });
             $(id).addEventListener("change", function () { dirty = true; updateStatusLine(); });
         });

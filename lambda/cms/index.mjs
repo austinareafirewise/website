@@ -331,6 +331,24 @@ function validateItem(input, id) {
         const tone = str(input.tone, "Notice kind", 20) || "meeting";
         if (!NOTICE_TONES.has(tone)) throw new ValidationError("That is not one of the notice kinds.");
         item.tone = tone;
+
+        /* When the thing itself happens, which is not when the notice is shown.
+           Those were one field until a board member pointed out they pull in
+           opposite directions: the window wants to open weeks early so people
+           see it in time, and the printed time has to be the meeting. Setting
+           one correctly made the other wrong.
+
+           Optional, because plenty of notices are not events -- "chipper day
+           moved", "Walnut Creek recognized" -- and forcing a date on those
+           would invent one. A notice without it simply prints no time. */
+        if (input.eventStart) item.eventStart = isoDate(input.eventStart, "Event date and start time");
+        if (input.eventEnd) item.eventEnd = isoDate(input.eventEnd, "Event end time");
+        if (item.eventEnd && !item.eventStart) {
+            throw new ValidationError("There is an event end time but no start time.");
+        }
+        if (item.eventStart && item.eventEnd && Date.parse(item.eventEnd) <= Date.parse(item.eventStart)) {
+            throw new ValidationError("The event end time must be after the start time.");
+        }
         // One picture, and the site always draws it small and to the side: a
         // notice sits above the headline and the burn ban, so a large image
         // there pushes the whole page down.

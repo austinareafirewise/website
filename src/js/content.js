@@ -242,6 +242,30 @@
         recognition: "Good news"
     };
 
+    /* When the thing itself happens. eventStart is the real answer; startsAt is
+       only when the notice began appearing, and it is used here just so a
+       notice written before there were separate fields still shows something
+       rather than nothing. A same-day end time is shown as a range. */
+    function whenText(n) {
+        var start = n.eventStart || n.startsAt;
+        if (!start) return "";
+        var text = fmtDate(start, true);
+        if (!text) return "";
+        if (n.eventStart && n.eventEnd) {
+            var a = new Date(n.eventStart), b = new Date(n.eventEnd);
+            if (!isNaN(b.getTime())) {
+                var sameDay = a.toDateString() === b.toDateString();
+                var opts = { timeStyle: "short", timeZone: "America/Chicago" };
+                try {
+                    text += sameDay
+                        ? " – " + new Intl.DateTimeFormat("en-US", opts).format(b)
+                        : " – " + fmtDate(n.eventEnd, true);
+                } catch (e) { /* leave the start alone */ }
+            }
+        }
+        return text;
+    }
+
     function renderNotices(notices) {
         var slot = document.getElementById("notice-slot");
         if (!slot) return;
@@ -252,7 +276,7 @@
             var art = el("article", { class: "notice notice-" + tone }, [
                 el("p", { class: "notice-kicker", text: TONES[tone] }),
                 el("h2", { text: n.title }),
-                el("p", { class: "notice-when", text: fmtDate(n.startsAt, true) })
+                el("p", { class: "notice-when", text: whenText(n) })
             ]);
             // One picture, small and to the side. A notice sits above the
             // headline and the burn ban; a big image here pushes the page down.

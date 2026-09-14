@@ -50,19 +50,38 @@ You pick the kind and the site picks the color and the little label above the
 title. Use "Please read" sparingly — it is the loudest one, and it stops being
 loud if everything uses it.
 
-## When it appears, and when it goes
+## When the meeting actually is
+- section: content
+- screen: editor
+- open: #new-notice
+- target: #f-event-start
+- audio: post-a-meeting-notice-04-38ee6a.mp3
+- audio-hash: 8f5e0829
+
+These boxes are the date and time of the thing itself — the meeting, the
+chipper day. This is what the notice prints for people to read.
+
+It is separate from the two boxes below, and that separation matters: you want
+the notice on the site weeks before the meeting, and you want it to say the
+real date of the meeting. One box could not do both. There is an end time too,
+if you want to say when it finishes.
+
+Leave it blank if the notice is not about something happening at a set time.
+
+## When the notice appears, and when it goes
 - section: content
 - screen: editor
 - open: #new-notice
 - target: #f-starts
-- audio: post-a-meeting-notice-04-10bcee.mp3
-- audio-hash: 20dc5ef7
+- audio: post-a-meeting-notice-05-0037a7.mp3
+- audio-hash: d0106fc3
 
-Both dates are required, and both are Central time.
+These two are about the notice, not the meeting. Both are required, both are
+Central time.
 
 The notice appears on its own at the first time and disappears on its own at
-the second. Nobody has to remember to take it down, so set the stop date to
-just after the event.
+the second, so nobody has to remember to take it down. Show it from as soon as
+you have written it, and stop it just after the event.
 
 ## A picture, if you have one
 - section: content
@@ -83,16 +102,16 @@ hears instead of seeing it, which is why it is required.
 - screen: editor
 - open: #new-notice
 - target: #preview
-- audio: post-a-meeting-notice-06-6791a0.mp3
-- audio-hash: 43fc35aa
+- audio: post-a-meeting-notice-07-68e828.mp3
+- audio-hash: e4267685
 
 Preview opens the real home page with your notice on it. Not an approximation
 — the actual page, with your wording, your picture and your layout.
 
 It shows the notice whatever its dates say, so it is not a check that the
-notice will be live. What it does show is the date printed on the notice
-itself, which is the "Show from" time you set — so this is where you catch
-having typed the wrong day for the meeting.
+notice will be live. What it does show is the date printed on the notice —
+the "When is it?" time — so this is where you catch having typed the wrong day
+for the meeting.
 
 ## Publish
 - section: content

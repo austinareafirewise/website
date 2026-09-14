@@ -115,6 +115,26 @@ inside photos.
 
 ---
 
+## When the meeting is, and when the notice shows
+
+A meeting notice has two separate pairs of dates, and confusing them is the
+easiest mistake to make here.
+
+| | What it means |
+| --- | --- |
+| **When is it?** | The date and time of the meeting, the chipper day, the seminar. This is what the notice prints for visitors to read. An end time is optional. |
+| **Show from / Show until** | When the notice is on the website. Nothing to do with the meeting. |
+
+They pull in opposite directions on purpose: you want the notice up weeks
+before so people see it in time, and you want it to say the real date of the
+meeting. Show it from as soon as it is written; stop it just after the event.
+
+"When is it?" is optional — not every notice is an event. A notice without it
+prints no time. Publishing a meeting or an event with no time asks you once,
+in case you meant to fill it in.
+
+---
+
 ## What kind of notice
 
 A meeting notice carries a small label and a colored edge saying what it is:
