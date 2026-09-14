@@ -99,11 +99,14 @@ having typed the wrong day for the meeting.
 - screen: editor
 - open: #new-notice
 - target: #publish
-- audio: post-a-meeting-notice-07-bdc909.mp3
-- audio-hash: 6eba0ae8
+- audio: post-a-meeting-notice-07-11cdd6.mp3
+- audio-hash: 3e6beb2d
 
 Publish puts it on the site. Allow up to a minute for it to appear.
 
 If the start time has not arrived yet, it will say "Scheduled" and appear by
-itself when the time comes. "Take off the site" turns it back into a draft
-without deleting anything.
+itself when the time comes.
+
+There is also "Take off the site", which turns a published notice back into a
+draft without deleting anything. You will not see that button yet — it only
+appears once something has actually been published.

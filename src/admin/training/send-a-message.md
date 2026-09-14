@@ -86,22 +86,28 @@ there — they would unsubscribe your own record.
 ## Send yourself a test
 - section: comms
 - target: #comm-list
-- audio: send-a-message-04-a717f4.mp3
-- audio-hash: 5a5f123d
+- audio: send-a-message-06-0a172f.mp3
+- audio-hash: 09cd3438
 
 Before submitting anything, send yourself a test. It sends the real message to
 you alone.
 
-It is the only way to see what it actually looks like on a phone, and it is
-where you will notice the wrong date or the link that does not work.
+Like everything else here, this button lives on the message's own row, and the
+buttons on a row depend on where that message has got to. If you cannot see
+Send me a test, look at a message still being written rather than one already
+sent.
+
+A test is the only way to see how it lands on a phone, and it is where you will
+notice the wrong date or the link that does not work.
 
 ## Submit, and let somebody else approve
 - section: comms
 - target: #comm-list
-- audio: send-a-message-06-91aaea.mp3
-- audio-hash: a05cd44a
+- audio: send-a-message-07-0cf49c.mp3
+- audio-hash: fef86e42
 
-Submit for review hands it to the rest of the board.
+Submit for review is on the row of a message you are still writing — a draft,
+or one sent back to you. It hands the message to the rest of the board.
 
 From that moment the message cannot be edited, and the Edit button goes away.
 That is deliberate: whoever approves it has to be reading exactly what will go
@@ -111,13 +117,18 @@ again, with Edit back.
 Anybody else can approve it, or request changes with a note, which also sends
 it back to you as a draft.
 
+You will not see Approve on your own message, so do not go looking for it. It
+appears on somebody else's screen, not yours.
+
 ## Send
 - section: comms
 - target: #comm-list
-- audio: send-a-message-06-7f8595.mp3
-- audio-hash: 9d1e78a4
+- audio: send-a-message-08-bd0376.mp3
+- audio-hash: 43cf48ec
 
-Send now is the last step and it asks first.
+Send now appears only once a message has been approved, so on a draft or one
+waiting for review you will not find it. It is the last step, and it asks
+first.
 
 A message that has gone cannot be recalled, corrected or deleted. Read it once
 more.
