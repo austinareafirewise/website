@@ -153,7 +153,7 @@ For `clamp()` headings, the middle term needs a `rem` component
 (`clamp(2.1rem, 1.2rem + 2.6vw, 3.2rem)`). A pure `vw` middle term scales with
 the window and ignores the reader's setting.
 
-### Colour rules
+### Color rules
 
 There are **two oranges**, and the distinction is load-bearing:
 
@@ -163,10 +163,10 @@ There are **two oranges**, and the distinction is load-bearing:
   5.06:1 as text on the page background.
 
 Same split for sage: `--sage` is decorative (2.6:1), `--sage-text` is for text
-(4.97:1). The logo image itself is untouched and keeps the true flame colour —
+(4.97:1). The logo image itself is untouched and keeps the true flame color —
 logos are exempt from contrast rules, interface text is not.
 
-If you add a colour, check it before shipping. Target 4.5:1 for normal text,
+If you add a color, check it before shipping. Target 4.5:1 for normal text,
 3:1 for text at or above 24px (or 18.66px bold).
 
 ## Board-published content

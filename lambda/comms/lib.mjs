@@ -56,7 +56,7 @@ export const METHODS = new Set(["email", "sms", "both"]);
 export const AUDIENCES = new Set(["all", "email", "sms"]);
 
 /* Where a Firewise group is in the NFPA recognition process. "prospective"
-   matters as much as "recognised" — a neighbourhood that has started but not
+   matters as much as "recognized" — a neighborhood that has started but not
    finished is exactly who the Alliance exists to help. */
 export const GROUP_STATUSES = new Set(["prospective", "in-progress", "recognized", "lapsed", "inactive"]);
 
@@ -65,7 +65,7 @@ export const GROUP_STATUSES = new Set(["prospective", "in-progress", "recognized
 export const BOARD_STATUSES = new Set(["current", "past"]);
 
 /* Consent wording shown beside the signup button. Stored verbatim with each
-   record so the organisation can show exactly what a person agreed to. If
+   record so the organization can show exactly what a person agreed to. If
    this text changes, the version bumps and old records keep the old text. */
 export const CONSENT = {
     version: 1,
@@ -147,7 +147,7 @@ export function email(v, required) {
     return v;
 }
 
-/* US numbers only for now, normalised to E.164. Accepts the ways people
+/* US numbers only for now, normalized to E.164. Accepts the ways people
    actually type them: (512) 555-1234, 512.555.1234, +1 512 555 1234. */
 export function phone(v, required) {
     v = str(v, "Mobile number", 30, required);
@@ -525,7 +525,7 @@ export async function allGroups() {
         .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
 }
 
-/* What an anonymous visitor may see: enough to choose their neighbourhood
+/* What an anonymous visitor may see: enough to choose their neighborhood
    from a dropdown, and nothing about who leads it or how to reach them.
    Leadership names and contact details are board-only, because a public
    list of volunteers' phone numbers is not something to publish by

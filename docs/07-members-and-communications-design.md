@@ -31,7 +31,7 @@ API and admin page, and adds two new sections to the admin area.
   through **AWS End User Messaging** from a verified toll-free number.
 
 Both channels need one-time registration with AWS that takes days to weeks and
-requires information only the organisation can supply. That is on the
+requires information only the organization can supply. That is on the
 critical path and is listed at the end.
 
 ---
@@ -43,7 +43,7 @@ to people's phones and inboxes, and the law treats that differently:
 
 - **Texting** in the US falls under the TCPA. Sending a text someone did not
   clearly agree to receive carries statutory damages per message, and class
-  actions over it are routine. The defence is a record of consent: who, when,
+  actions over it are routine. The defense is a record of consent: who, when,
   from where, what they were told.
 - **Email** falls under CAN-SPAM: a working unsubscribe honoured within ten
   days, an accurate sender, and the sender's **postal address** in every
@@ -66,9 +66,9 @@ The existing form at the bottom of the home page, extended:
 | --- | --- | --- |
 | Name | no | |
 | Email | if email chosen | |
-| Mobile number | if text chosen | US numbers; normalised to +1 format |
+| Mobile number | if text chosen | US numbers; normalized to +1 format |
 | Contact me by | yes | **Email** / **Text** / **Both** |
-| Neighbourhood or area | no | as today |
+| Neighborhood or area | no | as today |
 | Interested in | no | as today |
 | Consent | yes | see below |
 
@@ -83,7 +83,7 @@ type, not a hidden checkbox:
 
 That text, the timestamp, the IP address, and the page it came from are
 stored with the record. That is the consent record, and it is what the
-organisation would produce if ever asked.
+organization would produce if ever asked.
 
 **What happens on submit:**
 
@@ -154,7 +154,7 @@ pending, unsubscribed.
 | **Unsubscribed** | Asked to stop, by link, STOP, or a board member. Kept as a record so they are not re-added by mistake; never messaged. |
 | **Bounced** | Email hard-bounced or number is unreachable. Not messaged until a board member fixes the address. |
 
-**Add.** A board member can add someone directly — a neighbour who asked at a
+**Add.** A board member can add someone directly — a neighbor who asked at a
 chipper day. The record still goes through confirmation: it is stored as
 pending and the person gets the confirmation email or text. A board member
 cannot mark someone confirmed by hand, because that would be manufacturing a
@@ -224,7 +224,7 @@ bounced, failed, unsubscribed-since. Totals at the top. Bounces and
 complaints update the member records automatically.
 
 **Nothing is ever deleted from the sent list.** A sent communication is a
-record of what the organisation told people. It can be duplicated into a new
+record of what the organization told people. It can be duplicated into a new
 draft.
 
 ---
@@ -259,16 +259,16 @@ are two ways to be registered:
 | Registration | Toll-free verification: one form, 1–3 weeks | Brand + campaign registration via The Campaign Registry: two fees, 1–3 weeks, more paperwork |
 | Throughput | 3 messages/second — a 500-person list in 3 minutes | higher, irrelevant here |
 | Per message | about $0.0083 per segment | about $0.0083 per segment |
-| Suits | organisations sending occasional informational texts | high-volume marketing |
+| Suits | organizations sending occasional informational texts | high-volume marketing |
 
-**Toll-free.** For a volunteer organisation sending a few messages a month it
+**Toll-free.** For a volunteer organization sending a few messages a month it
 is the same cost, less paperwork, and one form instead of two registrations.
 
 - STOP, HELP, and START keywords are handled by AWS automatically on a
   toll-free number with two-way messaging on. A STOP reply reaches the system
   through SNS and marks the member unsubscribed. A board member never has to
   see it.
-- The verification form asks for: organisation name and website, the **opt-in
+- The verification form asks for: organization name and website, the **opt-in
   page** (our form, with the consent wording above, hence the wording), a
   **privacy policy URL** (hence the page), sample messages, expected monthly
   volume, and a contact. Until it is approved the number cannot send at all.
@@ -417,7 +417,7 @@ people is $7.50, which is why the compose screen shows the segment count.
 
 ---
 
-## What only the organisation can do
+## What only the organization can do
 
 These are on the critical path and cannot be scripted. The text channel in
 particular is **weeks**, not hours.
@@ -427,7 +427,7 @@ particular is **weeks**, not hours.
 2. **SES production access** — I submit the request; AWS usually answers
    within a day. Until then email only goes to verified addresses.
 3. **Toll-free number verification** — I request the number and submit the
-   form, but it asks for the organisation's legal name, address, a contact
+   form, but it asks for the organization's legal name, address, a contact
    person, the privacy page, and the opt-in page. AWS and the carriers review
    it: **1–3 weeks**. Until approved, no text can be sent at all, including
    confirmation codes. Signup by text is therefore hidden on the form until

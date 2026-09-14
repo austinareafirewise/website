@@ -233,7 +233,7 @@
     /* ------------------------------------------------------------ */
 
     /* What a notice is about. The board picks the kind; the site picks the
-       colour. The label is always shown, so the colour is never the only
+       color. The label is always shown, so the color is never the only
        thing carrying the meaning. */
     var TONES = {
         meeting: "Meeting notice",
@@ -265,8 +265,8 @@
         slot.hidden = false;
     }
 
-    /* A stable accent colour per article, derived from its id rather than
-       drawn at random: an article people recognise by its green stripe should
+    /* A stable accent color per article, derived from its id rather than
+       drawn at random: an article people recognize by its green stripe should
        not be blue after a refresh. Borders only, so there is no contrast
        floor to clear and nothing for an editor to get wrong. */
     var ACCENTS = 5;

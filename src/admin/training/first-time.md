@@ -32,7 +32,7 @@ folder.
 The tabs across the top are the five things you can look after.
 
 News and notices is what visitors read. Members is everyone who asked to hear
-from us. Messages is what we send them. Firewise groups is the neighbourhood
+from us. Messages is what we send them. Firewise groups is the neighborhood
 groups. Board is the roster of who serves.
 
 ## Help is on every screen

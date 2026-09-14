@@ -258,7 +258,7 @@ Resources:
         #
         # Amplify implements this as a REDIRECT to the target, so a missing
         # page answers 302 and then 200 — it does not serve the 404 body
-        # under a 404 status. That is Amplify's behaviour and no rule can
+        # under a 404 status. That is Amplify's behavior and no rule can
         # change it. Put <meta name="robots" content="noindex"> in your
         # 404.html so the soft 404 never enters a search index. The
         # alternative is deleting this rule and accepting an unbranded
@@ -308,7 +308,7 @@ Resources:
   # ------------------------------------------------------------------
   # Cost smoke alarm. A static site like this should cost a few dollars a
   # year, nearly all of it the domain registration. A bill that climbs
-  # means something is wrong, and a volunteer organisation should hear
+  # means something is wrong, and a volunteer organization should hear
   # about it from an email rather than from a card statement.
   # ------------------------------------------------------------------
   CostAlert:

@@ -48,7 +48,7 @@
     outline: 0;
 }
 
-/* The site's action colour. --orange-dark, which is the tone the site uses
+/* The site's action color. --orange-dark, which is the tone the site uses
    for anything carrying words: 5.29:1 against white. */
 .submitButton-customizable {
     background-color: #A85512;

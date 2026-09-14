@@ -3,7 +3,7 @@
  *   aws     — AWS End User Messaging SMS (Pinpoint SMS v2). Primary. Needs a
  *             verified toll-free number in SMS_ORIGINATION. STOP/START come
  *             back through SNS to the events function.
- *   twilio  — Secondary. Credentials in an SSM SecureString the organisation
+ *   twilio  — Secondary. Credentials in an SSM SecureString the organization
  *             creates; never in code or the template. STOP/START and delivery
  *             status come back through the /hooks/twilio webhook.
  *   off     — Default until a number exists. Sending throws a clear error and

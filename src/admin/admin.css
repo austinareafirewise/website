@@ -191,7 +191,7 @@ code { background: #f1f1ec; padding: 1px 5px; border-radius: 4px; font-size: .9e
 .crop-tools .hint { margin: 0; flex: 1 1 220px; }
 .pic .pic-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
-/* ---------- Status colours reuse the site's form-status ---------- */
+/* ---------- Status colors reuse the site's form-status ---------- */
 
 .form-status.warn { background: var(--alert-bg); color: var(--orange-dark); }
 

@@ -22,7 +22,7 @@ Metadata:
     ParameterLabels:
       SiteOrigin: {default: "Site origin (https://www.example.org, no trailing slash)"}
       CognitoDomainPrefix: {default: "Sign-in page address prefix (must be unique across AWS)"}
-      InviteFromName: {default: "Organisation name in invitation emails"}
+      InviteFromName: {default: "Organization name in invitation emails"}
       ContentBucketName: {default: "S3 bucket name for published content"}
       TableName: {default: "DynamoDB table name"}
 
@@ -234,7 +234,7 @@ Resources:
   # Travis County publishes the burn ban on its own page and nowhere machine
   # readable, so this reads that page every half hour and writes burnban.json
   # next to the published content. The home page renders a notice from it.
-  # The function publishes nothing when it cannot recognise the page, so a
+  # The function publishes nothing when it cannot recognize the page, so a
   # county redesign makes the notice disappear rather than lie: see the head
   # of lambda/burnban/index.mjs.
   # ==================================================================

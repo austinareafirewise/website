@@ -52,7 +52,7 @@ message. Nobody can be marked confirmed by hand.
 ## Never add an address from a list
 - section: members
 
-Not from a neighbourhood directory, not from another organisation's roster, not
+Not from a neighborhood directory, not from another organization's roster, not
 from a spreadsheet somebody sent you.
 
 That is what the law calls an imported list, and one complaint from it can cost

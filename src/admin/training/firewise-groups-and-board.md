@@ -4,13 +4,13 @@
 <!-- primary-for: groups, board -->
 <!-- order: 60 -->
 <!-- minutes: 3 -->
-<!-- description: The neighbourhood groups list, and the roster of who serves on the board. -->
+<!-- description: The neighborhood groups list, and the roster of who serves on the board. -->
 
 ## The groups list is public, in one place
 - section: groups
 - target: #group-new
 
-These are the neighbourhood groups the Alliance works with. This list is also
+These are the neighborhood groups the Alliance works with. This list is also
 the dropdown people choose from on the sign-up form, so the names are read by
 residents.
 

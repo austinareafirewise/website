@@ -144,7 +144,7 @@ async function signup(event) {
     const area = str(b.area, "Area", LIMITS.area);
     const zipCode = zip(b.zip, false);
     // The group is optional on purpose: most of the county has no Firewise
-    // group yet, and those neighbourhoods are the ones most worth reaching.
+    // group yet, and those neighborhoods are the ones most worth reaching.
     // An unrecognised id is dropped rather than rejected, so a group deleted
     // between page load and submit does not lose the sign-up.
     let groupId = str(b.groupId, "Firewise group", 40);
@@ -873,7 +873,7 @@ async function transition(id, who, action, b) {
 
     if (action === "submit") {
         if (!["draft", "rejected"].includes(c.status)) throw new ValidationError("Only a draft can be submitted.");
-        if (!ENV.postalAddress) throw new ValidationError("The organisation's postal address is not configured. Email cannot be sent without it.");
+        if (!ENV.postalAddress) throw new ValidationError("The organization's postal address is not configured. Email cannot be sent without it.");
         validateCommInput(c);   // re-check quiet hours and sms availability at submit time
         next = { ...c, status: "review", submittedAt: now, submittedBy: who, approver: undefined, approvedAt: undefined, decisionNote: undefined };
     } else if (action === "withdraw") {
@@ -936,7 +936,7 @@ async function broadcast(id, who) {
     if (!c) return respond(404, { error: "That message no longer exists." });
     if (c.status !== "approved") throw new ValidationError("Only an approved message can be sent.");
     if (who !== c.author && who !== c.approver) throw new ValidationError("Only the author or the approver can send this message.");
-    if (!ENV.postalAddress) throw new ValidationError("The organisation's postal address is not configured. Email cannot be sent without it.");
+    if (!ENV.postalAddress) throw new ValidationError("The organization's postal address is not configured. Email cannot be sent without it.");
     const now = nowIso();
     const future = c.sendAt && Date.parse(c.sendAt) > Date.now() + 60000;
     const status = future ? "scheduled" : "sending";

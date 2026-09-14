@@ -133,7 +133,7 @@ Resources:
       Tags: [{Key: project, Value: website}]
 
   # ------------------------------------------------------------------
-  # Firewise groups: the recognised (and aspiring) neighbourhood groups
+  # Firewise groups: the recognized (and aspiring) neighborhood groups
   # across the county. Public reads get a trimmed projection so the signup
   # form can offer a dropdown; leadership contact details stay board-only.
   # ------------------------------------------------------------------

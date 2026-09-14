@@ -47,7 +47,7 @@ const MODEL = "gpt-4o-mini-tts";
 const VOICE = "marin";
 const INSTRUCTIONS =
     "Speak in a calm, warm, plain-spoken instructional voice, as though showing a " +
-    "neighbour how something works. Moderate pace. Pause naturally between " +
+    "neighbor how something works. Moderate pace. Pause naturally between " +
     "paragraphs. Do not sound promotional or breathless.";
 
 const args = process.argv.slice(2);

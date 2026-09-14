@@ -117,7 +117,7 @@ inside photos.
 
 ## What kind of notice
 
-A meeting notice carries a small label and a coloured edge saying what it is:
+A meeting notice carries a small label and a colored edge saying what it is:
 
 | Kind | Label shown | Use it for |
 | --- | --- | --- |
@@ -126,9 +126,9 @@ A meeting notice carries a small label and a coloured edge saying what it is:
 | Urgent | Please read | Something changed, or is time-critical |
 | Recognition | Good news | A recognition or a milestone |
 
-You choose the kind and the site chooses the colour. That is on purpose: the
-colours keep meaning the same thing across the site, and a notice can never
-come out in a colour nobody can read. The label is always shown, so the colour
+You choose the kind and the site chooses the color. That is on purpose: the
+colors keep meaning the same thing across the site, and a notice can never
+come out in a color nobody can read. The label is always shown, so the color
 is never the only thing saying what the notice is.
 
 Use **Please read** sparingly. It is the loudest one and it stops being loud if

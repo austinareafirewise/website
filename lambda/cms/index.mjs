@@ -55,11 +55,11 @@ const BODY_FORMATS = new Set(["plain", "markdown"]);
    picture and a line of text side by side. */
 const PICTURE_LAYOUTS = new Set(["full", "right", "left"]);
 
-/* What a meeting notice is about. The board picks the kind, not a colour:
-   the site maps each to one of its own palette colours and a word. Picking a
-   colour directly would let an editor produce unreadable text, and would break
+/* What a meeting notice is about. The board picks the kind, not a color:
+   the site maps each to one of its own palette colors and a word. Picking a
+   color directly would let an editor produce unreadable text, and would break
    the one signal this site has -- orange means alert here -- on a site about
-   fire. Every tone shows its label, so colour never carries the meaning on its
+   fire. Every tone shows its label, so color never carries the meaning on its
    own. */
 const NOTICE_TONES = new Set(["meeting", "event", "urgent", "recognition"]);
 

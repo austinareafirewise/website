@@ -262,7 +262,7 @@ section[id] { scroll-margin-top: 92px; }
    The label is a word, not an "Aa" glyph. "Aa" was the same letterform as the
    buttons beside it, so the row read as four controls rather than a label plus
    three. It is also the readers least fluent with the web who most need this
-   control, and they are the least likely to recognise ascending A's as a size
+   control, and they are the least likely to recognize ascending A's as a size
    picker. Below 640px the label drops and the three A's stand alone, which is
    the conventional pattern and needs the room more than it needs the word. */
 
@@ -399,7 +399,7 @@ section[id] { scroll-margin-top: 92px; }
    The county's status, top right on a wide screen and above the headline on a
    phone -- which is also its source order, so what a screen reader hears and
    what a phone shows are the same thing. Red for a ban, green for none; the
-   words say which either way, since colour alone is not a status. */
+   words say which either way, since color alone is not a status. */
 
 .hero-grid { display: grid; gap: 24px; }
 
@@ -823,8 +823,8 @@ section { padding: 52px 0; }
 .notice p:last-child { margin-bottom: 0; }
 
 /* What the notice is about. The board picks the kind and the site picks the
-   colour, so nothing here can end up unreadable, and the kicker always spells
-   the kind out -- colour is never the only thing saying what this is. */
+   color, so nothing here can end up unreadable, and the kicker always spells
+   the kind out -- color is never the only thing saying what this is. */
 .notice-meeting { border-left-color: var(--green-700); }
 .notice-event { border-left-color: var(--orange); }
 .notice-urgent { border-left-color: #9c2b16; }
@@ -851,9 +851,9 @@ section { padding: 52px 0; }
     .notice-figure { float: none; width: 100%; margin: 0 0 14px; }
 }
 
-/* ---------- Article accent colours ----------
+/* ---------- Article accent colors ----------
    Decoration only: a left edge, never text, so there is no contrast floor to
-   clear. The colour comes from the article's id, so it is the same every time
+   clear. The color comes from the article's id, so it is the same every time
    that article is drawn. */
 .accent-0 { --accent: var(--green-700); }
 .accent-1 { --accent: var(--orange); }

@@ -60,7 +60,7 @@ schedule that reads the Travis County Fire Marshal's burn ban page and writes
 `burnban.json` into the content bucket. The home page renders a notice in the
 hero from that file and links back to the county.
 
-It publishes nothing it cannot recognise, so a redesign of the county's page
+It publishes nothing it cannot recognize, so a redesign of the county's page
 makes the notice go away rather than go wrong; the notice also hides itself
 once the file is more than six hours old. If the notice disappears, look at
 `/aws/lambda/aafa-burnban` — the alert text it read is logged on every run,
@@ -96,7 +96,7 @@ that matter:
 | Parameter | Current | Note |
 | --- | --- | --- |
 | `PostalAddress` | P.O. Box 4211-A, Austin, TX 78731 | CAN-SPAM requires it in every email. The sender refuses to broadcast while it is blank. |
-| `ReplyTo` | vicki@vickilandon.com | An interim personal address. While blank, every email tells recipients the mailbox is unmonitored; setting it removes that line. Replace when the organisation has its own mailbox. |
+| `ReplyTo` | vicki@vickilandon.com | An interim personal address. While blank, every email tells recipients the mailbox is unmonitored; setting it removes that line. Replace when the organization has its own mailbox. |
 | `SmsProvider` | `off` | Becomes `aws` with `SmsOrigination` set to the toll-free number once carriers approve it. |
 
 #### Things only a person can do

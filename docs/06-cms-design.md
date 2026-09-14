@@ -84,7 +84,7 @@ published items alike; visitors cannot trigger one.
 | **Live** | Published and inside its window. On the site now. |
 | **Ended** | Published, stop date passed. Hidden; kept for the record. |
 
-Draft and Ended items sit greyed at the bottom of the list. Anything that is
+Draft and Ended items sit grayed at the bottom of the list. Anything that is
 not Live is unmissably labelled.
 
 ---

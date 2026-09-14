@@ -14,8 +14,8 @@
  *     prohibited in Travis County" -- and is there whether or not a ban is
  *     on. Reading the whole page would report a permanent ban.
  *   - A state is only reported when the wording matches a known phrase. A
- *     redesign that this parser does not recognise yields "unknown".
- *   - Nothing is written unless a state was recognised. The old file stays,
+ *     redesign that this parser does not recognize yields "unknown".
+ *   - Nothing is written unless a state was recognized. The old file stays,
  *     its checkedAt stops advancing, and the page hides the notice once it
  *     goes stale. A parser that breaks goes quiet instead of going wrong.
  *
@@ -56,7 +56,7 @@ export const handler = async () => {
 
     const state = classify(alert.text);
     if (!state) {
-        console.log("alert wording not recognised; nothing published");
+        console.log("alert wording not recognized; nothing published");
         return { published: false, reason: "unrecognised" };
     }
 

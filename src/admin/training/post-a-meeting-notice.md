@@ -36,7 +36,7 @@ the rest of the page down.
 Choose what the notice is about. A meeting, an event, something that changed,
 or good news.
 
-You pick the kind and the site picks the colour and the little label above the
+You pick the kind and the site picks the color and the little label above the
 title. Use "Please read" sparingly — it is the loudest one, and it stops being
 loud if everything uses it.
 
