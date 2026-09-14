@@ -31,3 +31,8 @@ signup-form.png
 
 # Office lock files left behind while a document is open
 ~$*
+
+# Local preview: the static server config, and the placeholder photo used to
+# check the hero layout without putting a real picture in the repository.
+.claude/
+src/img/_preview-*

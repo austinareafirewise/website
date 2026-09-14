@@ -46,6 +46,22 @@ const LIMITS = {
 };
 
 const KINDS = new Set(["news", "notice"]);
+
+/* The home page's own words. One record, not a list, under a key the item
+   routes cannot address -- isId refuses anything with an underscore, so
+   /items/{id} can never reach it by accident or on purpose.
+
+   The wording the site shipped with is the default, so the page looks the same
+   the day this arrives and changes only when somebody chooses to change it. */
+const HOME_KEY = "__home";
+const HOME_DEFAULT = {
+    headline: "Wildfire moves fast.\nPrepare before it happens.",
+    lede: "The Austin Area Firewise Alliance is a volunteer organization helping Travis " +
+          "County neighborhoods get ready for wildfire — inside the City of Austin and out " +
+          "in the county, where the hills, cedar, and one-way-out streets that make this " +
+          "place worth living in also make it burn.",
+    pictures: [],
+};
 const STATUSES = new Set(["draft", "published"]);
 const BODY_FORMATS = new Set(["plain", "markdown"]);
 
@@ -89,6 +105,10 @@ export const handler = async (event) => {
         if (route === "DELETE /items/{id}") return await deleteItem(id);
         if (route === "POST /items/{id}/pictures") return await pictureUploadUrl(id, parseBody(event));
 
+        if (route === "GET /home") return respond(200, { home: await getHome() });
+        if (route === "PUT /home") return await putHome(parseBody(event), who);
+        if (route === "POST /home/pictures") return await homePictureUploadUrl();
+
         return respond(404, { error: "Unknown route." });
     } catch (err) {
         if (err instanceof ValidationError) {
@@ -126,7 +146,7 @@ async function listItems() {
         out.push(...(page.Items || []));
         ExclusiveStartKey = page.LastEvaluatedKey;
     } while (ExclusiveStartKey);
-    return out.sort((a, b) => (a.id < b.id ? 1 : -1));
+    return out.filter((i) => i.id !== HOME_KEY).sort((a, b) => (a.id < b.id ? 1 : -1));
 }
 
 async function getItem(id) {
@@ -239,8 +259,52 @@ async function pruneOrphans(id, pictures) {
 /* Publishing                                                           */
 /* ------------------------------------------------------------------ */
 
-/* The public projection. Published items only, not yet ended, with the
-   editor emails left out. The visitor's browser applies the start date. */
+/* The home page's headline, the paragraph under it, and the picture beside
+   them. One record rather than a list, and it always answers: an account that
+   has never edited it gets the wording that is written into the page. */
+async function getHome() {
+    const res = await ddb.send(new GetCommand({ TableName: TABLE, Key: { id: HOME_KEY } }));
+    return { ...HOME_DEFAULT, ...(res.Item || {}), id: undefined };
+}
+
+async function putHome(input, who) {
+    const now = new Date().toISOString();
+    const home = {
+        id: HOME_KEY,
+        headline: str(input.headline, "Headline", 160, true),
+        lede: str(input.lede, "Opening paragraph", 1200, true),
+        pictures: validatePictures(input, 1),
+        updatedAt: now,
+        updatedBy: who,
+    };
+    for (const p of home.pictures) {
+        for (const key of [p.key, p.thumbKey]) {
+            if (!key.startsWith(`images/${HOME_KEY}/`)) throw new ValidationError("That picture does not belong to the home page.");
+            try { await s3.send(new HeadObjectCommand({ Bucket: BUCKET, Key: key })); }
+            catch { throw new ValidationError("The picture has not finished uploading. Try again in a moment."); }
+        }
+    }
+    await ddb.send(new PutCommand({ TableName: TABLE, Item: home }));
+    await pruneOrphans(HOME_KEY, home.pictures);
+    await publish();
+    return respond(200, { home: { ...home, id: undefined } });
+}
+
+async function homePictureUploadUrl() {
+    const pictureId = newId();
+    const key = `images/${HOME_KEY}/${pictureId}.jpg`;
+    const thumbKey = `images/${HOME_KEY}/${pictureId}-thumb.jpg`;
+    const sign = (Key) => getSignedUrl(s3, new PutObjectCommand({
+        Bucket: BUCKET, Key, ContentType: "image/jpeg", CacheControl: "public, max-age=31536000, immutable",
+    }), { expiresIn: 300 });
+    return respond(200, {
+        key, thumbKey,
+        uploadUrl: await sign(key),
+        thumbUploadUrl: await sign(thumbKey),
+        headers: { "content-type": "image/jpeg", "cache-control": "public, max-age=31536000, immutable" },
+    });
+}
+
 async function publish() {
     const all = await listItems();
     const cutoff = Date.now() - 24 * 3600 * 1000; // keep a day of slack for clock skew
@@ -253,11 +317,14 @@ async function publish() {
             showOnHome: i.showOnHome || false,
             bodyFormat: i.bodyFormat || "plain",
             pictures: i.pictures || [],
+            // Notices only, and absent on a notice that is not an event.
+            tone: i.tone, eventStart: i.eventStart, eventEnd: i.eventEnd,
             updatedAt: i.updatedAt,
         }));
 
     const doc = {
         generatedAt: new Date().toISOString(),
+        home: await getHome(),
         notices: pub.filter((i) => i.kind === "notice"),
         news: pub.filter((i) => i.kind === "news"),
     };

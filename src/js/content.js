@@ -266,6 +266,34 @@
         return text;
     }
 
+    /* The hero's own words, and a picture beside them if the board has added
+       one. Everything here is optional: a home page with nothing published
+       keeps exactly what is written into index.html, so the page never depends
+       on this file having loaded. */
+    function renderHome(home) {
+        if (!home) return;
+
+        var h1 = document.querySelector(".hero h1");
+        if (h1 && home.headline) {
+            h1.textContent = "";
+            String(home.headline).split(/\n/).forEach(function (line, i) {
+                if (i) h1.appendChild(el("br"));
+                h1.appendChild(document.createTextNode(line));
+            });
+        }
+
+        var lede = document.querySelector(".hero .lede");
+        if (lede && home.lede) lede.textContent = home.lede;
+
+        var pic = (home.pictures || [])[0];
+        if (!pic) return;
+        var wrap = document.querySelector(".hero .wrap");
+        if (!wrap) return;
+        wrap.classList.add("hero-with-picture");
+        var fig = figure(pic, false, "hero-figure");
+        wrap.insertBefore(fig, wrap.firstChild);
+    }
+
     function renderNotices(notices) {
         var slot = document.getElementById("notice-slot");
         if (!slot) return;
@@ -472,6 +500,7 @@
         notices.sort(byNewest); news.sort(byNewest);
 
         if (page === "home") {
+            renderHome(doc.home);
             renderNotices(notices);
             renderHomeNews(news);
         } else if (page === "news") {

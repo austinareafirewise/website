@@ -305,7 +305,7 @@
         // trusting the record's kind would show two sections at once.
         var tab = document.querySelector('.admin-nav .tab[aria-current="page"]');
         var name = tab ? tab.getAttribute("data-section") : null;
-        ["content", "members", "comms", "groups", "board"].forEach(function (n) {
+        ["content", "home", "members", "comms", "groups", "board"].forEach(function (n) {
             var sec = $("section-" + n);
             if (sec) sec.hidden = n !== name;
         });
@@ -707,7 +707,7 @@
 
     function showSection(name) {
         $("rec-screen").hidden = true;
-        ["content", "members", "comms", "groups", "board"].forEach(function (n) {
+        ["content", "home", "members", "comms", "groups", "board"].forEach(function (n) {
             var sec = $("section-" + n);
             if (sec) sec.hidden = n !== name;
         });
@@ -715,8 +715,11 @@
             var on = t.getAttribute("data-section") === name;
             t.setAttribute("aria-current", on ? "page" : "false");
         });
+        if (name !== "home") window.AAFA_ADMIN.leftHome();
         if (name === "content") { window.AAFA_ADMIN.showContent(); return; }
         ["screen-signin", "screen-denied", "screen-list", "screen-edit"].forEach(function (id) { if ($(id)) $(id).hidden = true; });
+        // The home page is one record rather than a list, so it loads itself.
+        if (name === "home") { window.AAFA_ADMIN.showHome(); window.scrollTo(0, 0); return; }
         var host = $(name === "members" ? "member-list" : name === "groups" ? "group-list" : name === "board" ? "person-list" : "comm-list");
         if (!state.loaded[name]) host.textContent = "Loading…";
         Promise.all(NEEDS[name].map(function (n) { return LOADERS[n](); }))

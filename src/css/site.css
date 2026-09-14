@@ -395,6 +395,32 @@ section[id] { scroll-margin-top: 92px; }
 
 .hero .lede { font-size: 1.16rem; color: var(--muted); max-width: 64ch; }
 
+/* A picture beside the hero words, when the board has added one. Decoration:
+   the page reads the same without it, which is why it is allowed to disappear
+   entirely on a narrow screen rather than pushing the headline down a phone. */
+@media (min-width: 900px) {
+    .hero-with-picture {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        gap: 36px;
+        align-items: center;
+    }
+    .hero-with-picture .hero-figure { grid-column: 2; grid-row: 1 / -1; margin: 0; }
+    .hero-with-picture > :not(.hero-figure) { grid-column: 1; }
+}
+
+.hero-figure { margin: 0 0 22px; }
+.hero-figure img {
+    width: 100%; height: auto; display: block;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+.hero-figure figcaption { font-size: .82rem; color: var(--muted); margin-top: 6px; }
+
+@media (max-width: 899px) {
+    .hero-figure { display: none; }
+}
+
 /* ---------- The burn ban, in the conditions bar ----------
    It lives in the bar rather than the hero because it is a standing condition
    of the county, not part of the introduction to the Alliance -- and because

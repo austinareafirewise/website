@@ -657,6 +657,8 @@
     }
 
     function updateStatusLine() {
+        // The home page borrows the cropper but has no article behind it.
+        if (!current) return;
         var s = current._new ? "Not saved yet" : STATE_LABEL[stateOf(current)];
         $("form-status").textContent = s + (dirty ? " · unsaved changes" : "");
     }
@@ -831,17 +833,44 @@
         return node("label", { class: "pic-layout-label", for: id }, ["Where it sits ", sel]);
     }
 
+    /* A picture is cropped the same way wherever it is going. What differs is
+       where the list of them lives, how many are allowed, and what has to be
+       saved afterwards -- so that, and only that, is what a target holds. The
+       article editor is one; the home page is the other. */
+    var itemTarget = {
+        root: "pictures",
+        dropzone: "dropzone",
+        msgBox: function () { return $("msg"); },
+        list: function () { return (current.pictures = current.pictures || []); },
+        cap: function () { return current.kind === "notice" ? 1 : LIMITS.pictures; },
+        layout: function () { return current.kind !== "notice"; },
+        // A picture belongs to an article, so an article that has never been
+        // saved is saved as a draft before one can be hung on it.
+        grant: function () {
+            var ensure = current._new ? save("draft", true) : Promise.resolve(current);
+            return ensure.then(function () { return api("POST", "/items/" + current.id + "/pictures", {}); });
+        },
+        persist: function () { return save(current.status === "published" ? "published" : "draft", true); },
+        srcOf: function (p) { return cfg.contentBase.replace(/\/$/, "") + "/" + p.key; },
+        full: "article",
+        atCap: function (cap) {
+            return cap === 1 ? "A notice carries one picture. Remove it to choose a different one."
+                             : "This article already has three pictures.";
+        }
+    };
+    var picTarget = itemTarget;
+
     function renderPictures() {
-        var root = $("pictures");
+        var root = $(picTarget.root);
         root.textContent = "";
-        var pics = current.pictures || [];
+        var pics = picTarget.list();
         pics.forEach(function (p, i) {
             var card = node("div", { class: "pic" }, [
                 node("img", { src: cfg.contentBase + "/" + p.thumbKey, alt: p.alt || "" }),
                 node("div", { class: "pic-text" }, [
                     node("strong", { text: p.alt || "" }),
                     p.credit || "No credit line",
-                    current.kind === "notice" ? null : layoutPicker(p, i)
+                    picTarget.layout() ? layoutPicker(p, i) : null
                 ]),
                 node("div", { class: "pic-actions" }, [
                     node("button", { type: "button", class: "btn btn-outline btn-small", "data-act": "rotate", text: "Rotate / re-crop" }),
@@ -850,12 +879,12 @@
             ]);
             card.querySelector('[data-act="rotate"]').addEventListener("click", function () { recrop(i); });
             card.querySelector('[data-act="remove"]').addEventListener("click", function () {
-                current.pictures.splice(i, 1); dirty = true; renderPictures(); updateStatusLine();
-                msg("warn", "Picture removed from this article. Save or Publish to make that stick.");
+                picTarget.list().splice(i, 1); dirty = true; renderPictures(); updateStatusLine();
+                msg("warn", "Picture removed from this " + picTarget.full + ". Save to make that stick.", picTarget.msgBox());
             });
             root.appendChild(card);
         });
-        $("dropzone").hidden = pics.length >= (current.kind === "notice" ? 1 : LIMITS.pictures);
+        $(picTarget.dropzone).hidden = pics.length >= picTarget.cap();
     }
 
     /* Rotate or re-crop a picture that is already on the article: load it back
@@ -863,28 +892,27 @@
        allows this page's origin to read it, so the canvas stays clean and can
        still produce a file. */
     function recrop(i) {
-        var p = (current.pictures || [])[i];
+        var p = picTarget.list()[i];
         if (!p) return;
-        msg("info", "Opening the picture…");
+        msg("info", "Opening the picture…", picTarget.msgBox());
         var img = new Image();
         img.crossOrigin = "anonymous";
-        img.onload = function () { clearMsg(); openCropper(img, i); };
-        img.onerror = function () { msg("err", "That picture could not be opened for editing. Remove it and add it again."); };
-        img.src = cfg.contentBase.replace(/\/$/, "") + "/" + p.key;
+        img.onload = function () { clearMsg(picTarget.msgBox()); openCropper(img, i); };
+        img.onerror = function () { msg("err", "That picture could not be opened for editing. Remove it and add it again.", picTarget.msgBox()); };
+        img.src = picTarget.srcOf(p);
     }
 
     function pickFile(file) {
+        var box = picTarget.msgBox();
         if (!file) return;
-        if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return msg("err", "That is not a JPEG, PNG or WebP picture.");
-        if (file.size > LIMITS.fileBytes) return msg("err", "That picture is larger than 10 MB. Choose a smaller one.");
-        var cap = current.kind === "notice" ? 1 : LIMITS.pictures;
-        if ((current.pictures || []).length >= cap) {
-            return msg("err", cap === 1 ? "A notice carries one picture. Remove it to choose a different one." : "This article already has three pictures.");
-        }
+        if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return msg("err", "That is not a JPEG, PNG or WebP picture.", box);
+        if (file.size > LIMITS.fileBytes) return msg("err", "That picture is larger than 10 MB. Choose a smaller one.", box);
+        var cap = picTarget.cap();
+        if (picTarget.list().length >= cap) return msg("err", picTarget.atCap(cap), box);
         var url = URL.createObjectURL(file);
         var img = new Image();
         img.onload = function () { URL.revokeObjectURL(url); openCropper(img); };
-        img.onerror = function () { URL.revokeObjectURL(url); msg("err", "That picture could not be opened."); };
+        img.onerror = function () { URL.revokeObjectURL(url); msg("err", "That picture could not be opened.", box); };
         img.src = url;
     }
 
@@ -897,7 +925,7 @@
        maths, so everything downstream -- the frame, the preview, the encoder
        -- carries on as if the photo had arrived the right way up. */
     function openCropper(img, replaceIndex) {
-        var existing = replaceIndex == null ? null : current.pictures[replaceIndex];
+        var existing = replaceIndex == null ? null : picTarget.list()[replaceIndex];
         crop = { src: img, img: img, rotation: 0, replace: replaceIndex == null ? null : replaceIndex,
                  scale: 1, x: 0, y: 0, w: 0, h: 0, drag: null };
         layoutCropper();
@@ -909,10 +937,10 @@
         // Second and third pictures default to beside the text: an article
         // with three full-width bands in it is mostly bands.
         $("p-layout").value = existing ? existing.layout || "full"
-            : (current.pictures || []).length === 0 ? "full" : "right";
-        // A notice always draws its picture small and to the side, so there is
-        // nothing to choose.
-        $("wrap-p-layout").hidden = current.kind === "notice";
+            : picTarget.list().length === 0 ? "full" : "right";
+        // A notice, and the hero, always draw their picture in one place, so
+        // there is nothing to choose.
+        $("wrap-p-layout").hidden = !picTarget.layout();
         clearMsg($("crop-msg"));
         $("crop-modal").hidden = false;
         $("p-alt").focus();
@@ -1028,11 +1056,9 @@
         msg("info", "Adding the picture…", $("crop-msg"));
 
         var outW = Math.min(1600, Math.round(crop.w / crop.scale));
-        var ensureSaved = current._new ? save("draft", true) : Promise.resolve(current);
+        var target = picTarget;
 
-        ensureSaved.then(function () {
-            return Promise.all([encodeCrop(outW), encodeCrop(480), api("POST", "/items/" + current.id + "/pictures", {})]);
-        }).then(function (r) {
+        Promise.all([encodeCrop(outW), encodeCrop(480), target.grant()]).then(function (r) {
             var full = r[0], thumb = r[1], grant = r[2];
             var put = function (url, blob) {
                 return fetch(url, { method: "PUT", headers: grant.headers, body: blob }).then(function (res) {
@@ -1040,20 +1066,19 @@
                 });
             };
             return Promise.all([put(grant.uploadUrl, full.blob), put(grant.thumbUploadUrl, thumb.blob)]).then(function () {
-                current.pictures = current.pictures || [];
                 var pic = { key: grant.key, thumbKey: grant.thumbKey, width: full.w, height: full.h, alt: alt, credit: credit, layout: layout };
                 // Re-cropping replaces the picture where it stood, so the
                 // order of the article does not change under the editor. The
                 // old files are cleaned up by the API on save.
-                if (crop.replace != null) current.pictures.splice(crop.replace, 1, pic);
-                else current.pictures.push(pic);
-                return save(current.status === "published" ? "published" : "draft", true);
+                if (crop.replace != null) target.list().splice(crop.replace, 1, pic);
+                else target.list().push(pic);
+                return target.persist();
             });
         }).then(function () {
             var replaced = crop.replace != null;
             $("crop-modal").hidden = true; crop = null;
             renderPictures(); updateStatusLine();
-            msg("ok", replaced ? "Picture replaced and saved." : "Picture added and saved.");
+            msg("ok", replaced ? "Picture replaced and saved." : "Picture added and saved.", target.msgBox());
         }).catch(function (e) {
             // A picture belongs to an article, so the article is saved as a
             // draft first. A draft accepts an empty form, so that save rarely
@@ -1065,6 +1090,77 @@
             msg("err", text, $("crop-msg"));
         }).finally(function () { $("crop-ok").disabled = false; });
     }
+
+    /* ============================================================ */
+    /* 3b. The home page's own words                                 */
+    /* ============================================================ */
+
+    /* One record, so there is no list to come back to: the form is the
+       section. Only the headline, the paragraph under it, and a picture
+       beside them are editable. The buttons under the hero are how people
+       get around the site, so they stay in the page itself rather than
+       becoming something anybody can take away by accident. */
+
+    var home = null;
+    var homeDirty = false;
+
+    var homeTarget = {
+        root: "home-pictures",
+        dropzone: "home-dropzone",
+        msgBox: function () { return $("home-msg"); },
+        list: function () { return (home.pictures = home.pictures || []); },
+        cap: function () { return 1; },
+        layout: function () { return false; },
+        grant: function () { return api("POST", "/home/pictures", {}); },
+        persist: function () { return saveHome(true); },
+        srcOf: function (p) { return cfg.contentBase.replace(/\/$/, "") + "/" + p.key; },
+        full: "home page",
+        atCap: function () { return "The hero carries one picture. Remove it to choose a different one."; }
+    };
+
+    function showHome() {
+        picTarget = homeTarget;
+        clearMsg($("home-msg"));
+        if (home) { fillHome(); return; }
+        $("home-pictures").textContent = "";
+        msg("info", "Loading…", $("home-msg"));
+        api("GET", "/home").then(function (j) {
+            home = j.home || {};
+            homeDirty = false;
+            clearMsg($("home-msg"));
+            fillHome();
+        }).catch(function (e) { msg("err", e.message, $("home-msg")); });
+    }
+
+    function fillHome() {
+        $("f-home-headline").value = home.headline || "";
+        $("f-home-lede").value = home.lede || "";
+        renderPictures();
+    }
+
+    function saveHome(quiet) {
+        var body = {
+            headline: $("f-home-headline").value,
+            lede: $("f-home-lede").value,
+            pictures: home.pictures || []
+        };
+        if (!quiet) msg("info", "Saving…", $("home-msg"));
+        return api("PUT", "/home", body).then(function (j) {
+            home = j.home || home;
+            homeDirty = false;
+            fillHome();
+            if (!quiet) msg("ok", "Saved. The home page will show it within a minute.", $("home-msg"));
+            return home;
+        }).catch(function (e) {
+            msg("err", e.message, $("home-msg"));
+            throw e;
+        });
+    }
+
+    window.AAFA_ADMIN.showHome = showHome;
+    // Leaving the home page hands the cropper back to the article editor,
+    // which is the only other thing that uses it.
+    window.AAFA_ADMIN.leftHome = function () { picTarget = itemTarget; };
 
     /* ============================================================ */
     /* 4. Preview                                                    */
@@ -1108,7 +1204,7 @@
             $(id).addEventListener("input", function () { dirty = true; updateStatusLine(); });
             $(id).addEventListener("change", function () { dirty = true; updateStatusLine(); });
         });
-        window.addEventListener("beforeunload", function (e) { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+        window.addEventListener("beforeunload", function (e) { if (dirty || homeDirty) { e.preventDefault(); e.returnValue = ""; } });
 
         var dz = $("dropzone"), fi = $("file");
         dz.addEventListener("click", function () { fi.click(); });
@@ -1117,6 +1213,26 @@
         ["dragenter", "dragover"].forEach(function (t) { dz.addEventListener(t, function (e) { e.preventDefault(); dz.classList.add("over"); }); });
         ["dragleave", "drop"].forEach(function (t) { dz.addEventListener(t, function (e) { e.preventDefault(); dz.classList.remove("over"); }); });
         dz.addEventListener("drop", function (e) { pickFile(e.dataTransfer.files && e.dataTransfer.files[0]); });
+
+        var hdz = $("home-dropzone"), hfi = $("home-file");
+        hdz.addEventListener("click", function () { hfi.click(); });
+        hdz.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); hfi.click(); } });
+        hfi.addEventListener("change", function () { pickFile(hfi.files[0]); hfi.value = ""; });
+        ["dragenter", "dragover"].forEach(function (t) { hdz.addEventListener(t, function (e) { e.preventDefault(); hdz.classList.add("over"); }); });
+        ["dragleave", "drop"].forEach(function (t) { hdz.addEventListener(t, function (e) { e.preventDefault(); hdz.classList.remove("over"); }); });
+        hdz.addEventListener("drop", function (e) { pickFile(e.dataTransfer.files && e.dataTransfer.files[0]); });
+
+        ["f-home-headline", "f-home-lede"].forEach(function (id) {
+            $(id).addEventListener("input", function () { homeDirty = true; });
+        });
+        $("home-save").addEventListener("click", function () { saveHome().catch(function () {}); });
+        $("home-preview").addEventListener("click", function () {
+            var ensure = homeDirty ? saveHome(true) : Promise.resolve(home);
+            ensure.then(function () {
+                $("preview-frame").src = "../index.html?t=" + Date.now();
+                $("preview-modal").hidden = false;
+            }).catch(function () { /* saveHome already said why */ });
+        });
 
         var cc = $("crop-canvas");
         cc.addEventListener("pointerdown", cropDown);

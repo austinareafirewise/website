@@ -415,6 +415,18 @@ Resources:
     Type: AWS::ApiGatewayV2::Route
     Properties: {ApiId: !Ref Api, RouteKey: "POST /items/{id}/pictures", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
 
+  # The home page's own words: one record, its own routes, never in the item
+  # list. Board-only like everything else here.
+  RouteHomeGet:
+    Type: AWS::ApiGatewayV2::Route
+    Properties: {ApiId: !Ref Api, RouteKey: "GET /home", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
+  RouteHomePut:
+    Type: AWS::ApiGatewayV2::Route
+    Properties: {ApiId: !Ref Api, RouteKey: "PUT /home", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
+  RouteHomePicture:
+    Type: AWS::ApiGatewayV2::Route
+    Properties: {ApiId: !Ref Api, RouteKey: "POST /home/pictures", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
+
   Stage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
