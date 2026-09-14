@@ -33,7 +33,7 @@ nothing.
 
 ## What the statuses mean
 - section: members
-- target: #member-search
+- target: .item.confirmed | .item.pending | #member-list
 - audio: add-someone-to-the-list-03-03a452.mp3
 - audio-hash: a5420500
 
@@ -47,15 +47,28 @@ exist. Neither is ever sent to again.
 ## Adding somebody yourself
 - section: members
 - target: #member-new
-- audio: add-someone-to-the-list-04-ab193f.mp3
-- audio-hash: 004e4c26
+- audio: add-someone-to-the-list-04-f94782.mp3
+- audio-hash: b77a5b0f
 
-Only for somebody who actually asked — a paper sign-up sheet, or a request in
-person.
+"Add someone" is this button, and it is only for somebody who actually asked —
+a paper sign-up sheet at a meeting, or a request in person.
 
-The form makes you write down how you got their consent, and that sentence is
-stored with their record as the evidence. They still get the confirmation
-message. Nobody can be marked confirmed by hand.
+Press it, and the form opens.
+
+## What the form asks you to write down
+- section: members
+- screen: editor
+- open: #member-new
+- target: #f_consentNote
+- audio: add-someone-to-the-list-05-dafdc1.mp3
+- audio-hash: b493ae42
+
+This line is why that button is safe to have. You write down how you got their
+consent — "signed the sheet at the October meeting" — and that sentence is
+stored with their record as the evidence.
+
+They still get the confirmation message. Nobody can be marked confirmed by
+hand, by you or by anybody.
 
 ## Never add an address from a list
 - section: members
@@ -69,15 +82,30 @@ That is what the law calls an imported list, and one complaint from it can cost
 the Alliance the ability to send anything at all. There is no import button in
 this software, on purpose.
 
+## The buttons on somebody's row
+- section: members
+- target: .item.confirmed | .item.pending | #member-list
+- audio: add-someone-to-the-list-07-d14a65.mp3
+- audio-hash: 95c07cff
+
+Each person has their own buttons, on the right of their row. Which ones you
+see depends on where they have got to.
+
+Edit is always there. Resend appears only for somebody still Pending.
+Unsubscribe appears only for somebody who has Confirmed — so if everybody on
+your list is still pending, there is no Unsubscribe button anywhere yet, and
+nothing is wrong.
+
 ## Unsubscribe or delete
 - section: members
 - target: #member-export
-- audio: add-someone-to-the-list-06-0261c5.mp3
-- audio-hash: 4415c7f2
+- audio: add-someone-to-the-list-08-af543d.mp3
+- audio-hash: b830fae1
 
-If somebody asks to stop, unsubscribe them. Messages stop immediately and the
-record stays, so a later form submission cannot quietly put them back on.
+If somebody asks to stop, use Unsubscribe on their row. Messages stop at once
+and the record stays, so a later form submission cannot quietly put them back
+on.
 
-Delete only if they ask to be erased entirely — it removes the consent evidence
-with them. Download CSV gives you the whole list; it is personal information,
-so keep it off shared drives.
+Delete only if they ask to be erased entirely — it removes the consent
+evidence with them. Download CSV gives you the whole list; it is personal
+information, so keep it off shared drives.

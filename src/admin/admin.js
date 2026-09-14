@@ -380,11 +380,34 @@
         return !!node && !node.hidden && node.getClientRects().length > 0;
     }
 
-    function find(selector) {
+    /* A target may offer alternatives, separated by "|", and they are tried in
+       the order written -- unlike a CSS comma, which would hand back whichever
+       came first in the document. A step about what the statuses mean wants to
+       point at a confirmed member if there is one and a pending member only
+       if there is not, and that is a preference, not a grouping. */
+    /* "settle" means the screen has had its chance to finish loading. Until
+       then only the preferred alternatives are considered, because the last
+       one is usually a container that is on screen the whole time -- and a
+       fallback that matches immediately would win before the rows it is a
+       fallback FOR have even arrived, which is how this first landed the
+       highlight on the word "Loading…". */
+    function find(selector, settled) {
         if (!selector) return null;
-        try { return document.querySelector(selector); } catch (e) { return null; }
+        var parts = String(selector).split("|").map(function (p) { return p.trim(); }).filter(Boolean);
+        var upTo = parts.length > 1 && !settled ? parts.length - 1 : parts.length;
+        for (var i = 0; i < upTo; i++) {
+            var node;
+            try { node = document.querySelector(parts[i]); } catch (e) { continue; }
+            if (visible(node)) return node;
+        }
+        return null;
     }
 
+    /* Returns a promise, because what a step points at is often not there yet.
+       Switching section loads its list from the API; opening a form builds its
+       fields. Pointing the instant the tab is clicked lands the highlight on
+       the word "Loading…", which is exactly the sort of thing that looks like
+       the guide is broken. So it looks again for a moment before giving up. */
     function trainingFocus(section, selector, open) {
         if (trainingMark) { trainingMark.classList.remove("training-target"); trainingMark = null; }
 
@@ -394,18 +417,29 @@
             if (tab && tab !== currentTab) tab.click();
         }
 
-        if (open && !visible(find(selector))) {
-            var opener = find(open);
-            if (visible(opener)) opener.click();
-        }
+        if (!selector) return Promise.resolve(true);
 
-        if (!selector) return true;
-        var node = find(selector);
-        if (!visible(node)) return false;
-        node.classList.add("training-target");
-        trainingMark = node;
-        node.scrollIntoView({ block: "center", behavior: "smooth" });
-        return true;
+        var opened = false;
+        return new Promise(function (resolve) {
+            var tries = 0;
+            (function attempt() {
+                var node = find(selector, tries > 10);
+                if (visible(node)) {
+                    node.classList.add("training-target");
+                    trainingMark = node;
+                    node.scrollIntoView({ block: "center", behavior: "smooth" });
+                    return resolve(true);
+                }
+                // Once the screen has settled and it is still not there, the
+                // form it lives on may simply not be open.
+                if (open && !opened && tries >= 2) {
+                    var opener = find(open, true);
+                    if (visible(opener)) { opener.click(); opened = true; }
+                }
+                if (++tries > 14) return resolve(false);    // about 1.7 seconds
+                setTimeout(attempt, 120);
+            })();
+        });
     }
 
     window.AAFA_ADMIN.trainingFocus = trainingFocus;

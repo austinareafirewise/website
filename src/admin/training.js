@@ -93,17 +93,19 @@
         var w = admin();
         $("tr-pointing").hidden = true;
         if (!w) return;
-        var found = w.AAFA_ADMIN.trainingFocus(
+        var wanted = step.fields.target || null;
+        Promise.resolve(w.AAFA_ADMIN.trainingFocus(
             step.fields.section || null,
-            step.fields.target || null,
+            wanted,
             step.fields.open || null
-        );
-        if (step.fields.target && !found) {
-            // Say so rather than leaving somebody hunting for a highlight that
-            // is not there.
+        )).then(function (found) {
+            // Only complain about the step we are still on: a slow lookup must
+            // not put a message up over the next step.
+            if (!wanted || found) return;
+            if (!current || current.steps[at] !== step) return;
             $("tr-pointing").textContent = "The thing this step points at is not on the screen right now — it may only appear once you have opened an item.";
             $("tr-pointing").hidden = false;
-        }
+        });
     }
 
     function clearPointing() {

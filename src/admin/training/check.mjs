@@ -25,6 +25,16 @@ const REQUIRED_META = ["lesson-id", "sections", "order", "minutes", "description
 
 const html = readFileSync(PAGE, "utf8");
 const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));
+/* Classes the admin page only ever puts on at runtime -- a member row's
+   status, for instance -- exist in the stylesheet rather than the markup. */
+const css = readFileSync(join(HERE, "..", "admin.css"), "utf8")
+    + readFileSync(join(HERE, "..", "..", "css", "site.css"), "utf8");
+const styledClasses = new Set([...css.matchAll(/\.([A-Za-z][\w-]*)/g)].map((m) => m[1]));
+
+/* The keys the record editor builds its fields from. */
+const adminData = readFileSync(join(HERE, "..", "admin-data.js"), "utf8");
+const editorFields = new Set([...adminData.matchAll(/\{\s*k:\s*"([A-Za-z][\w]*)"/g)].map((m) => m[1]));
+
 const classes = new Set(
     [...html.matchAll(/\sclass="([^"]+)"/g)].flatMap((m) => m[1].split(/\s+/)).filter(Boolean)
 );
@@ -37,8 +47,34 @@ const primaries = new Map();   // section -> the lesson the Training button open
 /* A target is a plain #id or .class. Anything fancier is refused rather than
    half-checked: a selector this cannot verify is a selector that can rot. */
 function checkTarget(target, where) {
+    // Alternatives, tried in order by the guide. Each has to stand up on its own.
+    if (target.includes("|")) {
+        for (const one of target.split("|").map((t) => t.trim()).filter(Boolean)) checkTarget(one, where);
+        return;
+    }
+    // A compound like ".item.confirmed" is one class applied to a row the
+    // admin draws at runtime, so it is checked against the stylesheet: if the
+    // class is styled, it exists.
+    if (/^(\.[A-Za-z][\w-]*){2,}$/.test(target)) {
+        for (const cls of target.split(".").filter(Boolean)) {
+            if (!classes.has(cls) && !styledClasses.has(cls)) {
+                problems.push(`${where}: nothing uses or styles the class "${cls}"`);
+            }
+        }
+        return;
+    }
     if (/^#[A-Za-z][\w-]*$/.test(target)) {
-        if (!ids.has(target.slice(1))) problems.push(`${where}: no element with id "${target.slice(1)}" in admin/index.html`);
+        const id = target.slice(1);
+        // Fields inside the shared record editor are built at runtime, with
+        // ids of "f_" plus the field's key. Checked against those keys, so a
+        // renamed field still fails here rather than at somebody's screen.
+        if (id.startsWith("f_")) {
+            if (!editorFields.has(id.slice(2))) {
+                problems.push(`${where}: no field named "${id.slice(2)}" in admin-data.js FIELDS`);
+            }
+            return;
+        }
+        if (!ids.has(id)) problems.push(`${where}: no element with id "${id}" in admin/index.html`);
         return;
     }
     if (/^\.[A-Za-z][\w-]*$/.test(target)) {
