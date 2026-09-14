@@ -28,6 +28,7 @@ Under **$25 a year**, nearly all of it the domain name.
 | [02-deploy-stack.md](02-deploy-stack.md) | Upload one template; it builds the infrastructure | ~10 min + DNS |
 | [03-connect-github.md](03-connect-github.md) | Wire the repository to AWS, first publish | ~15 min |
 | [04-editing-the-site.md](04-editing-the-site.md) | **For board members** — notices, news, pictures, preview, publish | reference |
+| [field-guide.html](field-guide.html) | **For board members** — one page covering what the site does, the editing screen, and what it costs. Open it in a browser | reference |
 | [05-runbook.md](05-runbook.md) | Everything afterwards — editing, rollback, removing people, costs | reference |
 | [06-cms-design.md](06-cms-design.md) | How the board-editing feature works and why it is built that way | reference |
 

@@ -1,0 +1,633 @@
+<title>Firewise Site Handbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Open+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+/* Palette lifted from the site's own site.css tokens, so the handbook reads
+   as a companion to the thing it documents rather than a foreign document.
+   That includes honouring the site's own rule: orange is for emphasis and
+   never for large fields of colour. */
+:root {
+    --page:      #fbfaf7;
+    --surface:   #ffffff;
+    --sunk:      #f2f1ea;
+    --ink:       #1d2a21;
+    --muted:     #5c6b60;
+    --line:      #e2e0d8;
+
+    --green-900: #19462b;
+    --green-700: #265438;
+    --sage:      #8ca295;
+    --sage-text: #5c7265;
+
+    --accent:    #a85512;   /* the tone that may carry words */
+    --accent-dec:#da7b37;   /* decoration only */
+
+    --shadow: 0 1px 2px rgba(25,70,43,.06), 0 8px 24px rgba(25,70,43,.05);
+
+    --display: Oswald, "Arial Narrow", system-ui, sans-serif;
+    --body: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --page:      #141a15;
+        --surface:   #1b231c;
+        --sunk:      #10160f;
+        --ink:       #e7ebe3;
+        --muted:     #a3b0a4;
+        --line:      #2b352c;
+
+        --green-900: #0f2a1a;
+        --green-700: #8fb89b;
+        --sage:      #6c8375;
+        --sage-text: #9fb3a5;
+
+        --accent:    #e39a5c;
+        --accent-dec:#c97a3c;
+
+        --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+    }
+}
+
+:root[data-theme="dark"] {
+    --page:      #141a15;
+    --surface:   #1b231c;
+    --sunk:      #10160f;
+    --ink:       #e7ebe3;
+    --muted:     #a3b0a4;
+    --line:      #2b352c;
+
+    --green-900: #0f2a1a;
+    --green-700: #8fb89b;
+    --sage:      #6c8375;
+    --sage-text: #9fb3a5;
+
+    --accent:    #e39a5c;
+    --accent-dec:#c97a3c;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font: 400 16px/1.65 var(--body);
+    -webkit-font-smoothing: antialiased;
+}
+
+.shell { max-width: 820px; margin: 0 auto; padding: 0 24px 96px; }
+
+/* ---------- Masthead ---------- */
+
+.masthead {
+    background: var(--green-900);
+    color: #f2f5f0;
+    padding: 40px 0 34px;
+    border-bottom: 4px solid var(--accent-dec);
+}
+
+.masthead .shell { padding-bottom: 0; }
+
+.masthead .eyebrow {
+    font: 600 11px/1 var(--body);
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: #a9c4b1;
+    margin: 0 0 14px;
+}
+
+.masthead h1 {
+    font: 600 clamp(30px, 5vw, 44px)/1.08 var(--display);
+    text-transform: uppercase;
+    letter-spacing: .01em;
+    margin: 0 0 14px;
+    text-wrap: balance;
+}
+
+.masthead p { margin: 0; max-width: 56ch; color: #cfdcd2; font-size: 16px; }
+
+.facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: -28px 0 44px;
+    box-shadow: var(--shadow);
+}
+
+.fact { background: var(--surface); padding: 16px 18px; }
+
+.fact dt {
+    font: 600 10px/1 var(--body);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 8px;
+}
+
+.fact dd {
+    margin: 0;
+    font: 500 21px/1.15 var(--display);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+}
+
+.fact dd small {
+    display: block;
+    font: 400 12px/1.4 var(--body);
+    color: var(--muted);
+    margin-top: 4px;
+}
+
+/* ---------- Sections ---------- */
+
+section { margin-top: 52px; }
+
+.sec-head { margin-bottom: 20px; }
+
+.sec-head .eyebrow {
+    font: 700 10px/1 var(--body);
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+}
+
+h2 {
+    font: 600 clamp(22px, 3.4vw, 28px)/1.2 var(--display);
+    text-transform: uppercase;
+    letter-spacing: .01em;
+    margin: 0 0 8px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--green-700);
+    text-wrap: balance;
+}
+
+.sec-head p { margin: 12px 0 0; color: var(--muted); max-width: 62ch; }
+
+h3 { font: 600 16px/1.3 var(--body); margin: 28px 0 8px; color: var(--ink); }
+
+p { margin: 0 0 14px; max-width: 68ch; }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:hover { color: var(--ink); }
+
+code {
+    font: 400 .88em/1.4 var(--mono);
+    background: var(--sunk);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1px 5px;
+    white-space: nowrap;
+}
+
+/* ---------- Table ---------- */
+
+.scroller { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+
+table { border-collapse: collapse; width: 100%; min-width: 460px; background: var(--surface); }
+
+th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+
+th {
+    font: 700 10px/1 var(--body);
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--sunk);
+    white-space: nowrap;
+}
+
+tbody tr:last-child td { border-bottom: 0; }
+td:first-child { white-space: nowrap; font-weight: 600; }
+
+/* ---------- Capability list ---------- */
+
+.caps { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+
+.cap { background: var(--surface); padding: 16px 18px; }
+
+.cap h4 { font: 600 15px/1.3 var(--body); margin: 0 0 5px; }
+
+.cap p { margin: 0; font-size: 14.5px; color: var(--muted); max-width: none; }
+
+/* ---------- Numbered steps (a real sequence, so it is numbered) ---------- */
+
+.routine { list-style: none; margin: 0; padding: 0; counter-reset: step; }
+
+.routine > li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 14px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.routine > li:last-child { border-bottom: 0; }
+
+.routine > li::before {
+    content: counter(step);
+    font: 500 15px/30px var(--display);
+    text-align: center;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--green-900);
+    color: #f2f5f0;
+    font-variant-numeric: tabular-nums;
+}
+
+:root[data-theme="dark"] .routine > li::before,
+:root:not([data-theme="light"]) .routine > li::before { color: #dce8e0; }
+
+.routine strong { display: block; font: 600 15.5px/1.35 var(--body); margin-bottom: 3px; }
+
+.routine p { margin: 0; font-size: 14.5px; color: var(--muted); }
+
+/* ---------- Panels ---------- */
+
+.panel {
+    background: var(--sunk);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--sage);
+    border-radius: 0 8px 8px 0;
+    padding: 18px 20px;
+}
+
+.panel.rules { border-left-color: var(--accent-dec); }
+.panel h3 { margin-top: 0; }
+.panel > :last-child { margin-bottom: 0; }
+
+.rules ul { margin: 0; padding-left: 20px; }
+.rules li { margin-bottom: 11px; font-size: 15px; }
+.rules li:last-child { margin-bottom: 0; }
+.rules li strong { color: var(--ink); }
+
+.nots { list-style: none; margin: 0; padding: 0; }
+
+.nots li {
+    padding: 11px 0 11px 26px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+    font-size: 15px;
+}
+
+.nots li:last-child { border-bottom: 0; }
+
+.nots li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: var(--sage);
+    font-weight: 700;
+}
+
+.nots li strong { display: block; color: var(--ink); }
+.nots li span { color: var(--muted); font-size: 14.5px; }
+
+.note {
+    border-left: 3px solid var(--green-700);
+    padding: 2px 0 2px 16px;
+    margin: 22px 0;
+    color: var(--muted);
+    font-size: 14.5px;
+}
+
+.note strong { color: var(--ink); }
+
+/* States an item can be in — four labels, so four columns of equal weight. */
+.states { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+
+.state { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+
+.state b { display: block; font: 600 14.5px/1.3 var(--body); color: var(--green-700); margin-bottom: 4px; }
+
+.state span { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+footer.colophon {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 13.5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+}
+</style>
+
+<header class="masthead">
+    <div class="shell">
+        <p class="eyebrow">Austin Area Firewise Alliance</p>
+        <h1>Firewise Site Handbook</h1>
+        <p>What austinareafirewise.org does for the public, and how a board member publishes to it. No software to install, and nothing here requires you to write code.</p>
+    </div>
+</header>
+
+<div class="shell">
+
+    <dl class="facts">
+        <div class="fact">
+            <dt>Pages in the menu</dt>
+            <dd>6<small>plus a privacy page and a preferences page</small></dd>
+        </div>
+        <div class="fact">
+            <dt>Publish to live</dt>
+            <dd>~1 min<small>from pressing Publish</small></dd>
+        </div>
+        <div class="fact">
+            <dt>Running cost</dt>
+            <dd>$25–50<small>per year, depending on text and email</small></dd>
+        </div>
+        <div class="fact">
+            <dt>To install</dt>
+            <dd>Nothing<small>it all happens in a web browser</small></dd>
+        </div>
+    </dl>
+
+    <section>
+        <div class="sec-head">
+            <p class="eyebrow">Part one</p>
+            <h2>What the public sees</h2>
+            <p>Wildfire preparedness guidance for Travis County, written for homeowners rather than firefighters.</p>
+        </div>
+
+        <div class="scroller">
+            <table>
+                <thead>
+                    <tr><th>Page</th><th>What is on it</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Home</td><td>The emergency line, the burn ban notice, the board's current meeting notice, and four ways in</td></tr>
+                    <tr><td>News</td><td>Seminars, chipper days, newly recognized communities, meeting announcements — all published by the board</td></tr>
+                    <tr><td>Prepare</td><td>How embers ignite houses, the three defensible-space zones, home hardening, brush disposal</td></tr>
+                    <tr><td>Communities</td><td>What Firewise USA® recognition is and the six steps to earn it</td></tr>
+                    <tr><td>Evacuation</td><td>Alerts and STEAR, Ready / Set / Go, go-bags, neighborhoods with one way out</td></tr>
+                    <tr><td>About</td><td>Who the Alliance is and where the guidance comes from</td></tr>
+                    <tr><td>Privacy</td><td>What is kept about a visitor, and why. Linked from the footer</td></tr>
+                    <tr><td>Preferences</td><td>Where someone changes or stops their updates. Reached from a link in our emails</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Things the site does on its own</h3>
+
+
+        <div class="caps">
+            <div class="cap">
+                <h4>The burn ban status reads itself</h4>
+                <p>The home page shows Travis County's current burn ban, taken from the county's own page every half hour. If that page cannot be read, the notice hides itself rather than showing something out of date.</p>
+            </div>
+            <div class="cap">
+                <h4>The standing rule is always there</h4>
+                <p>Under the emergency line, a fixed banner says burn rules change with conditions and names the county as the authority. It states the rule rather than today's status, so it stays true whatever has happened — and it is what remains if the live status cannot be read.</p>
+            </div>
+            <div class="cap">
+                <h4>Text size control</h4>
+                <p>Three sizes in the header of every page, and it remembers each reader's choice. Built because our audience skews toward older homeowners.</p>
+            </div>
+            <div class="cap">
+                <h4>The 911 line comes first</h4>
+                <p>Ahead of the logo on every page, so someone using a screen reader hears it before anything else.</p>
+            </div>
+            <div class="cap">
+                <h4>It works on a phone</h4>
+                <p>The same content, restacked into one column. Nothing is hidden on a small screen.</p>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="sec-head">
+            <p class="eyebrow">Part two · this is your part</p>
+            <h2>The editing screen</h2>
+            <p>Everything below happens at the website address with <code>/admin/</code> on the end, in an ordinary web browser. You need the login that was emailed to you. There are five sections along the top.</p>
+        </div>
+
+        <div class="scroller">
+            <table>
+                <thead><tr><th>Section</th><th>What it is for</th></tr></thead>
+                <tbody>
+                    <tr><td>News &amp; notices</td><td>Meeting notices and news articles. The one most board members will use</td></tr>
+                    <tr><td>Members</td><td>People who have signed up for updates. Add someone by hand, see who has confirmed, unsubscribe or remove them, download the list</td></tr>
+                    <tr><td>Messages</td><td>Write an email or a text to members, choose who it goes to, and send it</td></tr>
+                    <tr><td>Firewise groups</td><td>The recognized neighborhoods — their leadership, and when recognition falls due for renewal</td></tr>
+                    <tr><td>Board</td><td>Who sits on the board, and who is allowed to sign in here</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note">
+            <strong>The four list sections all work the same way</strong> — a list, and a form that opens beside it. That is deliberate: learn one and you have learned all four. Every add, edit and delete asks you to confirm first.
+        </div>
+
+        <h3>Help is built into the screen</h3>
+        <p>The <strong>? Help</strong> button at the right-hand end of the section tabs opens help for whichever section you are looking at, and from there you can jump to any other topic — including <strong>How the site works</strong>, which is worth ten minutes once. You should not need this handbook open while you work.</p>
+    </section>
+
+    <section>
+        <div class="sec-head">
+            <p class="eyebrow">The main job</p>
+            <h2>Publishing a notice or an article</h2>
+        </div>
+
+        <div class="states" style="margin-bottom:24px">
+            <div class="state">
+                <b>A meeting notice</b>
+                <span>A box at the very top of the home page, above the headline. For the next meeting, a seminar, a chipper day. One at a time works best.</span>
+            </div>
+            <div class="state">
+                <b>A news article</b>
+                <span>Appears on the News page. Tick one box and its title also shows on the home page, for the two or three things that matter most right now.</span>
+            </div>
+        </div>
+
+        <ol class="routine">
+            <li>
+                <div>
+                    <strong>Sign in</strong>
+                    <p>Go to <strong>www.austinareafirewise.org/admin/</strong> and click Sign in. The first time, use the temporary password from your email and choose your own — a long phrase is easier to remember than a jumble. You stay signed in for the day.</p>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <strong>Write it</strong>
+                    <p>A title, then the text — where, when, what to bring. Leave a blank line between paragraphs. If there is a sign-up page or a map, paste the address and it becomes a button.</p>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <strong>Say when it should appear and disappear</strong>
+                    <p>A start time and a stop time, both Central. The item comes and goes on its own — nobody has to remember to take last quarter's meeting down.</p>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <strong>Add pictures, if you have them</strong>
+                    <p>Up to three on a news article. Drop a photo in and drag the frame to choose what shows. If it came out on its side, <strong>Turn left</strong> or <strong>Turn right</strong> rotates it a quarter turn. Then choose how it sits — <strong>across the whole width</strong>, or <strong>beside the text</strong> on the left or the right. Write one sentence describing it: that sentence is what someone who cannot see the picture hears.</p>
+                </div>
+            </li>
+            <li>
+                <div>
+                    <strong>Preview, then Publish</strong>
+                    <p>Preview shows the real page with your item in place, exactly as visitors will see it. Use it every time. Then Publish — it is on the site within a minute.</p>
+                </div>
+            </li>
+        </ol>
+
+        <div class="note">
+            <strong>Pictures place themselves down the article</strong> in the order you add them — the first above the first paragraph, the next a little further down. On a phone every picture goes full width whatever you chose, because a photo and two words of text side by side is worse than either alone.
+        </div>
+
+        <h3>A draft can be unfinished</h3>
+        <p><strong>Save as draft</strong> takes whatever you have — no title yet, no dates, nothing but a photo you wanted to keep. Come back to it later. <strong>Publish</strong> is the step that insists on a title, some text, and both dates; nothing reaches the site without them.</p>
+
+        <h3>The four states an item can be in</h3>
+
+        <div class="states">
+            <div class="state">
+                <b>Draft</b>
+                <span>Saved, and never visible to the public — not even to someone who guesses the address.</span>
+            </div>
+            <div class="state">
+                <b>Scheduled</b>
+                <span>Published, but waiting for its start time to arrive.</span>
+            </div>
+            <div class="state">
+                <b>On the site now</b>
+                <span>Live and visible to everyone.</span>
+            </div>
+            <div class="state">
+                <b>Ended</b>
+                <span>Past its stop time and gone from the site. Kept for reference — change the dates to bring it back.</span>
+            </div>
+        </div>
+
+        <div class="note">
+            <strong>Published something wrong?</strong> Open it and press <strong>Take off the site</strong>. It is gone within a minute, and nothing is deleted — it simply becomes a draft again.
+        </div>
+    </section>
+
+    <section>
+        <div class="sec-head">
+            <p class="eyebrow">Reassurance</p>
+            <h2>What you cannot break</h2>
+            <p>The editing screen was deliberately kept away from the parts people's safety depends on.</p>
+        </div>
+
+        <ul class="nots">
+            <li>
+                <strong>The emergency information</strong>
+                <span>The 911 line and both burn ban notices are part of the site itself. Nothing on the editing screen touches them.</span>
+            </li>
+            <li>
+                <strong>The guidance pages</strong>
+                <span>Defensible space distances, evacuation advice, home hardening — none of it can be changed from where you publish.</span>
+            </li>
+            <li>
+                <strong>Anything by accident</strong>
+                <span>Every add, edit and delete asks you to confirm. Drafts are never public, and anything published can be taken down by you in under a minute.</span>
+            </li>
+            <li>
+                <strong>The site as a whole</strong>
+                <span>The worst thing that can happen is a wrong notice on the home page — and that is yours to fix, without asking anyone.</span>
+            </li>
+        </ul>
+    </section>
+
+    <section>
+        <div class="sec-head">
+            <p class="eyebrow">Updates to members</p>
+            <h2>The sign-up list</h2>
+            <p>The home page has a form where a visitor asks for updates by email, by text, or both. It takes a first and last name, an email address, a mobile number, and — once the board has defined some — which Firewise group they belong to.</p>
+        </div>
+
+        <p><strong>Where it stands today:</strong> sign-ups are accepted. If our email sending is still going through approval, the record is held and the confirmation follows automatically once it clears — nobody has to come back and enter anything twice. Text messages begin once our phone number clears carrier approval; anyone giving a mobile now is told they will get a confirmation text when it goes live, and nothing is sent until they reply to it.</p>
+
+        <div class="panel">
+            <h3>Three things worth knowing before we start texting</h3>
+            <p><strong>Texts cost money, per person, per message.</strong> It is fractions of a cent each, but it is the one part of running this site that scales with how much we use it. The screen where a message is written shows how many segments it will send as, because a slightly-too-long message costs double.</p>
+            <p><strong>People can leave without asking us.</strong> Every email carries a link to a page where someone changes or stops their updates themselves, and every text can be stopped by replying STOP.</p>
+            <p style="margin-bottom:0"><strong>We say what we keep and why.</strong> The privacy page spells out what is stored about a visitor who only reads the site, and about someone who signs up. It is linked from the footer of every page.</p>
+        </div>
+    </section>
+
+    <section>
+        <div class="sec-head">
+            <p class="eyebrow">Not your job, usually</p>
+            <h2>The part that still needs a volunteer</h2>
+        </div>
+
+        <p>The six guidance pages are not edited from the admin screen. They live in files that a volunteer with the right access edits, previews, and publishes. That is deliberate — those pages change rarely, and when they do it is because a number changed at NFPA or the Forest Service, which someone should check against the source first.</p>
+
+        <div class="panel rules">
+            <h3>Rules that volunteer works to</h3>
+            <ul>
+                <li><strong>The site speaks as the Alliance, never as an agency.</strong> We are an independent volunteer organization — not the City of Austin, AFD, Travis County, or an ESD. Nothing may read as an official notice, and we do not reproduce agency branding.</li>
+                <li><strong>Never publish a fact with a shelf life.</strong> A stale "no burn ban in effect" is worse than no notice at all. Where the site does show a live status, it reads it from the agency and hides itself rather than guessing.</li>
+                <li><strong>Emergency instructions belong to the agencies.</strong> We point people to them; we do not restate them.</li>
+                <li><strong>Any number that changes gets checked against the source.</strong> Zone distances, vent mesh sizes, branch clearances — a typo there is guidance someone may act on.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <div class="sec-head">
+            <p class="eyebrow">What it commits us to</p>
+            <h2>Running cost</h2>
+        </div>
+
+        <p>Roughly <strong>$25 to $50 a year</strong>, depending on how we handle text and email. There is no hosting contract, no licence, and no subscription to cancel.</p>
+
+        <div class="scroller">
+            <table>
+                <thead><tr><th>What</th><th>Cost</th></tr></thead>
+                <tbody>
+                    <tr><td>Domain name</td><td>$13–15 a year</td></tr>
+                    <tr><td>Address lookup</td><td>50¢ a month</td></tr>
+                    <tr><td>Hosting</td><td>Free, then pennies</td></tr>
+                    <tr><td>Notices, news and the burn ban check</td><td>Pennies a month</td></tr>
+                    <tr><td>Email to members</td><td>Pennies a month</td></tr>
+                    <tr><td>Text messaging</td><td>The variable — a phone number is a dollar or two a month, plus a fraction of a cent per person per message</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note">
+            An alert emails the treasurer if the bill ever goes above what is expected, so a surprise shows up straight away rather than at the end of the year.
+        </div>
+    </section>
+
+    <section>
+        <div class="sec-head">
+            <p class="eyebrow">Know your limits</p>
+            <h2>When to ask for help</h2>
+        </div>
+
+        <ul class="nots">
+            <li><strong>Try the ? Help button first</strong><span>Every section has its own help built into the screen, written for exactly the thing you are looking at.</span></li>
+            <li><strong>"Signed in, but not on the board list"</strong><span>Your login works but has not been given permission yet. Ask whoever manages the website.</span></li>
+            <li><strong>A picture will not upload</strong><span>Check it is a JPEG, PNG or WebP under 10 MB, and try again in a moment. If it keeps failing, say so.</span></li>
+            <li><strong>You published it but cannot see it</strong><span>Check the start time has passed, wait a full minute, then reload the page.</span></li>
+            <li><strong>Anything about the guidance pages</strong><span>Wording, numbers, the menu, the header or footer — those are files, not admin-screen items.</span></li>
+            <li><strong>Adding anyone else's logo</strong><span>Trademarks carry usage rules, and placing one prominently can imply an endorsement we do not have.</span></li>
+        </ul>
+    </section>
+
+    <footer class="colophon">
+        Prepared for the Austin Area Firewise Alliance board · Checked against the site as it stood on 13 September 2026,
+        at commit <code>feb687d</code>. The full written guide to publishing is <code>docs/04-editing-the-site.md</code>
+        in this repository; where this summary and the repository disagree, the repository is right.
+    </footer>
+
+</div>
