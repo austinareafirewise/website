@@ -300,11 +300,7 @@ code { background: #f1f1ec; padding: 1px 5px; border-radius: 4px; font-size: .9e
 .tr-words p { font-size: 1rem; line-height: 1.6; margin: 0 0 12px; }
 .tr-audio { margin: 14px 0; }
 .tr-audio audio { width: 100%; }
-.tr-auto {
-    display: flex; align-items: center; gap: 8px;
-    margin-top: 8px; font-size: .88rem; color: var(--muted); cursor: pointer;
-}
-.tr-auto input { width: 18px; height: 18px; margin: 0; flex: 0 0 auto; }
+.tr-auto { margin-top: 8px; font-size: .88rem; }
 #tr-blocked { margin-top: 8px; color: var(--orange-dark); }
 .tr-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
 .tr-nav #tr-menu-back { margin-left: auto; }

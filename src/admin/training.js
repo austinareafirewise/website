@@ -157,6 +157,7 @@
     function start(lesson) {
         current = lesson;
         at = 0;
+        setRunning(true);
         $("tr-menu").hidden = true;
         $("tr-step").hidden = false;
         $("tr-kicker").textContent = "Training";
@@ -194,7 +195,9 @@
         }
 
         $("tr-prev").disabled = at === 0;
-        $("tr-next").textContent = at === current.steps.length - 1 ? "Finish" : "Next →";
+        var last = at === current.steps.length - 1;
+        $("tr-next").textContent = last ? "Finish" : "Next →";
+        $("tr-pause").hidden = last && !running;
         point(step);
     }
 
@@ -210,7 +213,24 @@
 
     var advanceTimer = null;
 
-    function autoOn() { return $("tr-auto").checked; }
+    /* The walkthrough runs from the moment a lesson starts and keeps going
+       until somebody stops it. One piece of state, shown by one button, and
+       the audio element's own play/pause is kept in step with it -- otherwise
+       pressing pause on the player would silence the voice while the steps
+       carried on turning. */
+    var running = true;
+
+    function autoOn() { return running; }
+
+    function setRunning(on) {
+        running = on;
+        var b = $("tr-pause");
+        b.textContent = on ? "\u275A\u275A Pause" : "\u25B6 Resume";
+        b.className = "btn btn-small " + (on ? "btn-primary" : "btn-green");
+        $("tr-auto-note").textContent = on
+            ? "The lesson plays itself. Press Pause to stop it anywhere."
+            : "Paused. Press Resume to carry on, or use Back and Next yourself.";
+    }
 
     function cancelAdvance() { clearTimeout(advanceTimer); advanceTimer = null; }
 
@@ -270,12 +290,33 @@
     });
 
     /* Pausing means "wait for me". Nothing should move while it is paused. */
-    $("tr-player").addEventListener("pause", cancelAdvance);
-    $("tr-player").addEventListener("play", function () { $("tr-blocked").hidden = true; });
+    $("tr-player").addEventListener("pause", function () {
+        // Ignore the pause the browser fires while swapping to the next clip.
+        if (!$("tr-player").ended && running && !$("tr-player").seeking) setRunning(false);
+        cancelAdvance();
+    });
+    $("tr-player").addEventListener("play", function () {
+        $("tr-blocked").hidden = true;
+        if (!running) setRunning(true);
+    });
 
-    $("tr-auto").addEventListener("change", function () {
-        if (autoOn()) playThisStep();
-        else { cancelAdvance(); $("tr-player").pause(); }
+    $("tr-pause").addEventListener("click", function () {
+        if (running) {
+            setRunning(false);
+            cancelAdvance();
+            $("tr-player").pause();
+        } else {
+            setRunning(true);
+            // Carry on from where the voice stopped, rather than restarting
+            // the step somebody has already half heard.
+            var p = $("tr-player");
+            if (p.getAttribute("src")) {
+                var pr = p.play();
+                if (pr && pr.catch) pr.catch(function () { $("tr-blocked").hidden = false; });
+            } else {
+                waitThenAdvance(4000);
+            }
+        }
     });
 
     $("tr-prev").addEventListener("click", function () { step(-1); });
