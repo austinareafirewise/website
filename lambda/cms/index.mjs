@@ -55,6 +55,7 @@ const KINDS = new Set(["news", "notice"]);
    the day this arrives and changes only when somebody chooses to change it. */
 const HOME_KEY = "__home";
 const HOME_DEFAULT = {
+    kicker: "Travis County, Texas",
     headline: "Wildfire moves fast.\nPrepare before it happens.",
     lede: "The Austin Area Firewise Alliance is a volunteer organization helping Travis " +
           "County neighborhoods get ready for wildfire — inside the City of Austin and out " +
@@ -271,6 +272,9 @@ async function putHome(input, who) {
     const now = new Date().toISOString();
     const home = {
         id: HOME_KEY,
+        // The small line above the headline. Optional: empty means the page
+        // shows no line at all rather than an empty one.
+        kicker: str(input.kicker, "The line above the headline", 60),
         headline: str(input.headline, "Headline", 160, true),
         lede: str(input.lede, "Opening paragraph", 1200, true),
         pictures: validatePictures(input, 1),

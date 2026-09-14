@@ -273,6 +273,14 @@
     function renderHome(home) {
         if (!home) return;
 
+        // The small line above the headline. An editor who clears it means
+        // the line to go, not to be left standing empty.
+        var kicker = document.querySelector(".hero .kicker");
+        if (kicker && typeof home.kicker === "string") {
+            kicker.textContent = home.kicker;
+            kicker.hidden = !home.kicker;
+        }
+
         var h1 = document.querySelector(".hero h1");
         if (h1 && home.headline) {
             h1.textContent = "";

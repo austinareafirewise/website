@@ -1133,6 +1133,7 @@
     }
 
     function fillHome() {
+        $("f-home-kicker").value = home.kicker || "";
         $("f-home-headline").value = home.headline || "";
         $("f-home-lede").value = home.lede || "";
         renderPictures();
@@ -1140,6 +1141,7 @@
 
     function saveHome(quiet) {
         var body = {
+            kicker: $("f-home-kicker").value,
             headline: $("f-home-headline").value,
             lede: $("f-home-lede").value,
             pictures: home.pictures || []
@@ -1222,7 +1224,7 @@
         ["dragleave", "drop"].forEach(function (t) { hdz.addEventListener(t, function (e) { e.preventDefault(); hdz.classList.remove("over"); }); });
         hdz.addEventListener("drop", function (e) { pickFile(e.dataTransfer.files && e.dataTransfer.files[0]); });
 
-        ["f-home-headline", "f-home-lede"].forEach(function (id) {
+        ["f-home-kicker", "f-home-headline", "f-home-lede"].forEach(function (id) {
             $(id).addEventListener("input", function () { homeDirty = true; });
         });
         $("home-save").addEventListener("click", function () { saveHome().catch(function () {}); });
