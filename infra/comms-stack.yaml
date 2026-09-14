@@ -334,10 +334,21 @@ Resources:
               - Effect: Allow
                 Action: ssm:GetParameter
                 Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${TwilioParameterName}"
+              # SES authorizes a send against the sending identity AND, while the
+              # account is in the sandbox, against the recipient's verified
+              # identity too. Granting only the domain meant every email to a
+              # verified address -- the whole of what the sandbox permits --
+              # failed with AccessDenied: test sends, and the confirmation for
+              # anybody a board member added by hand.
+              #
+              # Scoped to this account's own identities in this region. Nothing
+              # outside the account can be sent from or to, and once production
+              # access arrives the recipient no longer has to be an identity at
+              # all, so this quietly stops mattering.
               - Effect: Allow
                 Action: [ses:SendEmail, ses:SendRawEmail]
                 Resource:
-                  - !Sub "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:identity/${MailDomain}"
+                  - !Sub "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:identity/*"
                   - !Sub "arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/${ConfigSet}"
               # Readiness check before accepting a sign-up: is the account out
               # of the sandbox, and is the domain verified?

@@ -534,18 +534,38 @@ async function createMember(b, who) {
     return respond(200, { member: publicMember(m) });
 }
 
+/* Each channel is confirmed on its own, and each is attempted on its own.
+ *
+ * These used to run in sequence with no guard, so a failure on the first one
+ * stopped the second from being tried at all: somebody with an email address
+ * SES would not accept never got the text they could have confirmed with,
+ * even though the two have nothing to do with each other. A person who gave
+ * us both should be reachable on either.
+ *
+ * Returns what was sent and what failed, so the caller can say so instead of
+ * guessing. */
 async function sendConfirmationsFor(m) {
-    const sent = [];
-    if (m.email && m.emailStatus === "pending") { await sendEmailConfirmation(m); sent.push("email"); }
-    if (m.phone && m.smsStatus === "pending" && smsEnabled()) {
-        const code = newCode();
-        await ddb.send(new UpdateCommand({ TableName: ENV.members, Key: { memberId: m.memberId },
-            UpdateExpression: "SET smsCodeHash = :h, smsCodeExp = :x, smsCodeTries = :z",
-            ExpressionAttributeValues: { ":h": await hashCode(code, m.memberId), ":x": Math.floor(Date.now() / 1000) + 24 * 3600, ":z": 0 } }));
-        const t = await signToken("manage", m.memberId, 24 * 3600);
-        await sendSms(m.phone, `${ENV.orgName}: confirm your number for updates: ${ENV.siteOrigin}/manage.html?t=${t}&code=${code} (24h). Reply STOP to stop.`);
-        sent.push("sms");
+    const sent = [], failed = [];
+
+    if (m.email && m.emailStatus === "pending") {
+        try { await sendEmailConfirmation(m); sent.push("email"); }
+        catch (e) { failed.push({ channel: "email", reason: e.message || String(e) }); }
     }
+
+    if (m.phone && m.smsStatus === "pending" && smsEnabled()) {
+        try {
+            const code = newCode();
+            await ddb.send(new UpdateCommand({ TableName: ENV.members, Key: { memberId: m.memberId },
+                UpdateExpression: "SET smsCodeHash = :h, smsCodeExp = :x, smsCodeTries = :z",
+                ExpressionAttributeValues: { ":h": await hashCode(code, m.memberId), ":x": Math.floor(Date.now() / 1000) + 24 * 3600, ":z": 0 } }));
+            const t = await signToken("manage", m.memberId, 24 * 3600);
+            await sendSms(m.phone, `${ENV.orgName}: confirm your number for updates: ${ENV.siteOrigin}/manage.html?t=${t}&code=${code} (24h). Reply STOP to stop.`);
+            sent.push("sms");
+        } catch (e) { failed.push({ channel: "sms", reason: e.message || String(e) }); }
+    }
+
+    if (failed.length) console.error("confirmations failed", m.memberId, JSON.stringify(failed));
+    sent.failed = failed;      // carried alongside, so existing callers reading the array still work
     return sent;
 }
 
@@ -564,8 +584,19 @@ async function updateMember(id, b, who) {
     if (v.phone !== m.phone) { next.smsStatus = v.phone ? "pending" : undefined; delete next.smsCodeHash; delete next.smsCodeExp; delete next.smsCodeTries; }
     if (!v.email) delete next.email; if (!v.phone) delete next.phone;
     await ddb.send(new PutCommand({ TableName: ENV.members, Item: next }));
+
+    // The record is saved by this point. A confirmation that cannot be sent is
+    // worth reporting, but it must not be reported as a failed save: that is
+    // what happened when SES refused an unverified sandbox recipient, and the
+    // board member was told "nothing was changed" about a change already
+    // written. Losing a real edit to a messaging problem would be worse still.
     const sent = await sendConfirmationsFor(next);
-    return respond(200, { member: publicMember(next), confirmationsSent: sent });
+    const failed = sent.failed || [];
+    return respond(200, {
+        member: publicMember(next),
+        confirmationsSent: Array.from(sent),
+        confirmationsFailed: failed.length ? failed : undefined,
+    });
 }
 
 async function deleteMember(id, who) {

@@ -354,6 +354,15 @@
                 } else if (kind === "member" && !id) {
                     extra = " They are not on the list until they confirm.";
                 }
+                // A confirmation that could not be sent is said plainly. The
+                // record is saved either way, and the two must not be confused:
+                // a failed message once reported itself as a failed save.
+                if (j.confirmationsFailed && j.confirmationsFailed.length) {
+                    extra += " The record is saved, but the confirmation could not be sent by " +
+                             j.confirmationsFailed.map(function (f) { return f.channel; }).join(" or ") +
+                             ": " + j.confirmationsFailed[0].reason +
+                             " Use Resend once that is sorted out.";
+                }
                 notify(id ? "Saved" : "Added",
                     "\u201c" + who + "\u201d has been " + (id ? "updated." : "added as a " + LABEL[kind] + ".") + extra);
                 return refresh(kind);
