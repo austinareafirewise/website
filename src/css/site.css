@@ -685,6 +685,10 @@ section { padding: 52px 0; }
 .signup .field-row { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 .signup textarea { min-height: 120px; }
 
+/* The form's own submit sits under a short form and does not need the size
+   the hero buttons use. */
+.signup .btn[type="submit"] { padding: 10px 24px; font-size: .95rem; }
+
 .field { margin-bottom: 15px; }
 
 .field label { display: block; font-weight: 600; font-size: .92rem; margin-bottom: 6px; }
@@ -817,6 +821,45 @@ section { padding: 52px 0; }
 .notice h2 { font-size: 1.45rem; margin-bottom: .2em; }
 .notice-when { color: var(--muted); font-weight: 600; margin-bottom: .6em; }
 .notice p:last-child { margin-bottom: 0; }
+
+/* What the notice is about. The board picks the kind and the site picks the
+   colour, so nothing here can end up unreadable, and the kicker always spells
+   the kind out -- colour is never the only thing saying what this is. */
+.notice-meeting { border-left-color: var(--green-700); }
+.notice-event { border-left-color: var(--orange); }
+.notice-urgent { border-left-color: #9c2b16; }
+.notice-recognition { border-left-color: var(--green-500); }
+
+.notice-meeting .notice-kicker { color: var(--green-500); }
+.notice-event .notice-kicker { color: var(--orange-dark); }
+.notice-urgent .notice-kicker { color: #9c2b16; }
+.notice-recognition .notice-kicker { color: var(--green-500); }
+
+/* One picture, small and beside the words. A notice sits above the headline
+   and the burn ban notice, so anything bigger pushes the whole page down --
+   worst of all on a phone, which is why it stops floating there and the
+   picture goes back to being a band. */
+.notice-figure {
+    float: right;
+    width: min(38%, 200px);
+    margin: 0 0 12px 20px;
+}
+.notice-figure img { width: 100%; height: auto; border-radius: 8px; display: block; }
+.notice::after { content: ""; display: block; clear: both; }
+
+@media (max-width: 620px) {
+    .notice-figure { float: none; width: 100%; margin: 0 0 14px; }
+}
+
+/* ---------- Article accent colours ----------
+   Decoration only: a left edge, never text, so there is no contrast floor to
+   clear. The colour comes from the article's id, so it is the same every time
+   that article is drawn. */
+.accent-0 { --accent: var(--green-700); }
+.accent-1 { --accent: var(--orange); }
+.accent-2 { --accent: var(--green-500); }
+.accent-3 { --accent: var(--sage); }
+.accent-4 { --accent: var(--orange-darker); }
 .content-link { margin-top: 12px; margin-bottom: 0; }
 
 /* The external link on a notice or article is a secondary action next to the
@@ -829,7 +872,7 @@ section { padding: 52px 0; }
 #home-news h2 { font-size: 1.4rem; margin-bottom: 10px; }
 #home-news ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 #home-news li a {
-    display: block; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--orange);
+    display: block; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--accent, var(--orange));
     border-radius: 8px; padding: 12px 16px; font-weight: 600; text-decoration: none; color: var(--ink);
 }
 #home-news li a:hover { border-color: var(--orange-dark); color: var(--orange-dark); }
@@ -839,7 +882,8 @@ section { padding: 52px 0; }
 .news-list { display: grid; gap: 18px; }
 .news-card {
     display: grid; grid-template-columns: 1fr; gap: 16px; background: var(--card);
-    border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow);
+    border: 1px solid var(--line); border-left: 6px solid var(--accent, var(--sage));
+    border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow);
 }
 .news-card .news-thumb { margin: 0; }
 .news-card .news-thumb img { width: 100%; height: auto; border-radius: 8px; display: block; }
@@ -898,11 +942,16 @@ section { padding: 52px 0; }
 /* ---------- Sign-up form additions ---------- */
 .label-text { display: block; font-weight: 600; font-size: .92rem; margin-bottom: 8px; }
 .choice-row { display: flex; flex-wrap: wrap; gap: 10px; }
+/* Chips, not buttons. They were as tall as the Sign up button below them,
+   which made a three-word choice look like the main action on the form.
+   Still 44px of hit area including the border, which is the floor for a
+   touch target. */
 .choice {
-    display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px;
-    border: 1px solid #c9c9bf; border-radius: 8px; background: #fff; cursor: pointer; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 8px; padding: 7px 13px;
+    border: 1px solid #c9c9bf; border-radius: 8px; background: #fff; cursor: pointer;
+    font-weight: 600; font-size: .94rem;
 }
-.choice input { width: 20px; height: 20px; margin: 0; }
+.choice input { width: 18px; height: 18px; margin: 0; }
 .choice:has(input:checked) { border-color: var(--green-700); background: var(--sage-200); }
 .field-check.consent label { display: flex; gap: 12px; align-items: flex-start; font-weight: 400; font-size: .93rem; color: var(--muted); cursor: pointer; }
 .field-check.consent input { width: 22px; height: 22px; flex: 0 0 auto; margin-top: 2px; }

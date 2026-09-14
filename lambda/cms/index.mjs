@@ -55,6 +55,17 @@ const BODY_FORMATS = new Set(["plain", "markdown"]);
    picture and a line of text side by side. */
 const PICTURE_LAYOUTS = new Set(["full", "right", "left"]);
 
+/* What a meeting notice is about. The board picks the kind, not a colour:
+   the site maps each to one of its own palette colours and a word. Picking a
+   colour directly would let an editor produce unreadable text, and would break
+   the one signal this site has -- orange means alert here -- on a site about
+   fire. Every tone shows its label, so colour never carries the meaning on its
+   own. */
+const NOTICE_TONES = new Set(["meeting", "event", "urgent", "recognition"]);
+
+/* A notice may carry one small picture; an article may carry three. */
+const NOTICE_PICTURES = 1;
+
 /* ------------------------------------------------------------------ */
 /* Entry point                                                          */
 /* ------------------------------------------------------------------ */
@@ -179,7 +190,10 @@ async function pictureUploadUrl(id, input) {
     if (!isId(id)) throw new ValidationError("That item id is not valid.");
     const existing = await getItem(id);
     if (!existing) throw new ValidationError("Save the item once before adding pictures.");
-    if (existing.kind !== "news") throw new ValidationError("Only news articles carry pictures.");
+    const cap = existing.kind === "notice" ? NOTICE_PICTURES : LIMITS.pictures;
+    if ((existing.pictures || []).length >= cap) {
+        throw new ValidationError(cap === 1 ? "A notice can carry one picture." : `At most ${cap} pictures per article.`);
+    }
 
     const pictureId = newId();
     const key = `images/${id}/${pictureId}.jpg`;
@@ -263,6 +277,30 @@ async function publish() {
 
 class ValidationError extends Error {}
 
+/* Pictures are checked the same way whoever is carrying them; only how many
+   are allowed differs. */
+function validatePictures(input, max) {
+    const pics = Array.isArray(input.pictures) ? input.pictures : [];
+    if (pics.length > max) {
+        throw new ValidationError(max === 1 ? "A notice can carry one picture." : `At most ${max} pictures per article.`);
+    }
+    return pics.map((p, i) => {
+        if (!p || typeof p !== "object") throw new ValidationError(`Picture ${i + 1} is malformed.`);
+        const key = str(p.key, "Picture", 200, true);
+        const thumbKey = str(p.thumbKey, "Picture thumbnail", 200, true);
+        if (!/^images\/[A-Za-z0-9]+\/[A-Za-z0-9]+\.jpg$/.test(key) || !/^images\/[A-Za-z0-9]+\/[A-Za-z0-9]+-thumb\.jpg$/.test(thumbKey)) {
+            throw new ValidationError(`Picture ${i + 1} has an invalid location.`);
+        }
+        const alt = str(p.alt, `Picture ${i + 1} description`, LIMITS.alt, true);
+        const credit = str(p.credit, `Picture ${i + 1} credit`, LIMITS.credit);
+        const width = int(p.width), height = int(p.height);
+        if (!width || !height) throw new ValidationError(`Picture ${i + 1} is missing its size.`);
+        const layout = str(p.layout, `Picture ${i + 1} layout`, 10) || "full";
+        if (!PICTURE_LAYOUTS.has(layout)) throw new ValidationError(`Picture ${i + 1} has a layout the site does not have.`);
+        return { key, thumbKey, width, height, alt, credit, layout };
+    });
+}
+
 function validateItem(input, id) {
     if (!input || typeof input !== "object") throw new ValidationError("Nothing was sent.");
 
@@ -289,6 +327,16 @@ function validateItem(input, id) {
 
     const item = { id, kind, status, title, body, startsAt, endsAt, pictures: [] };
 
+    if (kind === "notice") {
+        const tone = str(input.tone, "Notice kind", 20) || "meeting";
+        if (!NOTICE_TONES.has(tone)) throw new ValidationError("That is not one of the notice kinds.");
+        item.tone = tone;
+        // One picture, and the site always draws it small and to the side: a
+        // notice sits above the headline and the burn ban, so a large image
+        // there pushes the whole page down.
+        item.pictures = validatePictures(input, NOTICE_PICTURES);
+    }
+
     const link = str(input.link, "Link", 500);
     if (link) {
         let u;
@@ -307,23 +355,7 @@ function validateItem(input, id) {
         const fmt = str(input.bodyFormat, "Body format", 10) || "plain";
         if (!BODY_FORMATS.has(fmt)) throw new ValidationError("Body format must be plain or markdown.");
         item.bodyFormat = fmt;
-        const pics = Array.isArray(input.pictures) ? input.pictures : [];
-        if (pics.length > LIMITS.pictures) throw new ValidationError(`At most ${LIMITS.pictures} pictures per article.`);
-        item.pictures = pics.map((p, i) => {
-            if (!p || typeof p !== "object") throw new ValidationError(`Picture ${i + 1} is malformed.`);
-            const key = str(p.key, "Picture", 200, true);
-            const thumbKey = str(p.thumbKey, "Picture thumbnail", 200, true);
-            if (!/^images\/[A-Za-z0-9]+\/[A-Za-z0-9]+\.jpg$/.test(key) || !/^images\/[A-Za-z0-9]+\/[A-Za-z0-9]+-thumb\.jpg$/.test(thumbKey)) {
-                throw new ValidationError(`Picture ${i + 1} has an invalid location.`);
-            }
-            const alt = str(p.alt, `Picture ${i + 1} description`, LIMITS.alt, true);
-            const credit = str(p.credit, `Picture ${i + 1} credit`, LIMITS.credit);
-            const width = int(p.width), height = int(p.height);
-            if (!width || !height) throw new ValidationError(`Picture ${i + 1} is missing its size.`);
-            const layout = str(p.layout, `Picture ${i + 1} layout`, 10) || "full";
-            if (!PICTURE_LAYOUTS.has(layout)) throw new ValidationError(`Picture ${i + 1} has a layout the site does not have.`);
-            return { key, thumbKey, width, height, alt, credit, layout };
-        });
+        item.pictures = validatePictures(input, LIMITS.pictures);
     }
 
     return item;

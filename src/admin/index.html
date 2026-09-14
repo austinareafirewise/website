@@ -111,6 +111,21 @@
                     <p class="hint">Leave a blank line between paragraphs.</p>
                 </div>
 
+                <!-- Notices only. The board chooses what the notice is about and
+                     the site chooses the colour to draw it in, so nothing here
+                     can produce an unreadable notice, and the label is always
+                     shown beside it. -->
+                <div class="field" id="wrap-tone">
+                    <label for="f-tone">What kind of notice is this?</label>
+                    <select id="f-tone">
+                        <option value="meeting">Meeting notice — a meeting, seminar or AGM</option>
+                        <option value="event">Event — a chipper day, work day or open day</option>
+                        <option value="urgent">Please read — something changed, or is time-critical</option>
+                        <option value="recognition">Good news — a recognition or milestone</option>
+                    </select>
+                    <p class="hint">This sets the colour and the small label above the title.</p>
+                </div>
+
                 <div class="field field-check" id="wrap-markdown">
                     <label><input type="checkbox" id="f-markdown"> Text uses Markdown</label>
                     <p class="hint">
@@ -152,7 +167,7 @@
                 </div>
 
                 <div id="wrap-pictures">
-                    <h2>Pictures <span class="opt">(up to 3)</span></h2>
+                    <h2>Pictures <span class="opt" id="pictures-cap">(up to 3)</span></h2>
                     <div id="pictures"></div>
                     <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Add a picture">
                         <strong>Drop a picture here</strong> or click to choose one
@@ -296,7 +311,7 @@
                     <input type="text" id="p-credit" maxlength="120" placeholder="Photo: J. Smith" autocomplete="off">
                 </div>
             </div>
-            <div class="field">
+            <div class="field" id="wrap-p-layout">
                 <label for="p-layout">How it sits in the article</label>
                 <select id="p-layout">
                     <option value="full">Across the whole width</option>
@@ -380,9 +395,24 @@
                 Allow up to a minute for a change to reach the public site.
             </p>
 
+            <h3>What kind of notice</h3>
+            <p>
+                A meeting notice carries a small label and a coloured edge saying what it is:
+                <strong>Meeting notice</strong>, <strong>Event</strong>, <strong>Please read</strong>
+                or <strong>Good news</strong>. You choose the kind; the site chooses the colour.
+                That is deliberate — it keeps the colours meaning the same thing everywhere, and
+                it means a notice can never come out in a colour nobody can read.
+            </p>
+            <p>
+                Use <strong>Please read</strong> sparingly. It is the loudest one, and it stops
+                being loud if every notice uses it.
+            </p>
+
             <h3>Pictures</h3>
             <p>
-                News articles take up to three. Drop one on the dotted box, drag the frame to
+                News articles take up to three. A meeting notice takes one, drawn small beside the
+                words — a notice sits above the headline on the home page, so a large picture there
+                pushes the whole page down. Drop one on the dotted box, drag the frame to
                 choose what shows, and say what is in the picture — that sentence is what someone
                 using a screen reader hears instead of seeing it, so it is required.
             </p>

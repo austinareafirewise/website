@@ -115,6 +115,32 @@ inside photos.
 
 ---
 
+## What kind of notice
+
+A meeting notice carries a small label and a coloured edge saying what it is:
+
+| Kind | Label shown | Use it for |
+| --- | --- | --- |
+| Meeting | Meeting notice | A meeting, seminar or the AGM |
+| Event | Event | A chipper day, work day or open day |
+| Urgent | Please read | Something changed, or is time-critical |
+| Recognition | Good news | A recognition or a milestone |
+
+You choose the kind and the site chooses the colour. That is on purpose: the
+colours keep meaning the same thing across the site, and a notice can never
+come out in a colour nobody can read. The label is always shown, so the colour
+is never the only thing saying what the notice is.
+
+Use **Please read** sparingly. It is the loudest one and it stops being loud if
+everything uses it.
+
+A notice can carry **one** picture, drawn small beside the words. A notice sits
+above the headline on the home page, so anything larger pushes the whole page
+down — on a phone especially. If you have a poster, make it a news article and
+point the notice at it with the link button.
+
+---
+
 ## Help, on the screen
 
 Every section has its own help. The **? Help** button at the right-hand end of

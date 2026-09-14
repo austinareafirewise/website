@@ -471,9 +471,14 @@
         $("f-link").value = item.link || "";
         $("f-linktext").value = item.linkText || "";
         $("f-home").checked = !!item.showOnHome;
+        $("f-tone").value = item.tone || "meeting";
+        $("wrap-tone").hidden = isNews;
         $("wrap-markdown").hidden = !isNews;
         $("wrap-home").hidden = !isNews;
-        $("wrap-pictures").hidden = !isNews;
+        // A notice carries one picture, an article three. Both use the same
+        // cropper; only the cap differs.
+        $("wrap-pictures").hidden = false;
+        $("pictures-cap").textContent = isNews ? "(up to 3)" : "(one, shown small beside the text)";
         $("unpublish").hidden = item.status !== "published";
         $("publish").textContent = item.status === "published" ? "Save and keep published" : "Publish";
         $("delete").hidden = !!item._new;
@@ -497,11 +502,12 @@
             kind: current.kind, status: status,
             title: $("f-title").value.trim(), body: $("f-body").value.replace(/\r\n?/g, "\n").trim(),
             startsAt: toIso($("f-starts").value), endsAt: toIso($("f-ends").value),
-            pictures: current.kind === "news" ? current.pictures || [] : []
+            pictures: current.pictures || []
         };
         var link = $("f-link").value.trim();
         if (link) { it.link = link; it.linkText = $("f-linktext").value.trim() || "More information"; }
         if (current.kind === "news") { it.showOnHome = $("f-home").checked; it.bodyFormat = $("f-markdown").checked ? "markdown" : "plain"; }
+        else { it.tone = $("f-tone").value; }
 
         // A draft can be missing anything: the point of saving one is to keep
         // work that is not finished, including an article that is so far
@@ -650,7 +656,7 @@
                 node("div", { class: "pic-text" }, [
                     node("strong", { text: p.alt || "" }),
                     p.credit || "No credit line",
-                    layoutPicker(p, i)
+                    current.kind === "notice" ? null : layoutPicker(p, i)
                 ]),
                 node("div", { class: "pic-actions" }, [
                     node("button", { type: "button", class: "btn btn-outline btn-small", "data-act": "rotate", text: "Rotate / re-crop" }),
@@ -664,7 +670,7 @@
             });
             root.appendChild(card);
         });
-        $("dropzone").hidden = pics.length >= LIMITS.pictures;
+        $("dropzone").hidden = pics.length >= (current.kind === "notice" ? 1 : LIMITS.pictures);
     }
 
     /* Rotate or re-crop a picture that is already on the article: load it back
@@ -686,7 +692,10 @@
         if (!file) return;
         if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return msg("err", "That is not a JPEG, PNG or WebP picture.");
         if (file.size > LIMITS.fileBytes) return msg("err", "That picture is larger than 10 MB. Choose a smaller one.");
-        if ((current.pictures || []).length >= LIMITS.pictures) return msg("err", "This article already has three pictures.");
+        var cap = current.kind === "notice" ? 1 : LIMITS.pictures;
+        if ((current.pictures || []).length >= cap) {
+            return msg("err", cap === 1 ? "A notice carries one picture. Remove it to choose a different one." : "This article already has three pictures.");
+        }
         var url = URL.createObjectURL(file);
         var img = new Image();
         img.onload = function () { URL.revokeObjectURL(url); openCropper(img); };
@@ -716,6 +725,9 @@
         // with three full-width bands in it is mostly bands.
         $("p-layout").value = existing ? existing.layout || "full"
             : (current.pictures || []).length === 0 ? "full" : "right";
+        // A notice always draws its picture small and to the side, so there is
+        // nothing to choose.
+        $("wrap-p-layout").hidden = current.kind === "notice";
         clearMsg($("crop-msg"));
         $("crop-modal").hidden = false;
         $("p-alt").focus();
@@ -907,7 +919,7 @@
         $("preview").addEventListener("click", preview);
         $("preview-close").addEventListener("click", function () { $("preview-modal").hidden = true; $("preview-frame").src = "about:blank"; });
 
-        ["f-title", "f-body", "f-markdown", "f-starts", "f-ends", "f-link", "f-linktext", "f-home"].forEach(function (id) {
+        ["f-title", "f-body", "f-markdown", "f-starts", "f-ends", "f-link", "f-linktext", "f-home", "f-tone"].forEach(function (id) {
             $(id).addEventListener("input", function () { dirty = true; updateStatusLine(); });
             $(id).addEventListener("change", function () { dirty = true; updateStatusLine(); });
         });

@@ -191,7 +191,7 @@
         return el("p", { class: "content-link" }, [a]);
     }
 
-    function figure(pic, thumb) {
+    function figure(pic, thumb, override) {
         var img = el("img", {
             src: imageUrl(thumb ? pic.thumbKey : pic.key),
             alt: pic.alt || "",
@@ -200,7 +200,7 @@
             height: thumb ? Math.round(480 * (pic.height / pic.width)) : pic.height
         });
         var layout = pic.layout === "right" || pic.layout === "left" ? pic.layout : "full";
-        var cls = thumb ? "news-thumb" : "news-figure news-figure-" + layout;
+        var cls = override || (thumb ? "news-thumb" : "news-figure news-figure-" + layout);
         var fig = el("figure", { class: cls }, [img]);
         if (!thumb && pic.credit) fig.appendChild(el("figcaption", { text: pic.credit }));
         return fig;
@@ -232,22 +232,48 @@
     /* Slots                                                         */
     /* ------------------------------------------------------------ */
 
+    /* What a notice is about. The board picks the kind; the site picks the
+       colour. The label is always shown, so the colour is never the only
+       thing carrying the meaning. */
+    var TONES = {
+        meeting: "Meeting notice",
+        event: "Event",
+        urgent: "Please read",
+        recognition: "Good news"
+    };
+
     function renderNotices(notices) {
         var slot = document.getElementById("notice-slot");
         if (!slot) return;
         slot.textContent = "";
         if (!notices.length) { slot.hidden = true; return; }
         notices.forEach(function (n) {
-            var art = el("article", { class: "notice" }, [
-                el("p", { class: "notice-kicker", text: "Meeting notice" }),
+            var tone = TONES[n.tone] ? n.tone : "meeting";
+            var art = el("article", { class: "notice notice-" + tone }, [
+                el("p", { class: "notice-kicker", text: TONES[tone] }),
                 el("h2", { text: n.title }),
                 el("p", { class: "notice-when", text: fmtDate(n.startsAt, true) })
             ]);
+            // One picture, small and to the side. A notice sits above the
+            // headline and the burn ban; a big image here pushes the page down.
+            var pic = (n.pictures || [])[0];
+            if (pic) art.appendChild(figure(pic, true, "notice-figure"));
             art.appendChild(renderBody(n));
             var lb = linkButton(n); if (lb) art.appendChild(lb);
             slot.appendChild(el("div", { class: "wrap" }, [art]));
         });
         slot.hidden = false;
+    }
+
+    /* A stable accent colour per article, derived from its id rather than
+       drawn at random: an article people recognise by its green stripe should
+       not be blue after a refresh. Borders only, so there is no contrast
+       floor to clear and nothing for an editor to get wrong. */
+    var ACCENTS = 5;
+    function accentOf(id) {
+        var h = 0, str = String(id || "");
+        for (var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 100000;
+        return h % ACCENTS;
     }
 
     function renderHomeNews(news) {
@@ -259,7 +285,7 @@
         var flagged = news.filter(function (n) { return n.showOnHome; });
         if (!flagged.length) { slot.hidden = true; return; }
         flagged.forEach(function (n) {
-            list.appendChild(el("li", null, [
+            list.appendChild(el("li", { class: "accent-" + accentOf(n.id) }, [
                 el("a", { href: "news.html?id=" + encodeURIComponent(n.id), text: n.title })
             ]));
         });
@@ -299,7 +325,7 @@
         var list = el("div", { class: "news-list" });
         news.forEach(function (n) {
             var href = "news.html?id=" + encodeURIComponent(n.id);
-            var card = el("article", { class: "news-card" });
+            var card = el("article", { class: "news-card accent-" + accentOf(n.id) });
             if (n.pictures && n.pictures.length) {
                 card.appendChild(el("a", { href: href, class: "news-thumb-link", "aria-hidden": "true", tabindex: "-1" }, [figure(n.pictures[0], true)]));
             }
