@@ -100,25 +100,36 @@ sent.
 A test is the only way to see how it lands on a phone, and it is where you will
 notice the wrong date or the link that does not work.
 
-## Submit, and let somebody else approve
+## Submit for review
 - section: comms
 - target: #comm-list
-- audio: send-a-message-07-0cf49c.mp3
-- audio-hash: fef86e42
+- audio: send-a-message-07-d23b3a.mp3
+- audio-hash: 30f593c4
 
-Submit for review is on the row of a message you are still writing — a draft,
-or one sent back to you. It hands the message to the rest of the board.
+Submit for review sits on the row of a message you are still writing — a draft,
+or one that has been sent back to you. It hands the message to the rest of the
+board.
 
-From that moment the message cannot be edited, and the Edit button goes away.
+If the message in front of you has already been submitted, you will not find
+Submit or Edit on it however hard you look. Press Withdraw on that row and both
+come straight back.
+
+## While it is waiting
+- section: comms
+- target: #comm-list
+- audio: send-a-message-08-f95ebd.mp3
+- audio-hash: 52a60022
+
+Once submitted, the message cannot be edited and the Edit button goes away.
 That is deliberate: whoever approves it has to be reading exactly what will go
-out. If you need to change something, press Withdraw and it becomes a draft
-again, with Edit back.
+out.
 
-Anybody else can approve it, or request changes with a note, which also sends
-it back to you as a draft.
+Withdraw turns it back into a draft with Edit restored. Anybody else can
+approve it, or request changes with a note, which also sends it back to you as
+a draft.
 
 You will not see Approve on your own message, so do not go looking for it. It
-appears on somebody else's screen, not yours.
+is on somebody else's screen, not yours.
 
 ## Send
 - section: comms
