@@ -395,71 +395,31 @@ section[id] { scroll-margin-top: 92px; }
 
 .hero .lede { font-size: 1.16rem; color: var(--muted); max-width: 64ch; }
 
-/* ---------- Burn ban notice in the hero ----------
-   The county's status, top right on a wide screen and above the headline on a
-   phone -- which is also its source order, so what a screen reader hears and
-   what a phone shows are the same thing. Red for a ban, green for none; the
-   words say which either way, since color alone is not a status. */
+/* ---------- The burn ban, in the conditions bar ----------
+   It lives in the bar rather than the hero because it is a standing condition
+   of the county, not part of the introduction to the Alliance -- and because
+   the bar is already the thing that says "before you burn". The words written
+   into the markup are the fallback: true whatever the county has done today,
+   and what stays on screen if the reading cannot be made or has gone stale. */
 
-.hero-grid { display: grid; gap: 24px; }
-
-@media (min-width: 880px) {
-    .hero-grid {
-        grid-template-columns: minmax(0, 1fr) 300px;
-        align-items: start;
-    }
-    .hero-copy { grid-column: 1; grid-row: 1; }
-    .burn-ban  { grid-column: 2; grid-row: 1; }
+.conditions.is-ban {
+    background: #fdeceb;
+    border-bottom-color: #c0392b;
 }
+.conditions.is-ban .label { color: #96231a; }
 
-.burn-ban {
-    border: 1px solid var(--line);
-    border-left: 5px solid var(--sage-text);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    background: var(--card);
-    font-size: .95rem;
+.conditions.is-clear {
+    background: #e9f2ea;
+    border-bottom-color: var(--green-500);
 }
+.conditions.is-clear .label { color: var(--green-700); }
 
-/* 7.2:1 and 7.6:1 for the headings on their own backgrounds; the body text
-   below them is --ink, which is over 13:1 on both. */
-.burn-ban.is-ban   { background: #fdeceb; border-color: #f0c8c4; border-left-color: #c0392b; }
-.burn-ban.is-clear { background: #e9f2ea; border-color: #cadfce; border-left-color: var(--green-500); }
-
-.burn-ban h2 {
-    font-size: 1rem;
-    line-height: 1.3;
-    margin: 0 0 6px;
-    text-transform: uppercase;
-    letter-spacing: .04em;
+.conditions .checked {
+    display: block;
+    font-size: .82rem;
+    color: #4a4a4a;
+    margin-top: 2px;
 }
-
-.burn-ban.is-ban h2   { color: #96231a; }
-.burn-ban.is-clear h2 { color: var(--green-700); }
-
-.burn-ban p { margin: 0 0 8px; color: var(--ink); }
-.burn-ban p:last-child { margin-bottom: 0; }
-
-.burn-ban a {
-    color: var(--orange-darker);
-    font-weight: 600;
-}
-
-/* Who said so and when. Small, but it is the part that tells a reader whether
-   to trust the line above it. */
-.burn-ban .burn-ban-source { font-size: .84rem; color: #4a4a4a; }
-
-.cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
-
-/* Interior page header, smaller than the home hero. */
-.page-head {
-    padding: 44px 0 30px;
-    background: linear-gradient(180deg, rgba(140, 162, 149, .16), rgba(251, 250, 247, 0));
-    border-bottom: 1px solid var(--line);
-}
-
-.page-head h1 { font-size: clamp(1.8rem, 1rem + 2.2vw, 2.6rem); }
-.page-head p { color: var(--muted); max-width: 68ch; margin-bottom: 0; }
 
 /* ---------- Sections ---------- */
 

@@ -392,33 +392,34 @@
 
     var BURN_BAN_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 
+    /* Rewrites the conditions bar with what the county actually says. The bar
+       already carries standing guidance that is true whatever the county has
+       done, so there is nothing to reveal and nothing to hide: either this
+       replaces the words with something more specific, or they stay as they
+       were. A stale or unreadable reading leaves the fallback in place, which
+       is the whole reason that wording exists. */
     function renderBurnBan(status) {
-        var slot = document.getElementById("burn-ban");
-        if (!slot || !status) return;
+        var bar = document.getElementById("conditions");
+        var label = document.getElementById("conditions-label");
+        var text = document.getElementById("conditions-text");
+        if (!bar || !label || !text || !status) return;
         if (status.state !== "ban" && status.state !== "none") return;
 
         var checked = Date.parse(status.checkedAt);
         if (isNaN(checked) || Date.now() - checked > BURN_BAN_MAX_AGE_MS) return;
 
         var ban = status.state === "ban";
-        slot.className = "burn-ban " + (ban ? "is-ban" : "is-clear");
-        slot.appendChild(el("h2", { text: status.headline || (ban ? "Burn ban in effect" : "No burn ban") }));
-        if (status.detail) slot.appendChild(el("p", { text: status.detail }));
+        bar.className = "conditions " + (ban ? "is-ban" : "is-clear");
+        label.textContent = ban ? "Burn ban in effect" : "No burn ban";
 
-        // The county is the authority, so the notice says so and links there.
-        slot.appendChild(el("p", {}, [
-            el("a", {
-                href: status.source,
-                class: "ext",
-                target: "_blank",
-                rel: "noopener",
-                text: "Travis County Fire Marshal"
-            }),
-            " — the county's page on burn bans."
-        ]));
-
-        slot.appendChild(el("p", { class: "burn-ban-source", text: "Checked " + fmtDate(status.checkedAt, true) + "." }));
-        slot.hidden = false;
+        text.textContent = "";
+        text.appendChild(document.createTextNode((status.detail || "") + " "));
+        text.appendChild(el("a", {
+            href: status.source, class: "ext", target: "_blank", rel: "noopener",
+            text: "Travis County's burn ban page"
+        }));
+        text.appendChild(document.createTextNode(" is the authority."));
+        text.appendChild(el("span", { class: "checked", text: "Checked " + fmtDate(status.checkedAt, true) + "." }));
     }
 
     function loadBurnBan() {
