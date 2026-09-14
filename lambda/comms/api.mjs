@@ -20,7 +20,7 @@ import {
     ddb, GetCommand, PutCommand, UpdateCommand, DeleteCommand, QueryCommand, ScanCommand,
     ENV, LIMITS, INTERESTS, METHODS, AUDIENCES, CONSENT, GROUP_STATUSES, BOARD_STATUSES,
     ValidationError, respond, redirect, parseBody, clientIp, editor,
-    str, email, phone, zip, isoDate, isId, newId, nowIso, withinTextingHours, smsSegments,
+    str, email, phone, zip, isoDate, isId, newId, nowIso, withinTextingHours, mayTextNow, isEmergency, URGENCIES, smsSegments,
     rateLimit, signToken, verifyToken, newCode, hashCode,
     getMember, findByEmail, findByPhone, allMembers, deriveStatus, publicMember, audienceFor,
     splitName, displayName,
@@ -796,22 +796,52 @@ function validateCommInput(b) {
         emailBody: wantEmail ? str(b.emailBody, "Email text", LIMITS.emailBody, true) : undefined,
         smsBody: wantSms ? str(b.smsBody, "Text message", LIMITS.smsBody, true) : undefined,
         sendAt: b.sendAt ? isoDate(b.sendAt, "Send when") : undefined,
+        urgency: (function () {
+            const u = str(b.urgency, "Urgency", 20) || "routine";
+            if (!URGENCIES.has(u)) throw new ValidationError("Urgency must be routine or emergency.");
+            return u;
+        })(),
     };
     if (out.smsBody) {
         const seg = smsSegments(renderSms({ smsBody: out.smsBody }));
         if (seg.segments > LIMITS.smsMaxSegments) throw new ValidationError(`That text would send as ${seg.segments} messages. Keep it under ${LIMITS.smsMaxSegments}.`);
     }
     if (out.sendAt && Date.parse(out.sendAt) < Date.now() - 60000) throw new ValidationError("'Send when' is in the past.");
-    if (wantSms && !withinTextingHours(out.sendAt ? new Date(out.sendAt) : new Date())) {
-        throw new ValidationError("Texts can only go out between 8am and 9pm Central. Pick a time in that window.");
+    // Quiet hours are for routine messages. An emergency -- an evacuation, a
+    // road closed by fire -- is exactly the message that must not wait for
+    // 8am, and federal rules treat it differently for that reason.
+    if (wantSms && !mayTextNow(out, out.sendAt ? new Date(out.sendAt) : new Date())) {
+        throw new ValidationError(
+            "Routine texts can only go out between 8am and 9pm Central. Pick a time in that window, " +
+            "or mark this an emergency if it is about an active threat to life or property."
+        );
     }
     return out;
+}
+
+/* Marking a message an emergency overrides the quiet hours and changes what
+   the carriers are told it is, so it is recorded as its own act: who decided,
+   and when. It stays in the history even if somebody sets it back to routine
+   afterwards. */
+function stampUrgency(next, previous, who, now) {
+    const was = previous ? previous.urgency || "routine" : null;
+    if (next.urgency === was) return;
+    if (next.urgency === "emergency") {
+        next.urgencySetBy = who;
+        next.urgencySetAt = now;
+        next.history = [...(next.history || []), { at: now, by: who, event: "marked emergency" }];
+    } else if (was === "emergency") {
+        next.history = [...(next.history || []), { at: now, by: who, event: "back to routine" }];
+        delete next.urgencySetBy;
+        delete next.urgencySetAt;
+    }
 }
 
 async function createComm(b, who) {
     const v = validateCommInput(b);
     const now = nowIso();
     const c = { commId: newId(), ...v, status: "draft", author: who, createdAt: now, updatedAt: now, updatedBy: who, history: [{ at: now, by: who, event: "created" }] };
+    stampUrgency(c, null, who, now);
     await ddb.send(new PutCommand({ TableName: ENV.comms, Item: c }));
     return respond(200, { comm: c });
 }
@@ -824,6 +854,7 @@ async function updateComm(id, b, who) {
     const now = nowIso();
     const next = { ...c, ...v, status: "draft", updatedAt: now, updatedBy: who, history: [...(c.history || []), { at: now, by: who, event: "edited" }] };
     for (const k of ["emailSubject", "emailBody", "smsBody", "sendAt"]) if (v[k] === undefined) delete next[k];
+    stampUrgency(next, c, who, now);
     await ddb.send(new PutCommand({ TableName: ENV.comms, Item: next }));
     return respond(200, { comm: next });
 }

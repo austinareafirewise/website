@@ -63,5 +63,16 @@ back to you as a draft.
 Send now is the last step and it asks first.
 
 A message that has gone cannot be recalled, corrected or deleted. Read it once
-more. If it is scheduled instead, texts should land between eight in the
-morning and nine at night — outside that is both rude and against the rules.
+more.
+
+## Routine, and emergency
+- section: comms
+- target: #comm-new
+
+A routine text waits for eight in the morning to nine at night. Schedule one
+outside that and the form refuses it.
+
+An emergency goes at once, at any hour — an evacuation, a fire closing a road,
+where the shelter is. It is not a way to make a message feel important.
+Marking a meeting reminder an emergency tells the phone companies something
+untrue, and that is what costs an organization its number.

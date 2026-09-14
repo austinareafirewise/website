@@ -193,6 +193,38 @@ export function centralHour(date) {
 }
 export function withinTextingHours(date) { const h = centralHour(date); return h >= 8 && h < 21; }
 
+/* How urgent a communication is, which decides two things: whether the 8am-9pm
+   quiet hours apply, and what the carriers are told the message is.
+ *
+ * "routine" is everything the Alliance normally sends -- meetings, chipper
+ * days, seminars, preparedness reminders. It is promotional to a carrier and
+ * it waits for the morning.
+ *
+ * "emergency" is a message about an active threat to life or property: an
+ * evacuation, a road closed by fire, where the shelter is. It goes at once,
+ * at any hour, and it is transactional to a carrier.
+ *
+ * The TCPA's 8pm-to-8am restriction is on telemarketing. Federal rules treat
+ * a call or text made for emergency purposes differently -- 47 CFR 64.1200
+ * defines those as messages "made necessary in any situation affecting the
+ * health and safety of consumers". A wildfire evacuation is the example that
+ * definition exists for.
+ *
+ * WHICH IS WHY THIS IS NOT A CONVENIENCE SETTING. Sending a meeting reminder
+ * as an emergency is misdeclaring a message to the carriers, and that is what
+ * costs an organization its number -- the same mistake as telling them a
+ * newsletter is transactional to get better routing. The admin screen says so
+ * in those words, every emergency send records who chose it, and the choice is
+ * separate from the approval so two people still have to agree. */
+export const URGENCIES = new Set(["routine", "emergency"]);
+
+export function isEmergency(comm) { return comm && comm.urgency === "emergency"; }
+
+/* Quiet hours apply to routine messages only. */
+export function mayTextNow(comm, date) {
+    return isEmergency(comm) || withinTextingHours(date || new Date());
+}
+
 /* SMS segment count. GSM-7 alphabet fits 160 per single segment, 153 each
    when concatenated; anything outside it (curly quotes, emoji) forces UCS-2
    at 70 / 67. Shown to the editor so a two-segment message is a choice. */

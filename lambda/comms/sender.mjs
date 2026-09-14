@@ -10,7 +10,7 @@
 import { SendMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
 import {
     ddb, GetCommand, PutCommand, UpdateCommand, DeleteCommand, ENV,
-    allMembers, audienceFor, renderEmail, renderSms, nowIso, withinTextingHours,
+    allMembers, audienceFor, renderEmail, renderSms, nowIso, mayTextNow, isEmergency,
 } from "./lib.mjs";
 import { sendEmail } from "./email.mjs";
 import { sendSms, smsEnabled } from "./sms.mjs";
@@ -36,7 +36,8 @@ async function sendOne(commId) {
 
     const recipients = audienceFor(await allMembers(), c.audience);
     const counts = { email: 0, sms: 0, sent: 0, failed: 0, skipped: 0, deferredSms: 0 };
-    const smsOk = smsEnabled() && withinTextingHours(new Date());
+    // An emergency goes at any hour. Everything else waits for the window.
+    const smsOk = smsEnabled() && mayTextNow(c, new Date());
 
     for (const r of recipients) {
         const key = { commId, recipient: `${r.member.memberId}#${r.channel}` };
@@ -63,7 +64,10 @@ async function sendOne(commId) {
                     await ddb.send(new DeleteCommand({ TableName: ENV.deliveries, Key: key }));
                     counts.deferredSms++; continue;
                 }
-                const res = await sendSms(r.to, renderSms(c), "promotional");
+                // What the carriers are told this is. An emergency notice is
+                // genuinely transactional; calling a meeting reminder one is
+                // the misdeclaration that costs an organization its number.
+                const res = await sendSms(r.to, renderSms(c), isEmergency(c) ? "transactional" : "promotional");
                 await mark(key, "sent", res.providerId);
                 counts.sms++; counts.sent++;
             }

@@ -372,6 +372,14 @@ blockquote.md-demo { margin: 0; padding-left: 12px; border-left: 3px solid var(-
 .item.confirmed .badge { background: #E4F0E6; color: #1d5b2c; }
 .item.pending .badge { background: var(--alert-bg); color: var(--orange-dark); }
 
+/* An emergency message, called out in the list so nobody has to open it to
+   see that the quiet hours were overridden. */
+.item .meta { white-space: normal; }
+.emergency-flag {
+    display: inline-block; font-weight: 700; font-size: .72rem; letter-spacing: .08em;
+    color: #8e2412; background: #FBE4E0; border-radius: 4px; padding: 1px 6px;
+}
+
 /* Leadership rows inside the group editor */
 .leaders { display: grid; gap: 8px; margin-bottom: 10px; }
 /* First name, last name, role, email, phone, and the Remove button. */

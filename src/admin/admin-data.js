@@ -145,8 +145,12 @@
         comm: function () {
             return [
                 { k: "name", label: "Name (for your list, not sent)", type: "text", required: true },
-                { k: "audience", label: "Send to", type: "select", required: true, options: [
+                { k: "audience", label: "Send to", type: "select", required: true, row: "how", options: [
                     { value: "email", label: "Email subscribers" }, { value: "sms", label: "Text subscribers" }, { value: "all", label: "Everyone" }] },
+                { k: "urgency", label: "Kind of message", type: "select", required: true, row: "how", options: [
+                    { value: "routine", label: "Routine — meetings, events, reminders" },
+                    { value: "emergency", label: "Emergency — active threat to life or property" }],
+                  hint: "Routine texts wait for 8am–9pm Central. An emergency goes at once, at any hour. Only use it for an evacuation, a fire closing a road, or where the shelter is — telling the phone companies a meeting reminder is an emergency is what costs an organization its number." },
                 { k: "emailSubject", label: "Email subject", type: "text" },
                 { k: "emailBody", label: "Email message", type: "textarea", hint: "Markdown allowed. The unsubscribe link and our postal address are added automatically." },
                 { k: "smsBody", label: "Text message", type: "textarea", hint: "\"Reply STOP to stop\" is added automatically. Watch the segment count — a long text sends as several." },
@@ -519,6 +523,7 @@
         var me = (window.AAFA_ADMIN && window.AAFA_ADMIN.email) || "";
         state.comms.forEach(function (c) {
             var bits = [COMM_STATE[c.status] || c.status];
+            if (c.urgency === "emergency") bits.push("EMERGENCY");
             bits.push(c.audience === "all" ? "everyone" : c.audience === "email" ? "email only" : "text only");
             if (c.author) bits.push("by " + c.author);
             if (c.approver && c.status !== "rejected") bits.push("approved by " + c.approver);
