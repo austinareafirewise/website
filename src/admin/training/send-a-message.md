@@ -23,15 +23,19 @@ been read by two.
 
 ## Write it
 - section: comms
-- target: #comm-new
-- audio: send-a-message-02-00355d.mp3
-- audio-hash: 61b21f3e
+- screen: editor
+- open: #comm-new
+- target: #f_name
+- audio: send-a-message-02-04b162.mp3
+- audio-hash: dbe358bc
 
-The name at the top is for your own list and is never sent.
+This is the message form, and the box outlined at the top of it is the
+message's name. That name is for your own list here. It is never sent to
+anybody.
 
-Choose who it goes to: email subscribers, text subscribers, or everyone. People
-chose which when they signed up, so somebody who only wanted email never gets a
-text.
+Below it is "Send to": email subscribers, text subscribers, or everyone.
+People chose which when they signed up, so somebody who only wanted email
+never gets a text.
 
 ## Email and text are different
 - section: comms
@@ -84,9 +88,14 @@ more.
 
 ## Routine, and emergency
 - section: comms
-- target: #comm-new
-- audio: send-a-message-07-12c3f4.mp3
-- audio-hash: f6851a69
+- screen: editor
+- open: #comm-new
+- target: #f_urgency
+- audio: send-a-message-07-2290fd.mp3
+- audio-hash: 8ebfe8fb
+
+This box is "Kind of message", and it decides whether a text can go out in the
+middle of the night.
 
 A routine text waits for eight in the morning to nine at night. Schedule one
 outside that and the form refuses it.
