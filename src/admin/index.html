@@ -156,15 +156,23 @@
                     <p class="hint">JPEG, PNG or WebP, up to 10 MB. You will crop it before it is added.</p>
                 </div>
 
-                <div class="admin-buttons">
-                    <button type="button" class="btn btn-outline" id="save-draft">Save as draft</button>
-                    <button type="button" class="btn btn-outline" id="preview">Preview</button>
-                    <button type="button" class="btn btn-primary" id="publish">Publish</button>
-                    <button type="button" class="btn btn-outline" id="unpublish" hidden>Take off the site</button>
-                    <button type="button" class="btn btn-outline" id="duplicate" hidden>Duplicate</button>
-                    <button type="button" class="btn btn-danger" id="delete">Delete</button>
+                <!-- Sticks to the bottom of the window while the form is
+                     scrolled, so the buttons and whatever the form is trying
+                     to tell you are both in front of you. The message sits
+                     above the buttons: below them it was off the screen
+                     exactly when it mattered, and putting it above means the
+                     buttons do not jump when one appears. -->
+                <div class="form-actions">
+                    <div class="form-status" id="msg" role="status" aria-live="polite"></div>
+                    <div class="admin-buttons">
+                        <button type="button" class="btn btn-outline" id="save-draft">Save as draft</button>
+                        <button type="button" class="btn btn-outline" id="preview">Preview</button>
+                        <button type="button" class="btn btn-primary" id="publish">Publish</button>
+                        <button type="button" class="btn btn-outline" id="unpublish" hidden>Take off the site</button>
+                        <button type="button" class="btn btn-outline" id="duplicate" hidden>Duplicate</button>
+                        <button type="button" class="btn btn-danger" id="delete">Delete</button>
+                    </div>
                 </div>
-                <div class="form-status" id="msg" role="status" aria-live="polite"></div>
             </form>
         </section>
         </div><!-- /section-content -->
@@ -204,20 +212,32 @@
             <div id="person-list" aria-live="polite"></div>
         </div>
 
-        <!-- One dialog serves every data section; admin-data.js builds the
-             fields for whichever record is being edited. -->
-        <div class="modal" id="rec-modal" hidden role="dialog" aria-modal="true" aria-labelledby="rec-title">
-            <div class="modal-box">
-                <h2 id="rec-title">Edit</h2>
-                <form id="rec-form" novalidate></form>
+        <!-- One editor serves every data section; admin-data.js builds the
+             fields for whichever record is being edited.
+
+             A full screen rather than a dialog, deliberately: adding a board
+             member should look and behave like writing a news article, so
+             there is one way of filling something in on this site rather than
+             two. It also gives long forms the whole window instead of a box
+             inside it. -->
+        <section id="rec-screen" hidden>
+            <div class="admin-form-head">
+                <button type="button" class="btn btn-outline btn-small" id="rec-back">← Back to the list</button>
+            </div>
+
+            <h1 id="rec-title">Edit</h1>
+
+            <form id="rec-form" novalidate></form>
+
+            <div class="form-actions">
+                <div class="form-status" id="rec-msg" role="status" aria-live="polite"></div>
                 <div class="admin-buttons">
                     <button type="button" class="btn btn-outline" id="rec-cancel">Cancel</button>
                     <button type="button" class="btn btn-primary" id="rec-save">Save</button>
                     <button type="button" class="btn btn-danger" id="rec-delete" hidden>Delete</button>
                 </div>
-                <div class="form-status" id="rec-msg" role="status" aria-live="polite"></div>
             </div>
-        </div>
+        </section>
     </main>
 
     <!-- Confirmation of something that has already happened. Deliberately
@@ -282,11 +302,13 @@
                     the first at the top, the next a couple of paragraphs down. On a phone every
                     picture goes full width, because there is no room beside the text.</p>
             </div>
-            <div class="admin-buttons">
-                <button type="button" class="btn btn-outline" id="crop-cancel">Cancel</button>
-                <button type="button" class="btn btn-primary" id="crop-ok">Add this picture</button>
+            <div class="form-actions">
+                <div class="form-status" id="crop-msg" role="status"></div>
+                <div class="admin-buttons">
+                    <button type="button" class="btn btn-outline" id="crop-cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="crop-ok">Add this picture</button>
+                </div>
             </div>
-            <div class="form-status" id="crop-msg" role="status"></div>
         </div>
     </div>
 

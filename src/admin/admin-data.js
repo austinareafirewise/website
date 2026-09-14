@@ -124,7 +124,8 @@
         },
         person: function () {
             return [
-                { k: "name", label: "Name", type: "text", required: true },
+                { k: "firstName", label: "First name", type: "text", required: true },
+                { k: "lastName", label: "Last name", type: "text", required: true },
                 { k: "role", label: "Role", type: "text", hint: "Chair, treasurer, secretary, member at large…" },
                 { k: "status", label: "Status", type: "select", required: true, options: [
                     { value: "current", label: "Current board member" }, { value: "past", label: "Past board member" }] },
@@ -180,6 +181,18 @@
         return wrap;
     }
 
+    /* Matches splitName in the Lambda: a stored single name is read as first
+       plus last, with the last word taken as the surname, and is only written
+       back once somebody saves the form. */
+    function splitPersonName(p) {
+        if (p.firstName || p.lastName) return { firstName: p.firstName || "", lastName: p.lastName || "" };
+        var whole = String(p.name || "").trim();
+        if (!whole) return { firstName: "", lastName: "" };
+        var i = whole.lastIndexOf(" ");
+        return i < 0 ? { firstName: whole, lastName: "" }
+                     : { firstName: whole.slice(0, i).trim(), lastName: whole.slice(i + 1).trim() };
+    }
+
     /* Leadership is a repeating group, so it gets its own control rather
        than being squeezed into a text box people would have to format. */
     function leadersField(leaders) {
@@ -188,14 +201,19 @@
         var list = el("div", { id: "leaders-list", class: "leaders" });
         function row(l) {
             var r = el("div", { class: "leader-row" }, [
-                el("input", { type: "text", placeholder: "Name", "data-lk": "name" }),
-                el("input", { type: "text", placeholder: "Role", "data-lk": "role" }),
-                el("input", { type: "email", placeholder: "Email", "data-lk": "email" }),
-                el("input", { type: "tel", placeholder: "Phone", "data-lk": "phone" }),
+                el("input", { type: "text", placeholder: "First name", "aria-label": "First name", "data-lk": "firstName" }),
+                el("input", { type: "text", placeholder: "Last name", "aria-label": "Last name", "data-lk": "lastName" }),
+                el("input", { type: "text", placeholder: "Role", "aria-label": "Role", "data-lk": "role" }),
+                el("input", { type: "email", placeholder: "Email", "aria-label": "Email", "data-lk": "email" }),
+                el("input", { type: "tel", placeholder: "Phone", "aria-label": "Phone", "data-lk": "phone" }),
                 el("button", { type: "button", class: "btn btn-outline btn-small", text: "Remove" })
             ]);
+            // Older rows hold one name; split it so an existing group opens
+            // with the pieces in the right boxes.
+            var parts = splitPersonName(l);
             var ins = r.querySelectorAll("input");
-            ins[0].value = l.name || ""; ins[1].value = l.role || ""; ins[2].value = l.email || ""; ins[3].value = l.phone || "";
+            ins[0].value = parts.firstName; ins[1].value = parts.lastName;
+            ins[2].value = l.role || ""; ins[3].value = l.email || ""; ins[4].value = l.phone || "";
             r.querySelector("button").addEventListener("click", function () { r.remove(); });
             return r;
         }
@@ -220,9 +238,35 @@
         $("rec-title").textContent = (isNew ? "Add a " : "Edit ") + titles[kind];
         $("rec-delete").hidden = isNew;
         $("rec-msg").className = "form-status";
-        $("rec-modal").hidden = false;
+        showEditor(kind);
         var first = form.querySelector("input, select, textarea");
         if (first) first.focus();
+    }
+
+    /* The editor takes the place of the list it was opened from, rather than
+       floating over it. Both are full-width screens in the same section, so
+       going in and coming back is the same movement as the news editor. */
+    function showEditor(kind) {
+        var sec = $("section-" + sectionFor(kind));
+        if (sec) sec.hidden = true;
+        $("rec-screen").hidden = false;
+        window.scrollTo(0, 0);
+    }
+
+    function closeEditor() {
+        $("rec-screen").hidden = true;
+        $("rec-form").textContent = "";
+        // Go back to the section the tabs say we are in, not the one the
+        // record belongs to. They are normally the same, but if anything has
+        // moved on underneath -- a tab pressed while the editor was open --
+        // trusting the record's kind would show two sections at once.
+        var tab = document.querySelector('.admin-nav .tab[aria-current="page"]');
+        var name = tab ? tab.getAttribute("data-section") : null;
+        ["content", "members", "comms", "groups", "board"].forEach(function (n) {
+            var sec = $("section-" + n);
+            if (sec) sec.hidden = n !== name;
+        });
+        window.scrollTo(0, 0);
     }
 
     function collect() {
@@ -235,7 +279,7 @@
                     var v = {};
                     Array.prototype.forEach.call(r.querySelectorAll("input"), function (i) { v[i.getAttribute("data-lk")] = i.value.trim(); });
                     return v;
-                }).filter(function (v) { return v.name; });
+                }).filter(function (v) { return v.firstName || v.lastName; });
                 return;
             }
             var e = $("f_" + f.k);
@@ -262,7 +306,7 @@
         $("rec-msg").textContent = "Saving…";
         api(id ? "PUT" : "POST", basePath(kind) + (id ? "/" + id : ""), body)
             .then(function (j) {
-                $("rec-modal").hidden = true;
+                closeEditor();
                 var who = body.name || [body.firstName, body.lastName].filter(Boolean).join(" ") || body.email || body.phone || "The record";
                 var extra = "";
                 if (j.confirmationsSent && j.confirmationsSent.length) {
@@ -287,7 +331,7 @@
                   : "";
         if (!window.confirm("Delete " + what + "?" + extra)) return;
         api("DELETE", basePath(kind) + "/" + id).then(function (j) {
-            $("rec-modal").hidden = true;
+            closeEditor();
             var tail = j.message ? " " + j.message
                 : j.membersUpdated ? " " + j.membersUpdated + " sign-up(s) were kept, with the group removed from them."
                 : "";
@@ -427,7 +471,7 @@
             var hasLogin = p.email && state.logins.indexOf(p.email) >= 0;
             var card = el("div", { class: "item " + (p.status === "current" ? "live" : "draft") }, [
                 el("div", null, [
-                    el("h3", null, [badge(p.status === "current" ? "current" : "past", p.status === "current" ? "live" : ""), p.name + (p.role ? " — " + p.role : "")]),
+                    el("h3", null, [badge(p.status === "current" ? "current" : "past", p.status === "current" ? "live" : ""), (p.name || [p.firstName, p.lastName].filter(Boolean).join(" ") || "(no name)") + (p.role ? " — " + p.role : "")]),
                     el("p", { class: "meta", text: bits.join(" · ") }),
                     el("p", { class: "meta", text: hasLogin ? "Has a website login" : "No website login" })
                 ]),
@@ -559,6 +603,7 @@
     }
 
     function showSection(name) {
+        $("rec-screen").hidden = true;
         ["content", "members", "comms", "groups", "board"].forEach(function (n) {
             var sec = $("section-" + n);
             if (sec) sec.hidden = n !== name;
@@ -604,7 +649,8 @@
             .catch(function (e) { window.alert(e.message); });
     });
 
-    $("rec-cancel").addEventListener("click", function () { $("rec-modal").hidden = true; });
+    $("rec-cancel").addEventListener("click", closeEditor);
+    $("rec-back").addEventListener("click", closeEditor);
     $("rec-save").addEventListener("click", saveRecord);
     $("rec-delete").addEventListener("click", deleteRecord);
 })();

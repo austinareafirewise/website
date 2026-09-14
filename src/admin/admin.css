@@ -12,6 +12,13 @@
 
 .admin-main { padding: 28px 20px 60px; }
 
+/* The public stylesheet gives every <section> 52px of padding top and bottom,
+   which is right for the bands on the home page and wrong here: the admin
+   screens are sections too, so each one opened with 80px of nothing between
+   the tabs and the first control. */
+.admin-main > section,
+.admin-main > div > section { padding: 0; }
+
 .admin-who { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: .95rem; color: var(--muted); }
 
 .btn-small { padding: 8px 14px; font-size: .9rem; }
@@ -57,7 +64,16 @@
 
 .admin-form-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
 .admin-status { font-weight: 700; color: var(--muted); }
-#form h1 { font-size: 1.8rem; }
+/* The editor's title says which record you are in, and that is all it has to
+   do. At the site's h1 size it was a banner over every form, pushing the
+   first field down the screen for no gain. */
+#form h1,
+#rec-screen h1 {
+    font-size: 1.25rem;
+    letter-spacing: .04em;
+    color: var(--green-900);
+    margin-bottom: .7em;
+}
 #form h2 { font-size: 1.25rem; margin-top: 22px; }
 .admin-two { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .field-check label { display: flex; gap: 10px; align-items: flex-start; font-weight: 600; cursor: pointer; }
@@ -66,8 +82,56 @@
 .req { font-weight: 400; color: var(--orange-dark); }
 code { background: #f1f1ec; padding: 1px 5px; border-radius: 4px; font-size: .9em; }
 
-.admin-buttons { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; align-items: center; }
+.admin-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; align-items: center; }
 .admin-buttons .btn-danger { margin-left: auto; }
+
+/* ---------- The actions bar ----------
+   Buttons and the form's message, kept at the bottom of whatever is
+   scrolling: the window for the news form, the dialog box for the others.
+   Before this, a long form put both below the fold, so an error message
+   appeared somewhere the person who caused it could not see.
+
+   The message sits above the buttons. Below them it was the first thing off
+   the screen, and above them means the buttons hold still when one appears
+   rather than being shoved down. */
+.form-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 30;
+    background: var(--page);
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -8px 20px rgba(25, 70, 43, .07);
+    margin-top: 24px;
+    padding: 12px 0;
+}
+
+.form-actions .admin-buttons { margin-top: 0; }
+.form-actions .form-status { margin-top: 0; margin-bottom: 10px; }
+
+/* Smaller than a standalone button: this row is always on screen now, so it
+   should take as little of it as it can and still be easy to hit. The 44px
+   minimum is the touch target, not decoration. */
+.form-actions .btn {
+    padding: 9px 16px;
+    font-size: .92rem;
+    min-height: 44px;
+}
+
+/* Bleed to the edges of whatever contains it, so the bar reads as a bar
+   rather than a floating box. The insets match the container's padding. */
+#screen-edit .form-actions {
+    margin-inline: -20px;
+    padding-inline: 20px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.modal-box .form-actions {
+    margin-inline: -22px;
+    margin-bottom: -22px;
+    padding-inline: 22px;
+    padding-bottom: 22px;
+    border-radius: 0 0 12px 12px;
+}
 
 /* ---------- Pictures ---------- */
 
@@ -253,9 +317,17 @@ blockquote.md-demo { margin: 0; padding-left: 12px; border-left: 3px solid var(-
 
 /* Leadership rows inside the group editor */
 .leaders { display: grid; gap: 8px; margin-bottom: 10px; }
-.leader-row { display: grid; gap: 8px; grid-template-columns: 1.2fr 1fr 1.4fr 1fr auto; align-items: center; }
+/* First name, last name, role, email, phone, and the Remove button. */
+.leader-row { display: grid; gap: 8px; grid-template-columns: 1fr 1fr 1fr 1.4fr 1fr auto; align-items: center; }
 .leader-row input { padding: 8px 10px; border: 1px solid #c9c9bf; border-radius: 7px; font: inherit; font-size: .92rem; }
-@media (max-width: 760px) { .leader-row { grid-template-columns: 1fr; } }
+
+/* Six boxes in a row stop being readable well before the screen is narrow,
+   so they pair up first and only stack one-per-line on a phone. */
+@media (max-width: 1040px) {
+    .leader-row { grid-template-columns: 1fr 1fr; }
+    .leader-row button { grid-column: 1 / -1; justify-self: start; }
+}
+@media (max-width: 560px) { .leader-row { grid-template-columns: 1fr; } }
 
 #rec-form .field { margin-bottom: 14px; }
 #rec-form textarea { width: 100%; }
