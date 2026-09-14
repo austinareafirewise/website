@@ -84,13 +84,18 @@ where you will notice the wrong date or the link that does not work.
 ## Submit, and let somebody else approve
 - section: comms
 - target: #comm-list
-- audio: send-a-message-05-cc011a.mp3
-- audio-hash: a0636ffc
+- audio: send-a-message-06-91aaea.mp3
+- audio-hash: a05cd44a
 
-Submit for review hands it to the rest of the board. You can still withdraw it.
+Submit for review hands it to the rest of the board.
 
-Anybody else can approve it, or request changes with a note, which sends it
-back to you as a draft.
+From that moment the message cannot be edited, and the Edit button goes away.
+That is deliberate: whoever approves it has to be reading exactly what will go
+out. If you need to change something, press Withdraw and it becomes a draft
+again, with Edit back.
+
+Anybody else can approve it, or request changes with a note, which also sends
+it back to you as a draft.
 
 ## Send
 - section: comms

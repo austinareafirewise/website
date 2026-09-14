@@ -296,6 +296,30 @@
         </div>
     </div>
 
+    <!-- What a message will look like, before anything is sent. The email is
+         shown in a sandboxed frame: it is our own renderer's output, but a
+         frame keeps its styling from leaking into the admin page and keeps
+         anything in it from reaching this document. -->
+    <div class="modal" id="msg-preview-modal" hidden role="dialog" aria-modal="true" aria-labelledby="msg-preview-title">
+        <div class="modal-box modal-wide">
+            <div class="admin-form-head">
+                <strong id="msg-preview-title">Preview — nothing has been sent</strong>
+                <button type="button" class="btn btn-outline btn-small" id="msg-preview-close">Close</button>
+            </div>
+            <p class="hint" id="msg-preview-note"></p>
+            <div id="msg-preview-sms" hidden>
+                <h2>Text message</h2>
+                <pre class="sms-preview" id="msg-preview-smstext"></pre>
+                <p class="hint" id="msg-preview-segments"></p>
+            </div>
+            <div id="msg-preview-email" hidden>
+                <h2>Email</h2>
+                <p class="hint"><strong>Subject:</strong> <span id="msg-preview-subject"></span></p>
+                <iframe id="msg-preview-frame" title="The email as it will look" sandbox=""></iframe>
+            </div>
+        </div>
+    </div>
+
     <!-- Cropper -->
     <div class="modal" id="crop-modal" hidden role="dialog" aria-modal="true" aria-labelledby="crop-title">
         <div class="modal-box">
@@ -549,8 +573,11 @@
                 <li><strong>Send me a test</strong> — sends the real message to you alone. Do this
                     before every submission. It is the only way to see what it actually looks like
                     on a phone.</li>
-                <li><strong>Submit for review</strong> — hands it to the rest of the board. You can
-                    still <strong>Withdraw</strong> it.</li>
+                <li><strong>Submit for review</strong> — hands it to the rest of the board.
+                    From this point the message <strong>cannot be edited</strong>: whoever approves
+                    it has to be reading exactly what will go out. If you need to change something,
+                    press <strong>Withdraw</strong> and it becomes a draft again, with its Edit
+                    button back.</li>
                 <li><strong>Approve</strong> — done by a different board member. You cannot approve
                     your own message; the button is not there for the person who wrote it. Anyone
                     else can <strong>Request changes</strong> instead, with a note, which sends it

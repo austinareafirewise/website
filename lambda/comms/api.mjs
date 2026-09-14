@@ -80,6 +80,7 @@ export const handler = async (event) => {
         if (route === "POST /comms/{id}/approve") return await transition(id, who, "approve", parseBody(event));
         if (route === "POST /comms/{id}/reject") return await transition(id, who, "reject", parseBody(event));
         if (route === "POST /comms/{id}/withdraw") return await transition(id, who, "withdraw", parseBody(event));
+        if (route === "POST /comms/{id}/preview") return await previewComm(id, who);
         if (route === "POST /comms/{id}/test") return await testSend(id, who);
         if (route === "POST /comms/{id}/send") return await broadcast(id, who);
         if (route === "POST /comms/{id}/duplicate") return await duplicateComm(id, who);
@@ -989,6 +990,36 @@ async function transition(id, who, action, b) {
 /* A test goes to the requesting board member only: their sign-in email
    always, and their own confirmed mobile if they are on the list. Never to
    anyone else, whatever the audience says. */
+/* The message as it will actually look, without sending anything.
+ *
+ * Built by the same renderer the sender uses, so the footer, the unsubscribe
+ * link and the postal address are the real ones rather than an impression of
+ * them. A test send needs email to be working and puts a message in somebody's
+ * inbox; reading it first should cost neither.
+ *
+ * The links are signed for whoever is previewing, so following one from the
+ * preview would unsubscribe the board member looking at it. The screen says
+ * so rather than relying on nobody clicking. */
+async function previewComm(id, who) {
+    const c = await getComm(id);
+    if (!c) return respond(404, { error: "That message no longer exists." });
+    const me = await findByEmail(who);
+    const asMember = { memberId: me?.memberId || newId(), email: who, name: me?.name || "Board member" };
+
+    const out = { name: c.name, audience: c.audience, urgency: c.urgency || "routine" };
+    if (c.emailBody) {
+        const r = await renderEmail(c, asMember);
+        out.emailSubject = c.emailSubject || "";
+        out.emailHtml = r.html;
+        out.emailText = r.text;
+    }
+    if (c.smsBody) {
+        out.smsText = renderSms(c);
+        out.smsSegments = smsSegments(out.smsText);
+    }
+    return respond(200, out);
+}
+
 async function testSend(id, who) {
     const c = await getComm(id);
     if (!c) return respond(404, { error: "That message no longer exists." });

@@ -532,6 +532,41 @@
         });
     }
 
+    /* Show the message exactly as the sender would build it. */
+    function previewComm(c) {
+        api("POST", "/comms/" + c.commId + "/preview")
+            .then(function (j) {
+                $("msg-preview-title").textContent = "Preview: " + (j.name || "message") + " — nothing has been sent";
+                $("msg-preview-note").textContent =
+                    "This is what the sender will produce, built by the same code that sends it. " +
+                    "The unsubscribe and manage links are signed for you, so do not follow them from here — " +
+                    "they would unsubscribe your own record.";
+
+                var hasSms = !!j.smsText;
+                $("msg-preview-sms").hidden = !hasSms;
+                if (hasSms) {
+                    $("msg-preview-smstext").textContent = j.smsText;
+                    var seg = j.smsSegments || {};
+                    $("msg-preview-segments").textContent =
+                        (seg.chars || j.smsText.length) + " characters · " +
+                        (seg.segments || "?") + " message" + (seg.segments === 1 ? "" : "s") +
+                        (seg.encoding ? " · " + seg.encoding : "");
+                }
+
+                var hasEmail = !!j.emailHtml;
+                $("msg-preview-email").hidden = !hasEmail;
+                if (hasEmail) {
+                    $("msg-preview-subject").textContent = j.emailSubject || "(no subject)";
+                    // srcdoc into a sandboxed frame: it renders, and it cannot
+                    // reach this page or run anything.
+                    $("msg-preview-frame").srcdoc = j.emailHtml;
+                }
+                $("msg-preview-modal").hidden = false;
+                $("msg-preview-close").focus();
+            })
+            .catch(function (e) { window.alert(e.message); });
+    }
+
     var COMM_STATE = {
         draft: "Draft", review: "Waiting for review", approved: "Approved — ready to send",
         rejected: "Changes requested", scheduled: "Scheduled", sending: "Sending…", sent: "Sent"
@@ -596,6 +631,14 @@
                 acts.appendChild(b);
             }
 
+            // Reading it should come before testing it: a test needs email to
+            // be working and lands in somebody's inbox. Available in every
+            // state, including after sending, so "what did we actually send?"
+            // has an answer.
+            var prev = el("button", { type: "button", class: "btn btn-outline btn-small", text: "Preview" });
+            prev.addEventListener("click", function () { previewComm(c); });
+            acts.appendChild(prev);
+
             if (["draft", "rejected"].indexOf(c.status) >= 0) {
                 var edit = el("button", { type: "button", class: "btn btn-outline btn-small", text: "Edit" });
                 edit.addEventListener("click", function () { openEditor("comm", c); });
@@ -606,7 +649,14 @@
                 act("Send me a test", "/test");
                 if (c.author === me || c.submittedBy === me) {
                     act("Withdraw", "/withdraw");
-                    acts.appendChild(el("span", { class: "meta", text: "Someone else on the board approves this." }));
+                    // It said who approves and stopped, leaving the author with
+                    // no Edit button and nothing explaining where it went. A
+                    // message under review cannot be edited on purpose -- the
+                    // approver has to be reading what actually goes out -- so
+                    // say that, and say the way back.
+                    acts.appendChild(el("span", { class: "meta", text:
+                        "Another board member approves this — you cannot approve your own. " +
+                        "To change it, press Withdraw: it becomes a draft you can edit again." }));
                 } else {
                     act("Approve", "/approve", null, "btn-green");
                     act("Request changes", "/reject");
@@ -696,6 +746,14 @@
                 a.click(); URL.revokeObjectURL(a.href);
             })
             .catch(function (e) { window.alert(e.message); });
+    });
+
+    $("msg-preview-close").addEventListener("click", function () {
+        $("msg-preview-modal").hidden = true;
+        $("msg-preview-frame").removeAttribute("srcdoc");
+    });
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !$("msg-preview-modal").hidden) $("msg-preview-close").click();
     });
 
     $("rec-cancel").addEventListener("click", closeEditor);
