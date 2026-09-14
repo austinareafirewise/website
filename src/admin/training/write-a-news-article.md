@@ -8,8 +8,11 @@
 ## An article, not a notice
 - section: content
 - target: #new-news
-- audio: write-a-news-article-01-ae1ab1.mp3
-- audio-hash: 663eb855
+- audio: write-a-news-article-01-76ef58.mp3
+- audio-hash: c8c7f41a
+
+Write a news article. This lesson is about the longer pieces that get a page
+of their own, and how they differ from a notice.
 
 A news article gets a page of its own, with room for pictures and as many
 words as it needs. A notice is a band at the top of the home page for

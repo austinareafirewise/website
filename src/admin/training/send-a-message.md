@@ -9,8 +9,11 @@
 ## Nothing goes out alone
 - section: comms
 - target: #comm-list
-- audio: send-a-message-01-3f83bc.mp3
-- audio-hash: 4415db32
+- audio: send-a-message-01-955707.mp3
+- audio-hash: e460ebf9
+
+Send a message to members. This lesson covers writing an email or a text to
+the membership, and the two-person rule that governs all of it.
 
 One board member writes a message and a different one approves it. You cannot
 approve your own — the button is not there for the person who wrote it.

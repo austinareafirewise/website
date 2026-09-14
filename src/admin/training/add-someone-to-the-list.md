@@ -9,11 +9,14 @@
 ## Most people add themselves
 - section: members
 - target: #member-list
-- audio: add-someone-to-the-list-01-ad0c58.mp3
-- audio-hash: 8bc2bdfb
+- audio: add-someone-to-the-list-01-68dd7c.mp3
+- audio-hash: b9f80fa7
 
-Almost everyone on this list put themselves on it, through the form on the home
-page. You do not have to do anything for that to work.
+Add someone to the list. This lesson is about the membership list: how people
+join, what the statuses mean, and the one rule about adding somebody yourself.
+
+Almost everyone on this list put themselves on it, through the form on the
+home page. You do not have to do anything for that to work.
 
 This screen is for looking after the list, and for the occasional person who
 signed up on paper at a meeting.

@@ -8,11 +8,14 @@
 ## Signing in
 - section: content
 - target: #who-email
-- audio: first-time-01-2b17d8.mp3
-- audio-hash: 25994910
+- audio: first-time-01-8a6774.mp3
+- audio-hash: 1db99c97
 
-You get to the editing area by adding slash-admin-slash to the end of the website
-address, and signing in with your own email and password.
+Your first time in. This lesson covers signing in, what the five sections
+are, and where to find help. About three minutes.
+
+You get to the editing area by adding slash-admin-slash to the end of the
+website address, and signing in with your own email and password.
 
 Every board member has their own. There is no shared password, and nobody else
 needs to know yours.

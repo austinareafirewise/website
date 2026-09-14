@@ -9,12 +9,15 @@
 ## The groups list is public, in one place
 - section: groups
 - target: #group-new
-- audio: firewise-groups-and-board-01-681b67.mp3
-- audio-hash: 34440c73
+- audio: firewise-groups-and-board-01-d8d3f1.mp3
+- audio-hash: 1b305c56
 
-These are the neighborhood groups the Alliance works with. This list is also
-the dropdown people choose from on the sign-up form, so the names are read by
-residents.
+Firewise groups and the board roster. Two lists in this lesson: the
+neighborhood groups the Alliance works with, and the record of who serves on
+the board.
+
+These are the neighborhood groups. This list is also the dropdown people
+choose from on the sign-up form, so the names are read by residents.
 
 Nothing else about a group is shown on the website — not the area, not the
 leadership.
@@ -63,11 +66,19 @@ it away. That keeps the roster safe for anyone to correct.
 
 ## When somebody leaves the board
 - section: board
-- target: #person-new
-- audio: firewise-groups-and-board-05-f55380.mp3
-- audio-hash: aa18e131
+- screen: editor
+- open: #person-new
+- target: #f_status
+- audio: firewise-groups-and-board-05-db9d59.mp3
+- audio-hash: 1402d56c
 
-Do both things. Set them to past board member here, with an end date.
+Somebody leaving the board is two separate jobs, and doing one without the
+other is worse than doing neither — the roster then says something untrue.
 
-Then ask whoever manages the AWS account to remove their sign-in. One without
-the other leaves either a wrong roster or a login that should be gone.
+The first job is on this form. You reach it with Edit on that person's row.
+Set Status, the box outlined here, to "Past board member", and fill in Term
+ended just below it.
+
+The second job is not on this screen at all. Ask whoever manages the AWS
+account to remove their sign-in. The roster and the logins are kept separate on
+purpose, so neither one removes the other.
