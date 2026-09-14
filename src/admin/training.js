@@ -97,7 +97,8 @@
         Promise.resolve(w.AAFA_ADMIN.trainingFocus(
             step.fields.section || null,
             wanted,
-            step.fields.open || null
+            step.fields.open || null,
+            step.fields.screen || null
         )).then(function (found) {
             // Only complain about the step we are still on: a slow lookup must
             // not put a message up over the next step.

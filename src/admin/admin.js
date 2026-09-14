@@ -408,8 +408,25 @@
        fields. Pointing the instant the tab is clicked lands the highlight on
        the word "Loading…", which is exactly the sort of thing that looks like
        the guide is broken. So it looks again for a moment before giving up. */
-    function trainingFocus(section, selector, open) {
+    /* A step that is not about a form has to get out of one. The guide opens
+       editors as it goes, and without this the next step describing a list
+       would narrate rows sitting behind the form it had just opened. */
+    function leaveEditor() {
+        if (!$("rec-screen").hidden) { $("rec-back").click(); return; }
+        if (!$("screen-edit").hidden) {
+            // The content editor knows when it holds unsaved work. Somebody
+            // following along who has typed something keeps it; the step will
+            // report that it cannot find what it points at, which is true and
+            // better than throwing their work away to tidy the screen.
+            if (dirty) return;
+            $("back").click();
+        }
+    }
+
+    function trainingFocus(section, selector, open, screen) {
         if (trainingMark) { trainingMark.classList.remove("training-target"); trainingMark = null; }
+
+        if (screen !== "editor") leaveEditor();
 
         if (section) {
             var tab = document.querySelector('.admin-nav .tab[data-section="' + section + '"]');
