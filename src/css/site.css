@@ -376,11 +376,23 @@ section[id] { scroll-margin-top: 92px; }
 /* ---------- Hero ---------- */
 
 .hero {
-    padding: 64px 0 52px;
+    padding: 64px 0 36px;
     background:
         linear-gradient(180deg, rgba(140, 162, 149, .18), rgba(251, 250, 247, 0) 70%),
         var(--page);
+}
+
+/* The four ways in. Below the hero rather than inside it, so the words above
+   can be edited without the navigation being edited with them. */
+.cta-strip {
+    padding: 0 0 30px;
+    background: var(--page);
     border-bottom: 1px solid var(--line);
+}
+.cta-strip .wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .hero .kicker,
