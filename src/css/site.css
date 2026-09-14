@@ -402,10 +402,24 @@ section[id] { scroll-margin-top: 92px; }
     .hero-with-picture {
         display: grid;
         grid-template-columns: minmax(0, 1fr) 340px;
-        gap: 36px;
-        align-items: center;
+        /* No row gap: the rows are the hero's own paragraphs, which carry
+           their own spacing, and the picture spans however many there are. */
+        gap: 0 36px;
     }
-    .hero-with-picture .hero-figure { grid-column: 2; grid-row: 1 / -1; margin: 0; }
+    /* Sat against the bottom of the words rather than level with the
+       headline, which it would otherwise compete with.
+
+       The span is a deliberate over-count. The rows here are implicit --
+       nothing declares how many there are -- so "1 / -1" would resolve to a
+       single row and leave the picture at the top. Spanning past the end
+       reaches the last one whatever the hero grows to hold; the rows beyond
+       it are empty and take no height. */
+    .hero-with-picture .hero-figure {
+        grid-column: 2;
+        grid-row: 1 / span 99;
+        align-self: end;
+        margin: 0;
+    }
     .hero-with-picture > :not(.hero-figure) { grid-column: 1; }
 }
 
