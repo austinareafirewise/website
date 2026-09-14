@@ -88,27 +88,33 @@ this software, on purpose.
 ## The buttons on somebody's row
 - section: members
 - target: .item.confirmed | .item.pending | #member-list
-- audio: add-someone-to-the-list-07-d14a65.mp3
-- audio-hash: 95c07cff
+- audio: add-someone-to-the-list-07-4ff51d.mp3
+- audio-hash: 69733e41
 
-Each person has their own buttons, on the right of their row. Which ones you
-see depends on where they have got to.
+Each person has their own buttons, on the right of their row, and they are not
+the same for everybody. One row is outlined here, but look down the whole list
+as this is explained — the buttons change from person to person.
 
-Edit is always there. Resend appears only for somebody still Pending.
-Unsubscribe appears only for somebody who has Confirmed — so if everybody on
-your list is still pending, there is no Unsubscribe button anywhere yet, and
-nothing is wrong.
+Edit is on every row. Resend appears only for somebody still Pending.
+Unsubscribe appears only for somebody who has Confirmed.
+
+So the row outlined now may not have the button being described, and that is
+not a fault. If everyone on your list is still pending there is no Unsubscribe
+button anywhere yet; it appears on the first person who confirms.
 
 ## Unsubscribe or delete
 - section: members
-- target: #member-export
-- audio: add-someone-to-the-list-08-af543d.mp3
-- audio-hash: b830fae1
+- target: .item.confirmed | .item.pending | #member-list
+- audio: add-someone-to-the-list-08-49a559.mp3
+- audio-hash: a899a328
 
 If somebody asks to stop, use Unsubscribe on their row. Messages stop at once
 and the record stays, so a later form submission cannot quietly put them back
 on.
 
-Delete only if they ask to be erased entirely — it removes the consent
-evidence with them. Download CSV gives you the whole list; it is personal
-information, so keep it off shared drives.
+Delete is inside their record, behind Edit, and is only for somebody who asks
+to be erased entirely — it takes the consent evidence with them.
+
+One last thing, above the list: Download CSV gives you everybody in a
+spreadsheet. That is personal information about your neighbors, so keep it off
+shared drives and delete your copy when you are done with it.
