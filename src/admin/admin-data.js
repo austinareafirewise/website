@@ -112,10 +112,13 @@
                     { value: "lapsed", label: "Lapsed — was recognized, renewal overdue" },
                     { value: "inactive", label: "Inactive — hide from the sign-up form" }] },
                 { k: "area", label: "Area it covers", type: "text", hint: "Streets, subdivision, or boundaries as a resident would describe them." },
-                { k: "zips", label: "ZIP codes", type: "text", hint: "Comma separated." },
-                { k: "households", label: "Households", type: "number" },
-                { k: "recognizedYear", label: "Year recognized", type: "number", hint: "Required if the status is Recognized." },
-                { k: "renewalDue", label: "Renewal due", type: "datetime-local" },
+                { k: "zips", label: "ZIP codes", type: "text", hint: "Comma separated.", row: "area" },
+                { k: "households", label: "Number of households", type: "number", row: "area",
+                  hint: "How many homes the group covers \u2014 the figure it reports to Firewise USA.", min: "0" },
+                { k: "recognizedYear", label: "Year recognized", type: "number", row: "recognition",
+                  hint: "Required if the status is Recognized.", min: "2000" },
+                { k: "renewalDue", label: "Renewal due", type: "datetime-local", row: "recognition",
+                  hint: "Firewise USA recognition has to be renewed. Past it, move the group to Lapsed." },
                 { k: "website", label: "Website", type: "url", hint: "Must start with https://" },
                 { k: "about", label: "About the group", type: "textarea" },
                 { k: "notes", label: "Notes (board only)", type: "textarea" },
@@ -174,6 +177,8 @@
             return leadersField(value || []);
         } else {
             input = el("input", { type: f.type, id: id });
+            if (f.min != null) input.setAttribute("min", f.min);
+            if (f.type === "number") input.setAttribute("inputmode", "numeric");
             input.value = f.type === "datetime-local" ? localInput(value) : (value == null ? "" : value);
         }
         wrap.appendChild(input);
@@ -232,7 +237,21 @@
         var defs = FIELDS[kind]().filter(function (f) { return !f.newOnly || isNew; });
         var form = $("rec-form");
         form.textContent = "";
-        defs.forEach(function (f) { form.appendChild(field(f, current.record[f.k])); });
+        // Consecutive fields marked with the same row sit side by side. A ZIP
+        // and a count of houses are both short, and a short box stretched the
+        // width of the page reads as though it wants a sentence.
+        for (var i = 0; i < defs.length; i++) {
+            var f = defs[i];
+            if (f.row && defs[i + 1] && defs[i + 1].row === f.row) {
+                var pair = el("div", { class: "admin-two" });
+                pair.appendChild(field(f, current.record[f.k]));
+                pair.appendChild(field(defs[i + 1], current.record[defs[i + 1].k]));
+                form.appendChild(pair);
+                i++;
+                continue;
+            }
+            form.appendChild(field(f, current.record[f.k]));
+        }
 
         var titles = { member: "member", group: "Firewise group", person: "board member", comm: "message" };
         $("rec-title").textContent = (isNew ? "Add a " : "Edit ") + titles[kind];
