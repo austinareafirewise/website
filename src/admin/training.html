@@ -44,7 +44,18 @@
             <div class="tr-words" id="tr-words"></div>
 
             <div class="tr-audio" id="tr-audio" hidden>
-                <audio id="tr-player" controls preload="none"></audio>
+                <!-- metadata, not none: the length of a step is worth seeing
+                     before deciding to start it, and it costs one small range
+                     request rather than the whole clip. -->
+                <audio id="tr-player" controls preload="metadata"></audio>
+                <label class="tr-auto">
+                    <input type="checkbox" id="tr-auto" checked>
+                    Play each step and move on by itself
+                </label>
+                <p class="hint" id="tr-blocked" hidden>
+                    Your browser is holding the sound until you ask for it. Press play above —
+                    after that the rest of the lesson runs on its own.
+                </p>
             </div>
             <p class="hint" id="tr-noaudio" hidden>No recording for this step yet — the words above are the whole of it.</p>
 

@@ -8,10 +8,10 @@
 ## Signing in
 - section: content
 - target: #who-email
-- audio: first-time-01-5e0798.mp3
-- audio-hash: 7b656eb1
+- audio: first-time-01-2b17d8.mp3
+- audio-hash: 25994910
 
-You get to the editing area by adding `/admin/` to the end of the website
+You get to the editing area by adding slash-admin-slash to the end of the website
 address, and signing in with your own email and password.
 
 Every board member has their own. There is no shared password, and nobody else

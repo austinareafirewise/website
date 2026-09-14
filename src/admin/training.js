@@ -113,6 +113,8 @@
 
     function showMenu(sectionHint) {
         current = null;
+        cancelAdvance();
+        try { $("tr-player").pause(); } catch (e) { /* nothing loaded */ }
         clearPointing();
         $("tr-step").hidden = true;
         $("tr-menu").hidden = false;
@@ -176,14 +178,19 @@
         });
 
         var player = $("tr-player");
+        $("tr-blocked").hidden = true;
         if (step.fields.audio) {
             player.src = "training/audio/" + step.fields.audio;
             $("tr-audio").hidden = false;
             $("tr-noaudio").hidden = true;
+            if (autoOn()) playThisStep();
         } else {
+            player.pause();
             player.removeAttribute("src");
             $("tr-audio").hidden = true;
             $("tr-noaudio").hidden = false;
+            // No clip to wait for. Give somebody time to read it, then move on.
+            if (autoOn()) waitThenAdvance(Math.max(6000, step.words.join(" ").split(/\s+/).length * 320));
         }
 
         $("tr-prev").disabled = at === 0;
@@ -191,7 +198,45 @@
         point(step);
     }
 
+    /* ------------------------------------------------------------ */
+    /* Playing, and moving on by itself                              */
+    /*                                                               */
+    /* A browser will not play sound until somebody has asked this    */
+    /* document for it. Opening the guide is a click and starting a   */
+    /* lesson is another, so usually it simply plays -- but when it   */
+    /* does not, the promise rejects and the guide says so rather     */
+    /* than sitting silent looking broken.                            */
+    /* ------------------------------------------------------------ */
+
+    var advanceTimer = null;
+
+    function autoOn() { return $("tr-auto").checked; }
+
+    function cancelAdvance() { clearTimeout(advanceTimer); advanceTimer = null; }
+
+    function waitThenAdvance(ms) {
+        cancelAdvance();
+        advanceTimer = setTimeout(function () {
+            if (autoOn() && current && at < current.steps.length - 1) step(1);
+        }, ms);
+    }
+
+    function playThisStep() {
+        var player = $("tr-player");
+        cancelAdvance();
+        try { player.currentTime = 0; } catch (e) { /* not loaded yet */ }
+        var p = player.play();
+        if (p && p.catch) {
+            p.catch(function () {
+                // Blocked, or the file is missing. Either way, say so and stop
+                // pretending the lesson is running.
+                $("tr-blocked").hidden = false;
+            });
+        }
+    }
+
     function step(by) {
+        cancelAdvance();
         if (!current) return;
         var next = at + by;
         if (next < 0) return;
@@ -214,6 +259,24 @@
     /* ------------------------------------------------------------ */
     /* Wiring                                                        */
     /* ------------------------------------------------------------ */
+
+    /* When a clip finishes, wait a beat -- landing on the next screen the
+       instant the voice stops is disorienting -- then move on. The last step
+       stops rather than looping back to the menu on its own. */
+    $("tr-player").addEventListener("ended", function () {
+        if (!autoOn() || !current) return;
+        if (at >= current.steps.length - 1) return;
+        waitThenAdvance(900);
+    });
+
+    /* Pausing means "wait for me". Nothing should move while it is paused. */
+    $("tr-player").addEventListener("pause", cancelAdvance);
+    $("tr-player").addEventListener("play", function () { $("tr-blocked").hidden = true; });
+
+    $("tr-auto").addEventListener("change", function () {
+        if (autoOn()) playThisStep();
+        else { cancelAdvance(); $("tr-player").pause(); }
+    });
 
     $("tr-prev").addEventListener("click", function () { step(-1); });
     $("tr-next").addEventListener("click", function () { step(1); });
