@@ -129,14 +129,16 @@
             return [
                 { k: "firstName", label: "First name", type: "text", required: true },
                 { k: "lastName", label: "Last name", type: "text", required: true },
-                { k: "role", label: "Role", type: "text", hint: "Chair, treasurer, secretary, member at large…" },
-                { k: "status", label: "Status", type: "select", required: true, options: [
+                { k: "role", label: "Role", type: "text", row: "service",
+                  hint: "Chair, treasurer, secretary, member at large…" },
+                { k: "status", label: "Status", type: "select", required: true, row: "service", options: [
                     { value: "current", label: "Current board member" }, { value: "past", label: "Past board member" }] },
+                { k: "termStart", label: "Term started", type: "datetime-local", row: "term" },
+                { k: "termEnd", label: "Term ended", type: "datetime-local", row: "term",
+                  hint: "Required for a past board member." },
                 { k: "email", label: "Email address", type: "email" },
                 { k: "phone", label: "Phone", type: "tel" },
                 { k: "groupId", label: "Their Firewise group", type: "select", options: groupOptions() },
-                { k: "termStart", label: "Term started", type: "datetime-local" },
-                { k: "termEnd", label: "Term ended", type: "datetime-local", hint: "Required for a past board member." },
                 { k: "notes", label: "Notes", type: "textarea" }
             ];
         },
