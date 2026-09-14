@@ -17,9 +17,11 @@
     background-color: #FFFFFF;
 }
 
+/* Cognito caps the logo against the banner box, so both limits have to rise
+   together or whichever is smaller keeps holding it back. */
 .logo-customizable {
-    max-width: 68%;
-    max-height: 68%;
+    max-width: 92%;
+    max-height: 92%;
 }
 
 .label-customizable {
@@ -58,6 +60,13 @@
 .submitButton-customizable:hover {
     background-color: #8F4409;
     color: #FFFFFF;
+}
+
+/* The "Forgot your password?" link. Cognito's default blue is the last
+   off-brand thing on the page. */
+.redirect-customizable {
+    color: #265438;
+    padding-top: 6px;
 }
 
 .errorMessage-customizable {
