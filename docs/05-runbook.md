@@ -89,6 +89,20 @@ aws cognito-idp admin-update-user-attributes \
   --user-attributes Name=email,Value=new@example.org Name=email_verified,Value=true
 ```
 
+## After changing the admin page
+
+The training scripts in `src/admin/training/` point at real elements on that
+page by selector. Renaming or removing one silently invalidates a script — and
+eventually a recorded narration that points at nothing. Run:
+
+```bash
+node src/admin/training/check.mjs
+```
+
+It proves every target still exists, every section is a real tab, and no lesson
+is missing its metadata or has grown too long to speak over one screen. It
+exits non-zero and names the file and step when something has moved.
+
 ## The sign-in page's appearance
 
 The Cognito hosted sign-in page is branded to match the site. It has no
