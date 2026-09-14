@@ -21,7 +21,9 @@ leadership.
 
 ## Status decides what happens
 - section: groups
-- target: #group-list
+- screen: editor
+- open: #group-new
+- target: #f_status
 - audio: firewise-groups-and-board-02-9eb1f5.mp3
 - audio-hash: f2ac3372
 
@@ -35,6 +37,7 @@ chose it keep their records but lose the group.
 - section: groups
 - screen: editor
 - open: #group-new
+- target: #f_area
 - audio: firewise-groups-and-board-03-d1d306.mp3
 - audio-hash: 137c405d
 

@@ -144,6 +144,9 @@ function parseLesson(file) {
         if (fields.open && fields.screen !== "editor") {
             problems.push(`${where}: has an "open" but is not marked "screen: editor"`);
         }
+        if (fields.screen === "editor" && !fields.target) {
+            problems.push(`${where}: opens a form but points at nothing — add a "target"`);
+        }
         if (fields.screen === "editor" && !fields.open) {
             problems.push(`${where}: is on the editor but nothing says how to get there — add "open: <selector>"`);
         }

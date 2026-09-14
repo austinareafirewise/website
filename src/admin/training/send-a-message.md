@@ -34,6 +34,7 @@ text.
 - section: comms
 - screen: editor
 - open: #comm-new
+- target: #f_smsBody
 - audio: send-a-message-03-6fee0e.mp3
 - audio-hash: b058fe3c
 
