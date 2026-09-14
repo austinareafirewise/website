@@ -9,6 +9,8 @@
 ## Most people add themselves
 - section: members
 - target: #member-list
+- audio: add-someone-to-the-list-01-ad0c58.mp3
+- audio-hash: 8bc2bdfb
 
 Almost everyone on this list put themselves on it, through the form on the home
 page. You do not have to do anything for that to work.
@@ -19,6 +21,8 @@ signed up on paper at a meeting.
 ## Nobody is on the list until they confirm
 - section: members
 - target: #member-counts
+- audio: add-someone-to-the-list-02-029837.mp3
+- audio-hash: 6f2cd40c
 
 Filling in the form is not enough on its own. We send one message asking them
 to confirm, and nothing else is ever sent until they answer it.
@@ -30,6 +34,8 @@ nothing.
 ## What the statuses mean
 - section: members
 - target: #member-search
+- audio: add-someone-to-the-list-03-03a452.mp3
+- audio-hash: a5420500
 
 Confirmed means they answered and they receive messages. Pending means they
 have not, and they get nothing — if they say it never arrived, use Resend and
@@ -41,6 +47,8 @@ exist. Neither is ever sent to again.
 ## Adding somebody yourself
 - section: members
 - target: #member-new
+- audio: add-someone-to-the-list-04-ab193f.mp3
+- audio-hash: 004e4c26
 
 Only for somebody who actually asked — a paper sign-up sheet, or a request in
 person.
@@ -51,6 +59,8 @@ message. Nobody can be marked confirmed by hand.
 
 ## Never add an address from a list
 - section: members
+- audio: add-someone-to-the-list-05-99c074.mp3
+- audio-hash: 8a69a43a
 
 Not from a neighborhood directory, not from another organization's roster, not
 from a spreadsheet somebody sent you.
@@ -62,6 +72,8 @@ this software, on purpose.
 ## Unsubscribe or delete
 - section: members
 - target: #member-export
+- audio: add-someone-to-the-list-06-0261c5.mp3
+- audio-hash: 4415c7f2
 
 If somebody asks to stop, unsubscribe them. Messages stop immediately and the
 record stays, so a later form submission cannot quietly put them back on.

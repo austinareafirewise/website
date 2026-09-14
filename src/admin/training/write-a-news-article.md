@@ -8,6 +8,8 @@
 ## An article, not a notice
 - section: content
 - target: #new-news
+- audio: write-a-news-article-01-ae1ab1.mp3
+- audio-hash: 663eb855
 
 A news article gets a page of its own, with room for pictures and as many
 words as it needs. A notice is a band at the top of the home page for
@@ -20,6 +22,8 @@ read, it is an article.
 - section: content
 - screen: editor
 - target: #f-body
+- audio: write-a-news-article-02-9f2328.mp3
+- audio-hash: 1a6c6252
 
 Title, then the text. Leave a blank line between paragraphs.
 
@@ -31,6 +35,8 @@ visitors will see.
 - section: content
 - screen: editor
 - target: #wrap-home
+- audio: write-a-news-article-03-9b125a.mp3
+- audio-hash: d9b9ea6e
 
 Ticking this puts the article's title in the News section of the home page,
 under the headline.
@@ -42,6 +48,8 @@ article is on the home page, none of them stands out.
 - section: content
 - screen: editor
 - target: #dropzone
+- audio: write-a-news-article-04-424f2a.mp3
+- audio-hash: 000f4c37
 
 An article takes up to three. Drop one on the dotted box and drag the frame to
 choose what shows.
@@ -54,6 +62,8 @@ optional.
 - section: content
 - screen: editor
 - target: #pictures
+- audio: write-a-news-article-05-46d0ce.mp3
+- audio-hash: 3ba1440e
 
 Each picture is either across the whole width, or beside the text on the left
 or the right with the words flowing round it.
@@ -66,6 +76,8 @@ came out on its side.
 - section: content
 - screen: editor
 - target: #preview
+- audio: write-a-news-article-06-b31d03.mp3
+- audio-hash: ba4cd413
 
 Preview opens the real News page with your article in it. Use it every time.
 

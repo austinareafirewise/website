@@ -8,6 +8,8 @@
 ## Signing in
 - section: content
 - target: #who-email
+- audio: first-time-01-5e0798.mp3
+- audio-hash: 7b656eb1
 
 You get to the editing area by adding `/admin/` to the end of the website
 address, and signing in with your own email and password.
@@ -17,6 +19,8 @@ needs to know yours.
 
 ## If you have forgotten your password
 - section: content
+- audio: first-time-02-bac690.mp3
+- audio-hash: 738d5a9d
 
 On the sign-in page there is a link under the password box that says "Forgot
 your password?". Use it. A code is emailed to you and you choose a new one.
@@ -28,6 +32,8 @@ folder.
 ## The five sections
 - section: content
 - target: #admin-nav
+- audio: first-time-03-c2cc53.mp3
+- audio-hash: 91010eba
 
 The tabs across the top are the five things you can look after.
 
@@ -38,6 +44,8 @@ groups. Board is the roster of who serves.
 ## Help is on every screen
 - section: content
 - target: #help-open
+- audio: first-time-04-4d88d2.mp3
+- audio-hash: c28ac7e7
 
 The question mark at the end of the tabs opens the help for whichever section
 you are in. It is written in plain words and it is always about what is in
@@ -49,6 +57,8 @@ is "How the site works".
 ## Nothing you do here is dangerous
 - section: content
 - target: #new-notice
+- audio: first-time-05-6f68f1.mp3
+- audio-hash: 39e8688f
 
 You cannot break the website from this screen.
 

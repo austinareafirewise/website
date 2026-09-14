@@ -9,6 +9,8 @@
 ## What a notice is
 - section: content
 - target: #new-notice
+- audio: post-a-meeting-notice-01-64156f.mp3
+- audio-hash: 9c269ff4
 
 A meeting notice is the band across the top of the home page, above the big
 headline. It is for something happening on a date — a meeting, a seminar, a
@@ -20,6 +22,8 @@ Press "New meeting notice" to start one.
 - section: content
 - screen: editor
 - target: #f-title
+- audio: post-a-meeting-notice-02-af391d.mp3
+- audio-hash: 881e5ced
 
 Give it a title somebody can understand at a glance, then the details
 underneath.
@@ -32,6 +36,8 @@ the rest of the page down.
 - section: content
 - screen: editor
 - target: #wrap-tone
+- audio: post-a-meeting-notice-03-385f55.mp3
+- audio-hash: 8b9db79c
 
 Choose what the notice is about. A meeting, an event, something that changed,
 or good news.
@@ -44,6 +50,8 @@ loud if everything uses it.
 - section: content
 - screen: editor
 - target: #f-starts
+- audio: post-a-meeting-notice-04-10bcee.mp3
+- audio-hash: 20dc5ef7
 
 Both dates are required, and both are Central time.
 
@@ -55,6 +63,8 @@ just after the event.
 - section: content
 - screen: editor
 - target: #dropzone
+- audio: post-a-meeting-notice-05-d4b218.mp3
+- audio-hash: b93bb66f
 
 A notice can carry one picture, drawn small beside the words.
 
@@ -66,6 +76,8 @@ hears instead of seeing it, which is why it is required.
 - section: content
 - screen: editor
 - target: #preview
+- audio: post-a-meeting-notice-06-13cee1.mp3
+- audio-hash: 261cff74
 
 Preview opens the real home page with your notice in place. Not an
 approximation — the actual page, exactly as a visitor will see it.
@@ -76,6 +88,8 @@ Use it every time. It takes five seconds and it catches the wrong date.
 - section: content
 - screen: editor
 - target: #publish
+- audio: post-a-meeting-notice-07-bdc909.mp3
+- audio-hash: 6eba0ae8
 
 Publish puts it on the site. Allow up to a minute for it to appear.
 

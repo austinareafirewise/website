@@ -9,6 +9,8 @@
 ## The groups list is public, in one place
 - section: groups
 - target: #group-new
+- audio: firewise-groups-and-board-01-681b67.mp3
+- audio-hash: 34440c73
 
 These are the neighborhood groups the Alliance works with. This list is also
 the dropdown people choose from on the sign-up form, so the names are read by
@@ -20,6 +22,8 @@ leadership.
 ## Status decides what happens
 - section: groups
 - target: #group-list
+- audio: firewise-groups-and-board-02-9eb1f5.mp3
+- audio-hash: f2ac3372
 
 Prospective, in progress, recognized, lapsed, or inactive.
 
@@ -30,6 +34,8 @@ chose it keep their records but lose the group.
 ## Describe the area as a resident would
 - section: groups
 - screen: editor
+- audio: firewise-groups-and-board-03-d1d306.mp3
+- audio-hash: 137c405d
 
 Streets, a subdivision, "everything north of the creek". Not a formal boundary.
 
@@ -39,6 +45,8 @@ write it for them rather than for the paperwork.
 ## The board roster is not a set of logins
 - section: board
 - target: #board-note
+- audio: firewise-groups-and-board-04-80ad10.mp3
+- audio-hash: 4ea86f30
 
 This is who serves on the board. It is deliberately separate from who can sign
 in to this website.
@@ -49,6 +57,8 @@ it away. That keeps the roster safe for anyone to correct.
 ## When somebody leaves the board
 - section: board
 - target: #person-new
+- audio: firewise-groups-and-board-05-f55380.mp3
+- audio-hash: aa18e131
 
 Do both things. Set them to past board member here, with an end date.
 
