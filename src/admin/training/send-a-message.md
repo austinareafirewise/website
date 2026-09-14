@@ -1,5 +1,6 @@
 # Send a message to members
 <!-- lesson-id: send-a-message -->
+<!-- sections: comms -->
 <!-- order: 50 -->
 <!-- minutes: 4 -->
 <!-- description: Writing an email or text to the membership, and the two-person rule that governs it. -->

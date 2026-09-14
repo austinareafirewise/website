@@ -1,5 +1,6 @@
 # Your first time in
 <!-- lesson-id: first-time -->
+<!-- sections: content, members, comms, groups, board -->
 <!-- order: 10 -->
 <!-- minutes: 3 -->
 <!-- description: Signing in, what the five tabs are, and where to get help. Start here. -->

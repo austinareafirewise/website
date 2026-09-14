@@ -311,6 +311,81 @@
         if (!$("md-popover").hidden) { mdClose(); $("md-help").focus(); }
     });
 
+    /* ============================================================ */
+    /* Training                                                      */
+    /*                                                               */
+    /* The guide runs in its own window so it can sit beside the      */
+    /* screen it describes. This side does two things: offer the      */
+    /* button when a lesson covers the current tab, and let that      */
+    /* window point at things over here.                             */
+    /* ============================================================ */
+
+    /* Which lessons cover which tab. Kept here rather than fetched so the
+       button can appear immediately; training/check.mjs proves each file
+       exists and that its sections are real tabs. */
+    var TRAINING = {
+        content: ["first-time", "post-a-meeting-notice", "write-a-news-article"],
+        members: ["first-time", "add-someone-to-the-list"],
+        comms: ["first-time", "send-a-message"],
+        groups: ["first-time", "firewise-groups-and-board"],
+        board: ["first-time", "firewise-groups-and-board"]
+    };
+
+    var trainingWindow = null;
+
+    function updateTrainingButton() {
+        var tab = document.querySelector('.admin-nav .tab[aria-current="page"]');
+        var name = tab ? tab.getAttribute("data-section") : "content";
+        $("train-open").hidden = !(TRAINING[name] && TRAINING[name].length);
+    }
+
+    function openTraining() {
+        var tab = document.querySelector('.admin-nav .tab[aria-current="page"]');
+        var name = tab ? tab.getAttribute("data-section") : "content";
+        var url = "training.html?section=" + encodeURIComponent(name);
+        // Reuse the window if it is already open, so pressing the button twice
+        // does not leave two guides disagreeing about where you are.
+        if (trainingWindow && !trainingWindow.closed) {
+            trainingWindow.location.replace(url);
+            trainingWindow.focus();
+            return;
+        }
+        trainingWindow = window.open(url, "aafa-training", "width=460,height=720,menubar=no,toolbar=no,location=no");
+        if (!trainingWindow) {
+            notify("Training", "Your browser blocked the training window. Allow pop-ups for this site and press Training again.");
+        }
+    }
+
+    /* Called from the training window. Switches to the tab the step happens on
+       and outlines what it points at. Returns whether the target was actually
+       found, so the guide can say so rather than leaving somebody hunting. */
+    var trainingMark = null;
+    function trainingFocus(section, selector) {
+        if (trainingMark) { trainingMark.classList.remove("training-target"); trainingMark = null; }
+        if (section) {
+            var tab = document.querySelector('.admin-nav .tab[data-section="' + section + '"]');
+            var currentTab = document.querySelector('.admin-nav .tab[aria-current="page"]');
+            if (tab && tab !== currentTab) tab.click();
+        }
+        if (!selector) return true;
+        var node;
+        try { node = document.querySelector(selector); } catch (e) { return false; }
+        if (!node || node.hidden || !node.getClientRects().length) return false;
+        node.classList.add("training-target");
+        trainingMark = node;
+        node.scrollIntoView({ block: "center", behavior: "smooth" });
+        return true;
+    }
+
+    window.AAFA_ADMIN.trainingFocus = trainingFocus;
+    $("train-open").addEventListener("click", openTraining);
+    // Wired here rather than with the help button: this has to run after
+    // TRAINING is assigned, and the help block sits above it.
+    Array.prototype.forEach.call(document.querySelectorAll(".admin-nav .tab[data-section]"), function (t) {
+        t.addEventListener("click", updateTrainingButton);
+    });
+    updateTrainingButton();
+
     function msg(kind, text, el) {
         var box = el || $("msg");
         box.className = "form-status show " + kind;

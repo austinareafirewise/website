@@ -21,7 +21,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const PAGE = join(HERE, "..", "index.html");
 const SECTIONS = new Set(["content", "members", "comms", "groups", "board"]);
 const SCREENS = new Set(["list", "editor"]);
-const REQUIRED_META = ["lesson-id", "order", "minutes", "description"];
+const REQUIRED_META = ["lesson-id", "sections", "order", "minutes", "description"];
 
 const html = readFileSync(PAGE, "utf8");
 const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));
@@ -65,6 +65,11 @@ function parseLesson(file) {
             problems.push(`${file}: lesson-id "${meta["lesson-id"]}" is already used by ${seenIds.get(meta["lesson-id"])}`);
         }
         seenIds.set(meta["lesson-id"], file);
+    }
+    if (meta.sections) {
+        for (const name of meta.sections.split(",").map((x) => x.trim()).filter(Boolean)) {
+            if (!SECTIONS.has(name)) problems.push(`${file}: sections lists "${name}", which is not a tab`);
+        }
     }
     if (meta.order) {
         if (seenOrder.has(meta.order)) problems.push(`${file}: order ${meta.order} is already used by ${seenOrder.get(meta.order)}`);

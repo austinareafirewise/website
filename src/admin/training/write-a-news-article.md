@@ -1,5 +1,6 @@
 # Write a news article
 <!-- lesson-id: write-a-news-article -->
+<!-- sections: content -->
 <!-- order: 30 -->
 <!-- minutes: 3 -->
 <!-- description: A full page of its own on the News page, with room for pictures. -->

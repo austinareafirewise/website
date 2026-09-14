@@ -1,5 +1,6 @@
 # Firewise groups and the board roster
 <!-- lesson-id: firewise-groups-and-board -->
+<!-- sections: groups, board -->
 <!-- order: 60 -->
 <!-- minutes: 3 -->
 <!-- description: The neighbourhood groups list, and the roster of who serves on the board. -->

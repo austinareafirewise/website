@@ -43,6 +43,12 @@
             <button type="button" class="tab" data-section="board">Board</button>
             <!-- Help for whichever section is showing. Reads the selected tab
                  when it opens, so it never needs telling which one that is. -->
+            <!-- Training for whichever section is showing. Hidden until the
+                 lessons say there is one for this tab, so the icon never
+                 promises something that is not there. -->
+            <button type="button" class="tab train-tab" id="train-open" hidden>
+                <span class="train-mark" aria-hidden="true">▶</span> Training
+            </button>
             <button type="button" class="tab help-tab" id="help-open" aria-haspopup="dialog">
                 <span class="help-mark" aria-hidden="true">?</span> Help
             </button>

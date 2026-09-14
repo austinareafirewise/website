@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Training — Austin Area Firewise Alliance</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" href="../img/aafa-logo.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Oswald:wght@500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../css/site.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+
+<!-- The training guide, opened as its own small window from the admin page so
+     it can sit beside the screen it is talking about rather than covering it.
+     Same origin as its opener, which is what lets it switch the tab behind it
+     and outline whatever the step is pointing at.
+
+     It works with no audio at all: the words are on screen, and the player
+     only appears for a step that has a recorded clip. -->
+
+<body class="admin training-window">
+    <div class="tr-shell">
+        <header class="tr-head">
+            <div>
+                <p class="tr-kicker" id="tr-kicker">Training</p>
+                <h1 id="tr-title">Choose a lesson</h1>
+            </div>
+            <button type="button" class="btn btn-outline btn-small" id="tr-close">Close</button>
+        </header>
+
+        <!-- Lesson chooser -->
+        <div id="tr-menu">
+            <p class="hint" id="tr-menu-note"></p>
+            <div class="tr-list" id="tr-list"></div>
+        </div>
+
+        <!-- A lesson in progress -->
+        <div id="tr-step" hidden>
+            <p class="tr-progress" id="tr-progress"></p>
+            <h2 id="tr-step-title"></h2>
+            <div class="tr-words" id="tr-words"></div>
+
+            <div class="tr-audio" id="tr-audio" hidden>
+                <audio id="tr-player" controls preload="none"></audio>
+            </div>
+            <p class="hint" id="tr-noaudio" hidden>No recording for this step yet — the words above are the whole of it.</p>
+
+            <div class="tr-nav">
+                <button type="button" class="btn btn-outline btn-small" id="tr-prev">← Back</button>
+                <button type="button" class="btn btn-primary btn-small" id="tr-next">Next →</button>
+                <button type="button" class="btn btn-outline btn-small" id="tr-menu-back">All lessons</button>
+            </div>
+            <p class="hint" id="tr-pointing" hidden></p>
+        </div>
+
+        <div class="form-status" id="tr-msg" role="status" aria-live="polite"></div>
+    </div>
+
+    <script src="training.js"></script>
+</body>
+
+</html>
