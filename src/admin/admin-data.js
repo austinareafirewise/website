@@ -152,7 +152,9 @@
                     { value: "emergency", label: "Emergency — active threat to life or property" }],
                   hint: "Routine texts wait for 8am–9pm Central. An emergency goes at once, at any hour. Only use it for an evacuation, a fire closing a road, or where the shelter is — telling the phone companies a meeting reminder is an emergency is what costs an organization its number." },
                 { k: "emailSubject", label: "Email subject", type: "text" },
-                { k: "emailBody", label: "Email message", type: "textarea", hint: "Markdown allowed. The unsubscribe link and our postal address are added automatically." },
+                { k: "emailBody", label: "Email message", type: "textarea",
+                  help: "markdown", helpLabel: "What is Markdown?",
+                  hint: "You can use Markdown for headings, bold and bullet points — press \u201cWhat is Markdown?\u201d above for what to type. Plain sentences are fine too. The unsubscribe link and our postal address are added automatically." },
                 { k: "smsBody", label: "Text message", type: "textarea", hint: "\"Reply STOP to stop\" is added automatically. Watch the segment count — a long text sends as several." },
                 { k: "sendAt", label: "Send at (leave blank for immediately)", type: "datetime-local" }
             ];
@@ -166,7 +168,19 @@
     function field(f, value) {
         var id = "f_" + f.k;
         var wrap = el("div", { class: "field" });
-        wrap.appendChild(el("label", { for: id, text: f.label + (f.required ? "" : " (optional)") }));
+        var label = el("label", { for: id, text: f.label + (f.required ? "" : " (optional)") });
+        // A field that accepts Markdown gets the same way in to the same
+        // examples the news editor offers, rather than a hint telling people
+        // about a notation and leaving them to find out what it is.
+        if (f.help) {
+            var pill = el("button", { type: "button", class: "pill", text: f.helpLabel || "Help" });
+            pill.addEventListener("click", function () {
+                if (window.AAFA_ADMIN && window.AAFA_ADMIN.openHelp) window.AAFA_ADMIN.openHelp(f.help);
+            });
+            label.appendChild(document.createTextNode(" "));
+            label.appendChild(pill);
+        }
+        wrap.appendChild(label);
 
         var input;
         if (f.type === "textarea") {

@@ -37,20 +37,37 @@ Below it is "Send to": email subscribers, text subscribers, or everyone.
 People chose which when they signed up, so somebody who only wanted email
 never gets a text.
 
-## Email and text are different
+## The email
+- section: comms
+- screen: editor
+- open: #comm-new
+- target: #f_emailBody
+- audio: send-a-message-03-cd9392.mp3
+- audio-hash: efe6dfe0
+
+This box, outlined now, is the email message itself. The subject goes in the
+box just above it.
+
+You can write plain sentences and that is fine. If you want headings, bold
+text or bullet points, it understands Markdown, and the "What is Markdown?"
+button beside the label shows exactly what to type.
+
+The unsubscribe link and our postal address are added to every email for you.
+Both are required by law and neither can be removed.
+
+## And the text message
 - section: comms
 - screen: editor
 - open: #comm-new
 - target: #f_smsBody
-- audio: send-a-message-03-58373f.mp3
-- audio-hash: fb49d3db
+- audio: send-a-message-04-11b3cc.mp3
+- audio-hash: 1c77e8ae
 
-This is the text-message box, and a text has to be short. "Reply STOP to stop"
-is added for you, and a long message is billed and delivered as several.
+This one is the text message, and it is a different job. A text has to be
+short.
 
-The email boxes are above it — a subject and a body, and the body accepts
-Markdown. There the unsubscribe link and our postal address are added for you:
-both are required by law and neither can be removed.
+"Reply STOP to stop" is added for you, and a long message is billed and
+delivered as several. There is no Markdown in a text — it is plain words only.
 
 ## Send yourself a test
 - section: comms

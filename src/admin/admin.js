@@ -244,6 +244,12 @@
         return tab ? tab.getAttribute("data-section") : "content";
     }
 
+    /* Any screen can open one topic directly. The message form needs the
+       Markdown examples as much as the news form does -- its email body takes
+       the same markup -- and there is no reason for that help to live on one
+       screen only. */
+    window.AAFA_ADMIN.openHelp = openHelp;
+
     $("help-open").addEventListener("click", function () { openHelp(currentSection()); });
     $("help-close").addEventListener("click", closeHelp);
     $("help-modal").addEventListener("click", function (e) {
