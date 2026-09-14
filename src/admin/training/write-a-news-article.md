@@ -23,14 +23,15 @@ read, it is an article.
 - screen: editor
 - open: #new-news
 - target: #f-body
-- audio: write-a-news-article-02-9f2328.mp3
-- audio-hash: 1a6c6252
+- audio: write-a-news-article-02-8254e5.mp3
+- audio-hash: 9d888bc9
 
-Title, then the text. Leave a blank line between paragraphs.
+This is the Text box, where the article itself goes, with the title in the box
+above it. Leave a blank line between paragraphs.
 
-If you want headings, bold text or bullet points, tick the Markdown box and use
-the "What is Markdown?" button beside it — it shows what to type next to what
-visitors will see.
+If you want headings, bold text or bullet points, tick the Markdown box below
+and use the "What is Markdown?" button beside it — it shows what to type next
+to what visitors will see.
 
 ## Put it on the home page as well
 - section: content

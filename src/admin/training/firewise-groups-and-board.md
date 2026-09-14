@@ -24,10 +24,11 @@ leadership.
 - screen: editor
 - open: #group-new
 - target: #f_status
-- audio: firewise-groups-and-board-02-9eb1f5.mp3
-- audio-hash: f2ac3372
+- audio: firewise-groups-and-board-02-7f0b0b.mp3
+- audio-hash: 762ed99e
 
-Prospective, in progress, recognized, lapsed, or inactive.
+This is the group's Status, and it decides more than it looks. The choices are
+prospective, in progress, recognized, lapsed, and inactive.
 
 Inactive hides the group from the sign-up form. Use that rather than deleting a
 group that has stopped meeting — deleting loses its history, and the people who
@@ -38,12 +39,14 @@ chose it keep their records but lose the group.
 - screen: editor
 - open: #group-new
 - target: #f_area
-- audio: firewise-groups-and-board-03-d1d306.mp3
-- audio-hash: 137c405d
+- audio: firewise-groups-and-board-03-f8998f.mp3
+- audio-hash: b42f3fd7
 
-Streets, a subdivision, "everything north of the creek". Not a formal boundary.
+This box is "Area it covers". It is where you say which part of town the group
+is, in the words a resident would use — streets, a subdivision, "everything
+north of the creek". Not a formal boundary.
 
-That line is what somebody uses to work out whether the group is theirs, so
+This is the line somebody reads to work out whether the group is theirs, so
 write it for them rather than for the paperwork.
 
 ## The board roster is not a set of logins

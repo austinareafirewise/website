@@ -35,15 +35,15 @@ text.
 - screen: editor
 - open: #comm-new
 - target: #f_smsBody
-- audio: send-a-message-03-6fee0e.mp3
-- audio-hash: b058fe3c
+- audio: send-a-message-03-58373f.mp3
+- audio-hash: fb49d3db
 
-The email takes a subject and a body, and the body accepts Markdown. The
-unsubscribe link and our postal address are added for you — both are required
-by law and neither can be removed.
+This is the text-message box, and a text has to be short. "Reply STOP to stop"
+is added for you, and a long message is billed and delivered as several.
 
-The text has to be short. "Reply STOP to stop" is added for you, and a long
-text is billed and delivered as several.
+The email boxes are above it — a subject and a body, and the body accepts
+Markdown. There the unsubscribe link and our postal address are added for you:
+both are required by law and neither can be removed.
 
 ## Send yourself a test
 - section: comms
