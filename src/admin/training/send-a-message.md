@@ -69,6 +69,20 @@ short.
 "Reply STOP to stop" is added for you, and a long message is billed and
 delivered as several. There is no Markdown in a text — it is plain words only.
 
+## Read it before anybody else does
+- section: comms
+- target: #comm-list
+- audio: send-a-message-05-219ef8.mp3
+- audio-hash: 711f93e7
+
+Preview, on the message's own row, shows exactly what will go out. Not an
+impression of it — the same thing the sender builds, with the real footer, the
+unsubscribe link and our postal address at the bottom.
+
+It sends nothing and it needs nothing working. Do this first, every time. One
+warning: the links in a preview are signed for you, so do not follow them from
+there — they would unsubscribe your own record.
+
 ## Send yourself a test
 - section: comms
 - target: #comm-list
