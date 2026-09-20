@@ -29,6 +29,13 @@ openai-api-key.local
 signup-form.png
 *.screenshot.png
 
+# The HOA spreadsheet and anything scripts/clean-hoa-export.ps1 makes from it.
+# Those files carry board members' and residents' names, phone numbers and
+# home email addresses. The cleaned copy belongs beside the spreadsheet it
+# came from, not in a repository the whole organization can read.
+*HOAs*.txt
+* - cleaned.txt
+
 # Office lock files left behind while a document is open
 ~$*
 
