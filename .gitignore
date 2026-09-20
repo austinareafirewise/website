@@ -25,6 +25,11 @@ npm-debug.log*
 openai-api-key.local
 *.local
 
+# Scratch admin-user commands. These carry board members' email addresses and
+# the temporary password each account is created with, so they belong in a
+# terminal or a password manager, never in a file the repository can pick up.
+users.txt
+
 # Working files: screenshots gathered for carrier and SES paperwork
 signup-form.png
 *.screenshot.png
