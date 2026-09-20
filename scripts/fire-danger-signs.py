@@ -3,7 +3,8 @@
 
     python3 scripts/fire-danger-signs.py
 
-Writes src/img/fire-danger-<level>.svg and a PNG beside each one.
+Writes src/img/fire-danger-<level>.svg and a PNG beside each one, plus a
+-on-dark pair of each for a dark page or slide.
 
 The familiar roadside sign is a five-segment gauge with a pointer. This is our
 own drawing of that idea: no mascot, no agency marks, nothing lifted from
@@ -11,6 +12,13 @@ anybody's artwork -- shapes and text we generate here.
 
 The background is transparent. The sign has to sit on a web page, a slide and
 a printed flyer, and a tan disc behind it only ever matches one of them.
+
+Transparency has a cost: the words that sit on it take the color of whatever
+is behind them, and near-black names vanish on a dark slide. So each sign is
+drawn twice. The light version is for white and the site's cream; the -on-dark
+version turns the outlines, the level names and the title light instead. The
+banner keeps its own fill in both, because it brings its own background with
+it.
 
 The colors are the National Fire Danger Rating System's own, and they are in
 the order the public already reads them. Color is never the only thing saying
@@ -42,6 +50,13 @@ BANNER_TOP = 432
 
 FONT = "Oswald, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif"
 
+# What changes between the two versions: the outlines and the two runs of
+# text that sit on the transparent background. Nothing else.
+THEMES = {
+    "": {"line": "#1a1a1a", "label": "#1a1a1a", "title": "#8f1d1d"},
+    "-on-dark": {"line": "#f2f2f2", "label": "#ffffff", "title": "#ff9d90"},
+}
+
 
 def polar(r, deg):
     from math import cos, sin, radians
@@ -56,13 +71,14 @@ def wedge(i):
     return f"M {CX:.1f} {CY:.1f} L {x0:.1f} {y0:.1f} A {R_ARC} {R_ARC} 0 0 1 {x1:.1f} {y1:.1f} Z"
 
 
-def sign(slug, label, color, ink, index):
+def sign(slug, label, color, ink, index, theme, suffix):
+    line, label_ink, title_ink = theme["line"], theme["label"], theme["title"]
     mid = 180 + 36 * index + 18          # the middle of this level's wedge
     turn = mid - 270                     # the pointer is drawn upright, then turned
 
     wedges = "\n".join(
         f'        <path d="{wedge(i)}" fill="{LEVELS[i][2]}" '
-        f'stroke="#1a1a1a" stroke-width="{4 if i == index else 3}" />'
+        f'stroke="{line}" stroke-width="{4 if i == index else 3}" />'
         for i in range(5)
     )
 
@@ -74,7 +90,7 @@ def sign(slug, label, color, ink, index):
         a = 180 + 36 * i + 18
         x, y = polar(R_LABEL, a)
         weight = "700"
-        fill = "#1a1a1a"
+        fill = label_ink
         names.append(
             f'        <text x="{x:.1f}" y="{y:.1f}" transform="rotate({a + 90:.1f} {x:.1f} {y:.1f})" '
             f'text-anchor="middle" dominant-baseline="middle" font-family="{FONT}" '
@@ -82,13 +98,13 @@ def sign(slug, label, color, ink, index):
         )
 
     return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}"
-     role="img" aria-labelledby="t-{slug}">
-    <title id="t-{slug}">Today's fire danger: {label}</title>
+     role="img" aria-labelledby="t-{slug}{suffix}">
+    <title id="t-{slug}{suffix}">Today's fire danger: {label}</title>
 
     <!-- The gauge. Every level is drawn; the one in force is the one at full
          strength, so the sign reads at a glance and still lists the scale. -->
 {wedges}
-    <line x1="{CX - R_ARC}" y1="{CY}" x2="{CX + R_ARC}" y2="{CY}" stroke="#1a1a1a" stroke-width="5" />
+    <line x1="{CX - R_ARC}" y1="{CY}" x2="{CX + R_ARC}" y2="{CY}" stroke="{line}" stroke-width="5" />
 {chr(10).join(names)}
 
     <!-- The pointer -->
@@ -100,22 +116,22 @@ def sign(slug, label, color, ink, index):
                  L {CX - 24} {CY}
                  L {CX - 24} {CY - R_ARC + 112}
                  L {CX - 58} {CY - R_ARC + 112} Z"
-              fill="{color}" stroke="#1a1a1a" stroke-width="5" stroke-linejoin="round" />
+              fill="{color}" stroke="{line}" stroke-width="5" stroke-linejoin="round" />
     </g>
-    <circle cx="{CX}" cy="{CY}" r="16" fill="#1a1a1a" />
+    <circle cx="{CX}" cy="{CY}" r="16" fill="{line}" />
 
     <!-- The word, which is what somebody actually reads -->
     <rect x="{CX - 296}" y="{BANNER_TOP}" width="592" height="132" rx="8"
-          fill="{color}" stroke="#1a1a1a" stroke-width="5" />
+          fill="{color}" stroke="{line}" stroke-width="5" />
     <text x="{CX}" y="{BANNER_TOP + 70}" text-anchor="middle" dominant-baseline="middle"
           font-family="{FONT}" font-size="{96 if len(label) < 8 else 74}" font-weight="700" fill="{ink}"
           stroke="{'#1a1a1a' if ink == '#ffffff' else 'none'}" stroke-width="{4 if ink == '#ffffff' else 0}"
           paint-order="stroke" letter-spacing="2">{label}</text>
 
     <text x="{CX}" y="{BANNER_TOP + 224}" text-anchor="middle" font-family="{FONT}"
-          font-size="84" font-weight="700" fill="#8f1d1d" letter-spacing="2">TODAY&#8217;S FIRE</text>
+          font-size="84" font-weight="700" fill="{title_ink}" letter-spacing="2">TODAY&#8217;S FIRE</text>
     <text x="{CX}" y="{BANNER_TOP + 312}" text-anchor="middle" font-family="{FONT}"
-          font-size="84" font-weight="700" fill="#8f1d1d" letter-spacing="2">DANGER</text>
+          font-size="84" font-weight="700" fill="{title_ink}" letter-spacing="2">DANGER</text>
 </svg>
 '''
 
@@ -123,14 +139,15 @@ def sign(slug, label, color, ink, index):
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for i, (slug, label, color, ink) in enumerate(LEVELS):
-        svg = OUT / f"fire-danger-{slug}.svg"
-        svg.write_text(sign(slug, label, color, ink, i), encoding="utf-8")
-        png = OUT / f"fire-danger-{slug}.png"
-        subprocess.run(
-            ["rsvg-convert", "-w", "900", "-o", str(png), str(svg)],
-            check=True,
-        )
-        print(f"{svg.relative_to(ROOT)}  +  {png.relative_to(ROOT)}")
+        for suffix, theme in THEMES.items():
+            svg = OUT / f"fire-danger-{slug}{suffix}.svg"
+            svg.write_text(sign(slug, label, color, ink, i, theme, suffix), encoding="utf-8")
+            png = OUT / f"fire-danger-{slug}{suffix}.png"
+            subprocess.run(
+                ["rsvg-convert", "-w", "900", "-o", str(png), str(svg)],
+                check=True,
+            )
+            print(f"{svg.relative_to(ROOT)}  +  {png.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

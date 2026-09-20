@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 800" width="900" height="800"
+     role="img" aria-labelledby="t-high-on-dark">
+    <title id="t-high-on-dark">Today's fire danger: HIGH</title>
+
+    <!-- The gauge. Every level is drawn; the one in force is the one at full
+         strength, so the sign reads at a glance and still lists the scale. -->
+        <path d="M 450.0 400.0 L 150.0 400.0 A 300 300 0 0 1 207.3 223.7 Z" fill="#3f9c35" stroke="#f2f2f2" stroke-width="3" />
+        <path d="M 450.0 400.0 L 207.3 223.7 A 300 300 0 0 1 357.3 114.7 Z" fill="#2e9bd6" stroke="#f2f2f2" stroke-width="3" />
+        <path d="M 450.0 400.0 L 357.3 114.7 A 300 300 0 0 1 542.7 114.7 Z" fill="#f7e017" stroke="#f2f2f2" stroke-width="4" />
+        <path d="M 450.0 400.0 L 542.7 114.7 A 300 300 0 0 1 692.7 223.7 Z" fill="#f18a21" stroke="#f2f2f2" stroke-width="3" />
+        <path d="M 450.0 400.0 L 692.7 223.7 A 300 300 0 0 1 750.0 400.0 Z" fill="#c8202f" stroke="#f2f2f2" stroke-width="3" />
+    <line x1="150" y1="400" x2="750" y2="400" stroke="#f2f2f2" stroke-width="5" />
+        <text x="124.7" y="294.3" transform="rotate(288.0 124.7 294.3)" text-anchor="middle" dominant-baseline="middle" font-family="Oswald, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif" font-size="38" font-weight="700" fill="#ffffff" letter-spacing="1">LOW</text>
+        <text x="249.0" y="123.3" transform="rotate(324.0 249.0 123.3)" text-anchor="middle" dominant-baseline="middle" font-family="Oswald, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif" font-size="38" font-weight="700" fill="#ffffff" letter-spacing="1">MODERATE</text>
+        <text x="450.0" y="58.0" transform="rotate(360.0 450.0 58.0)" text-anchor="middle" dominant-baseline="middle" font-family="Oswald, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif" font-size="38" font-weight="700" fill="#ffffff" letter-spacing="1">HIGH</text>
+        <text x="651.0" y="123.3" transform="rotate(396.0 651.0 123.3)" text-anchor="middle" dominant-baseline="middle" font-family="Oswald, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif" font-size="38" font-weight="700" fill="#ffffff" letter-spacing="1">VERY HIGH</text>
+        <text x="775.3" y="294.3" transform="rotate(432.0 775.3 294.3)" text-anchor="middle" dominant-baseline="middle" font-family="Oswald, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif" font-size="38" font-weight="700" fill="#ffffff" letter-spacing="1">EXTREME</text>
+
+    <!-- The pointer -->
+    <g transform="rotate(0.0 450 400)">
+        <path d="M 450 116
+                 L 508 212
+                 L 474 212
+                 L 474 400
+                 L 426 400
+                 L 426 212
+                 L 392 212 Z"
+              fill="#f7e017" stroke="#f2f2f2" stroke-width="5" stroke-linejoin="round" />
+    </g>
+    <circle cx="450" cy="400" r="16" fill="#f2f2f2" />
+
+    <!-- The word, which is what somebody actually reads -->
+    <rect x="154" y="432" width="592" height="132" rx="8"
+          fill="#f7e017" stroke="#f2f2f2" stroke-width="5" />
+    <text x="450" y="502" text-anchor="middle" dominant-baseline="middle"
+          font-family="Oswald, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif" font-size="96" font-weight="700" fill="#1a1a1a"
+          stroke="none" stroke-width="0"
+          paint-order="stroke" letter-spacing="2">HIGH</text>
+
+    <text x="450" y="656" text-anchor="middle" font-family="Oswald, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif"
+          font-size="84" font-weight="700" fill="#ff9d90" letter-spacing="2">TODAY&#8217;S FIRE</text>
+    <text x="450" y="744" text-anchor="middle" font-family="Oswald, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif"
+          font-size="84" font-weight="700" fill="#ff9d90" letter-spacing="2">DANGER</text>
+</svg>
