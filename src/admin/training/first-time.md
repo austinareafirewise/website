@@ -1,17 +1,17 @@
 # Your first time in
 <!-- lesson-id: first-time -->
-<!-- sections: content, members, comms, groups, board -->
+<!-- sections: content, home, members, comms, groups, board -->
 <!-- order: 10 -->
 <!-- minutes: 3 -->
-<!-- description: Signing in, what the five tabs are, and where to get help. Start here. -->
+<!-- description: Signing in, what the six tabs are, and where to get help. Start here. -->
 
 ## Signing in
 - section: content
 - target: #who-email
-- audio: first-time-01-8a6774.mp3
-- audio-hash: 1db99c97
+- audio: first-time-01-56dda2.mp3
+- audio-hash: dc166aff
 
-Your first time in. This lesson covers signing in, what the five sections
+Your first time in. This lesson covers signing in, what the six sections
 are, and where to find help. About three minutes.
 
 You get to the editing area by adding slash-admin-slash to the end of the
@@ -32,17 +32,19 @@ Nobody has to do that for you. The code comes from an Amazon address rather
 than from us, so if it does not arrive within a minute, look in your spam
 folder.
 
-## The five sections
+## The six sections
 - section: content
 - target: #admin-nav
-- audio: first-time-03-c2cc53.mp3
-- audio-hash: 91010eba
+- audio: first-time-03-504708.mp3
+- audio-hash: f0df4cc1
 
-The tabs across the top are the five things you can look after.
+The tabs across the top are the six things you can look after.
 
-News and notices is what visitors read. Members is everyone who asked to hear
-from us. Messages is what we send them. Firewise groups is the neighborhood
-groups. Board is the roster of who serves.
+News and notices is what visitors read. Home banner is the top of the home
+page — the headline and the words under it. Members is everyone who asked to
+hear from us. Messages is what we send them. Firewise groups is the
+neighborhood groups. Alliance board is the roster of who serves on our own
+board.
 
 ## Help is on every screen
 - section: content

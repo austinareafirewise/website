@@ -3,8 +3,8 @@
 <!-- sections: groups -->
 <!-- primary-for: groups -->
 <!-- order: 60 -->
-<!-- minutes: 3 -->
-<!-- description: The neighborhood groups the Alliance works with, and each group's own officers. -->
+<!-- minutes: 4 -->
+<!-- description: The neighborhood groups the Alliance works with, their own officers, and importing the board's spreadsheet. -->
 
 ## The groups list is public, in one place
 - section: groups
@@ -39,20 +39,44 @@ Inactive hides the group from the sign-up form. Use that rather than deleting a
 group that has stopped meeting — deleting loses its history, and the people who
 chose it keep their records but lose the group.
 
-## Describe the area as a resident would
+## City, and the area it covers
 - section: groups
 - screen: editor
 - open: #group-new
-- target: #f_area
-- audio: firewise-groups-03-6a79cb.mp3
-- audio-hash: b42f3fd7
+- target: #f_city
+- audio: firewise-groups-03-16079f.mp3
+- audio-hash: 5d72f8a2
 
-This box is "Area it covers". It is where you say which part of town the group
-is, in the words a resident would use — streets, a subdivision, "everything
-north of the creek". Not a formal boundary.
+The box outlined here is City — Austin, Lago Vista, Jonestown. Besides the
+name, it is the only thing on this form a visitor sees: the sign-up dropdown
+reads "Jester Estates — Austin". Fill it in. Area it covers is blank on nearly
+every group we hold, so the city is usually the only thing telling two similar
+names apart.
 
-This is the line somebody reads to work out whether the group is theirs, so
-write it for them rather than for the paperwork.
+Just below it is that Area box. It is where you say which part of town the
+group is, in the words a resident would use — streets, a subdivision,
+"everything north of the creek". Not a formal boundary. Somebody reads that
+line to work out whether the group is theirs, so write it for them rather than
+for the paperwork.
+
+## Forty groups at once
+- section: groups
+- target: #group-import-open
+- audio: firewise-groups-04-22bfaf.mp3
+- audio-hash: 09c15008
+
+"Import from a file", outlined now, reads the board's own spreadsheet rather
+than making you type it back in. Save it as CSV or tab-separated text, with the
+headings in the first row.
+
+It already understands how that sheet is laid out: a row with a group name
+starts a group, and a row with no group name adds another contact to the group
+above it.
+
+Nothing is sent until you have read the preview and pressed Import. Groups
+already on the site are skipped rather than duplicated, so running the same
+file twice does not double anything, and any row it cannot take is listed with
+the reason while the rest go in.
 
 ## The group's own board
 - section: groups

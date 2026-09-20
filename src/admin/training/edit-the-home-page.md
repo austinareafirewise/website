@@ -1,19 +1,20 @@
-# Edit the home page
+# The home banner
 <!-- lesson-id: edit-the-home-page -->
 <!-- sections: home -->
 <!-- primary-for: home -->
 <!-- order: 15 -->
 <!-- minutes: 2 -->
-<!-- description: The headline at the top of the site, the paragraph under it, and the picture beside them. -->
+<!-- description: The Home banner tab: the headline at the top of the site, the paragraph under it, and the picture beside them. -->
 
 ## The top of the site, and nothing else
 - section: home
 - target: #f-home-headline
-- audio: edit-the-home-page-01-a28f15.mp3
-- audio-hash: 1c987516
+- audio: edit-the-home-page-01-bf1bbc.mp3
+- audio-hash: 453c776f
 
-Edit the home page. This lesson is the band at the very top of the site —
-the big headline, the words under it, and the picture beside them.
+The home banner. This lesson is the band at the very top of the site — the
+big headline, the words under it, and the picture beside them. It is the Home
+banner tab, and the heading on the screen says Home page banner.
 
 The box outlined now is the headline itself. A line break you type here
 becomes a line break on the page, which is how the two short lines up there
