@@ -3,8 +3,8 @@
 <!-- sections: home -->
 <!-- primary-for: home -->
 <!-- order: 15 -->
-<!-- minutes: 2 -->
-<!-- description: The Home banner tab: the headline at the top of the site, the paragraph under it, and the picture beside them. -->
+<!-- minutes: 3 -->
+<!-- description: The Home banner tab: the headline at the top of the site, the paragraph under it, and what sits beside them. -->
 
 ## The top of the site, and nothing else
 - section: home
@@ -56,8 +56,8 @@ only.
 ## A picture beside the words
 - section: home
 - target: #home-dropzone
-- audio: edit-the-home-page-04-8c340f.mp3
-- audio-hash: 5dd1830e
+- audio: edit-the-home-page-04-b911ca.mp3
+- audio-hash: 0e54ac82
 
 Drop a photo on the dotted box and you will crop it the same way you would on
 a news article.
@@ -66,9 +66,32 @@ It is decoration. It sits beside the headline on a computer and it is not
 shown at all on a phone, so nothing you say is ever inside the picture. One at
 a time: adding another means removing the one there.
 
+Adding one here also takes the fire danger sign away, which is the next step.
+You do not have to turn anything off; a picture the board chose wins.
+
 It still needs a sentence saying what is in it. That is what somebody using a
 screen reader hears, and it is required for that reason rather than as
 paperwork.
+
+## The fire danger sign
+- section: home
+- target: #f-home-firedanger
+- audio: edit-the-home-page-05-bfdb65.mp3
+- audio-hash: 0c336c7e
+
+Leave the picture off and the site draws this instead: the fire danger gauge,
+the same five levels as the sign outside a fire station.
+
+Nobody sets it. Texas A&M Forest Service rates the fire danger every day, and
+the site reads five weather stations around Travis County and shows the
+highest of them. If it cannot read today's rating the sign disappears rather
+than leaving yesterday's danger up.
+
+Unlike the picture, it stays on a phone. Decoration can be dropped on a small
+screen. Something a neighbor might act on cannot.
+
+This box turns it off, for the case where there is no picture and you would
+rather the space were empty.
 
 ## Look at it before anybody else does
 - section: home
