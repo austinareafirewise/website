@@ -1265,7 +1265,12 @@
         $("admin-nav").hidden = false;
         window.AAFA_ADMIN.token = function () { return ss(KEYS.id); };
         window.AAFA_ADMIN.email = ss(KEYS.email) || "";
-        return loadList().catch(function (e) {
+        return loadList().then(function () {
+            // Put the editor back on the tab they were using before the
+            // reload. After loadList, so the restored section asks the API
+            // with a token in hand and lands on a page that is ready.
+            if (window.AAFA_ADMIN.restoreSection) window.AAFA_ADMIN.restoreSection();
+        }).catch(function (e) {
             if (e.status === 403) show("screen-denied");
             else if (e.status === 401) show("screen-signin");
             else { show("screen-list"); msg("err", e.message, $("list")); }

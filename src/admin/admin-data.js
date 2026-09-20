@@ -719,7 +719,38 @@
         return Promise.all(NEEDS[section].map(function (n) { return LOADERS[n](); })).then(function () { RENDER[section](); });
     }
 
+    /* Which tab you were on, remembered across a reload.
+     *
+     * sessionStorage rather than localStorage or a URL hash. The tab dies with
+     * the browser tab, which is exactly when the sign-in dies too, so it can
+     * never restore a section for a session that has gone. A hash would not
+     * survive sign-in at all: the Cognito return calls history.replaceState to
+     * strip ?code=, and that takes the fragment with it.
+     *
+     * Wrapped because sessionStorage throws outright in some privacy settings
+     * rather than returning null. Losing the memory is not worth an error. */
+    var SECTION_KEY = "aafa-admin-section";
+
+    function rememberSection(name) {
+        try { sessionStorage.setItem(SECTION_KEY, name); } catch (e) { /* not remembered */ }
+    }
+
+    function lastSection() {
+        try { return sessionStorage.getItem(SECTION_KEY); } catch (e) { return null; }
+    }
+
+    /* Called once the session is established and the list has loaded, so the
+       restored section asks the API with a token in hand. */
+    window.AAFA_ADMIN.restoreSection = function () {
+        var name = lastSection();
+        // "content" is already what the markup shows, so there is nothing to do.
+        if (!name || name === "content") return;
+        if (!$("section-" + name)) return;
+        showSection(name);
+    };
+
     function showSection(name) {
+        rememberSection(name);
         $("rec-screen").hidden = true;
         ["content", "home", "members", "comms", "groups", "board"].forEach(function (n) {
             var sec = $("section-" + n);
