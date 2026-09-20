@@ -665,6 +665,7 @@ function validateGroup(b) {
     const out = {
         name: str(b.name, "Group name", LIMITS.groupName, true),
         status,
+        city: str(b.city, "City", LIMITS.groupCity) || undefined,
         area: str(b.area, "Area it covers", LIMITS.groupArea) || undefined,
         about: str(b.about, "About", LIMITS.groupAbout) || undefined,
         zips: (Array.isArray(b.zips) ? b.zips : String(b.zips || "").split(","))
@@ -695,9 +696,12 @@ function validateGroup(b) {
     if (out.recognizedYear !== undefined && (!Number.isInteger(out.recognizedYear) || out.recognizedYear < 2000 || out.recognizedYear > 2100)) {
         throw new ValidationError("Recognized year must be a four-digit year.");
     }
-    if (out.status === "recognized" && out.recognizedYear === undefined) {
-        throw new ValidationError("A recognized group needs the year it was recognized.");
-    }
+    /* A recognized group used to be required to carry the year it was
+       recognized, so that a renewal date could be reasoned about. The Alliance
+       does not hold those dates and has decided not to track them, so the rule
+       refused records that are otherwise correct. Year recognized and Renewal
+       due are still here and still work; they are simply optional now, and a
+       group with neither is shown as recognized without a date. */
     return out;
 }
 

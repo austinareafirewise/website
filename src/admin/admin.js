@@ -240,7 +240,7 @@
        DOM rather than tracking it here keeps this working no matter which
        file changed the section last. */
     function currentSection() {
-        var tab = document.querySelector('.admin-nav .tab[aria-current="page"]');
+        var tab = document.querySelector('.admin-nav .tab[data-section][aria-current="page"]');
         return tab ? tab.getAttribute("data-section") : "content";
     }
 
@@ -346,13 +346,13 @@
     var trainingWindow = null;
 
     function updateTrainingButton() {
-        var tab = document.querySelector('.admin-nav .tab[aria-current="page"]');
+        var tab = document.querySelector('.admin-nav .tab[data-section][aria-current="page"]');
         var name = tab ? tab.getAttribute("data-section") : "content";
         $("train-open").hidden = !TRAINING[name];
     }
 
     function openTraining() {
-        var tab = document.querySelector('.admin-nav .tab[aria-current="page"]');
+        var tab = document.querySelector('.admin-nav .tab[data-section][aria-current="page"]');
         var name = tab ? tab.getAttribute("data-section") : "content";
         var url = "training.html?section=" + encodeURIComponent(name) +
                   "&lesson=" + encodeURIComponent(TRAINING[name] || "");
@@ -437,7 +437,7 @@
 
         if (section) {
             var tab = document.querySelector('.admin-nav .tab[data-section="' + section + '"]');
-            var currentTab = document.querySelector('.admin-nav .tab[aria-current="page"]');
+            var currentTab = document.querySelector('.admin-nav .tab[data-section][aria-current="page"]');
             if (tab && tab !== currentTab) tab.click();
         }
 

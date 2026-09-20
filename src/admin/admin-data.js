@@ -111,12 +111,13 @@
                     { value: "recognized", label: "Recognized Firewise USA site" },
                     { value: "lapsed", label: "Lapsed — was recognized, renewal overdue" },
                     { value: "inactive", label: "Inactive — hide from the sign-up form" }] },
+                { k: "city", label: "City", type: "text", hint: "Austin, Lago Vista, Jonestown, and so on. Shown to visitors on the sign-up form.", row: "place" },
+                { k: "zips", label: "ZIP codes", type: "text", hint: "Comma separated.", row: "place" },
                 { k: "area", label: "Area it covers", type: "text", hint: "Streets, subdivision, or boundaries as a resident would describe them." },
-                { k: "zips", label: "ZIP codes", type: "text", hint: "Comma separated.", row: "area" },
-                { k: "households", label: "Number of households", type: "number", row: "area",
+                { k: "households", label: "Number of households", type: "number", row: "counts",
                   hint: "How many homes the group covers \u2014 the figure it reports to Firewise USA.", min: "0" },
-                { k: "recognizedYear", label: "Year recognized", type: "number", row: "recognition",
-                  hint: "Required if the status is Recognized.", min: "2000" },
+                { k: "recognizedYear", label: "Year recognized", type: "number", row: "counts",
+                  hint: "Optional. Leave it blank if the date is not to hand.", min: "2000" },
                 { k: "renewalDue", label: "Renewal due", type: "datetime-local", row: "recognition",
                   hint: "Firewise USA recognition has to be renewed. Past it, move the group to Lapsed." },
                 { k: "website", label: "Website", type: "url", hint: "Must start with https://" },
@@ -314,7 +315,7 @@
         // record belongs to. They are normally the same, but if anything has
         // moved on underneath -- a tab pressed while the editor was open --
         // trusting the record's kind would show two sections at once.
-        var tab = document.querySelector('.admin-nav .tab[aria-current="page"]');
+        var tab = document.querySelector('.admin-nav .tab[data-section][aria-current="page"]');
         var name = tab ? tab.getAttribute("data-section") : null;
         ["content", "home", "members", "comms", "groups", "board"].forEach(function (n) {
             var sec = $("section-" + n);
@@ -494,6 +495,7 @@
         state.members.forEach(function (m) { if (m.groupId) counts[m.groupId] = (counts[m.groupId] || 0) + 1; });
         state.groups.forEach(function (g) {
             var bits = [];
+            if (g.city) bits.push(g.city);
             if (g.area) bits.push(g.area);
             if (g.households) bits.push(g.households + " households");
             if (g.recognizedYear) bits.push("recognized " + g.recognizedYear);
@@ -723,7 +725,7 @@
             var sec = $("section-" + n);
             if (sec) sec.hidden = n !== name;
         });
-        Array.prototype.forEach.call(document.querySelectorAll(".admin-nav .tab"), function (t) {
+        Array.prototype.forEach.call(document.querySelectorAll(".admin-nav .tab[data-section]"), function (t) {
             var on = t.getAttribute("data-section") === name;
             t.setAttribute("aria-current", on ? "page" : "false");
         });
@@ -741,10 +743,292 @@
     }
 
     /* ------------------------------------------------------------ */
+    /* Importing Firewise groups from a spreadsheet                  */
+    /*                                                               */
+    /* The board keeps the HOA list in a spreadsheet and refreshes it */
+    /* occasionally. Typing forty-odd groups and their contacts back  */
+    /* into the form by hand is an evening's work and a fresh chance  */
+    /* to mistype an address every time.                              */
+    /*                                                               */
+    /* This posts each group through the same POST /groups the form   */
+    /* uses, so there is one set of rules about what a valid group is */
+    /* and the import cannot quietly write something the form would   */
+    /* have refused. Nothing is sent until the preview has been read. */
+    /* ------------------------------------------------------------ */
+
+    /* A CSV/TSV reader that understands quoted fields containing the
+       delimiter, quoted newlines, and "" as an escaped quote. Written out
+       rather than split(",") because the real file has all three. */
+    function parseDelimited(text, delim) {
+        var rows = [], row = [], field = "", inQuotes = false, i = 0;
+        text = text.replace(/^﻿/, "").replace(/\r\n?/g, "\n");
+        while (i < text.length) {
+            var c = text[i];
+            if (inQuotes) {
+                if (c === '"') {
+                    if (text[i + 1] === '"') { field += '"'; i += 2; continue; }
+                    inQuotes = false; i++; continue;
+                }
+                field += c; i++; continue;
+            }
+            if (c === '"') { inQuotes = true; i++; continue; }
+            if (c === delim) { row.push(field); field = ""; i++; continue; }
+            if (c === "\n") { row.push(field); rows.push(row); row = []; field = ""; i++; continue; }
+            field += c; i++;
+        }
+        row.push(field);
+        rows.push(row);
+        return rows.filter(function (r) { return r.some(function (c) { return c.trim(); }); });
+    }
+
+    /* Tabs or commas, whichever the heading row has more of. Guessing beats
+       asking: the board saves from whichever program is open. */
+    function sniffDelimiter(text) {
+        var head = text.split(/\r?\n/)[0] || "";
+        return (head.split("\t").length > head.split(",").length) ? "\t" : ",";
+    }
+
+    var IMPORT_COLUMNS = {
+        name: ["name", "group name", "group"],
+        city: ["city", "town"],
+        zips: ["zip code", "zip codes", "zip", "zips"],
+        households: ["# households", "households", "number of households", "homes"],
+        status: ["status"],
+        area: ["area it covers", "area"],
+        recognizedYear: ["year recognized", "recognized year"],
+        firstName: ["first name", "firstname"],
+        lastName: ["last name", "lastname"],
+        role: ["role", "title"],
+        phone: ["phone", "telephone"],
+        email: ["email", "email address"],
+        notes: ["notes", "note"]
+    };
+
+    var STATUS_WORDS = {
+        "prospective": "prospective", "in progress": "in-progress", "in-progress": "in-progress",
+        "recognized": "recognized", "lapsed": "lapsed", "inactive": "inactive"
+    };
+
+    function mapHeadings(headings) {
+        var map = {};
+        headings.forEach(function (h, idx) {
+            var key = String(h || "").trim().toLowerCase();
+            Object.keys(IMPORT_COLUMNS).forEach(function (field) {
+                if (map[field] === undefined && IMPORT_COLUMNS[field].indexOf(key) >= 0) map[field] = idx;
+            });
+        });
+        return map;
+    }
+
+    /* Rows to groups. A row with a name starts a group; a row without one
+       adds a contact to the group above it, which is how the board's own
+       spreadsheet already reads. */
+    function rowsToGroups(rows) {
+        var map = mapHeadings(rows[0]);
+        if (map.name === undefined) throw new Error("No 'Name' column found in the first row.");
+
+        var get = function (r, f) { return map[f] === undefined ? "" : String(r[map[f]] || "").trim(); };
+        var groups = [], problems = [], currentG = null;
+        // A word the site does not use is almost always in every row of the
+        // file, so it is counted and reported once rather than forty times.
+        var unknownStatus = {};
+
+        for (var i = 1; i < rows.length; i++) {
+            var r = rows[i], line = i + 1;
+            var name = get(r, "name");
+
+            if (name) {
+                var statusRaw = get(r, "status").toLowerCase();
+                var status = STATUS_WORDS[statusRaw] || "";
+                if (statusRaw && !status) {
+                    var word = get(r, "status");
+                    unknownStatus[word] = (unknownStatus[word] || 0) + 1;
+                }
+                var hh = get(r, "households").replace(/[^\d]/g, "");
+                var yr = get(r, "recognizedYear").replace(/[^\d]/g, "");
+                currentG = {
+                    line: line,
+                    name: name,
+                    city: get(r, "city"),
+                    area: get(r, "area"),
+                    zips: get(r, "zips"),
+                    households: hh,
+                    recognizedYear: yr,
+                    status: status || "prospective",
+                    notes: get(r, "notes"),
+                    leaders: []
+                };
+                groups.push(currentG);
+            } else if (!currentG) {
+                problems.push("Line " + line + ": a contact before any group — skipped.");
+                continue;
+            }
+
+            var first = get(r, "firstName"), last = get(r, "lastName");
+            if (first || last) {
+                currentG.leaders.push({
+                    firstName: first, lastName: last,
+                    role: get(r, "role"), email: get(r, "email"), phone: get(r, "phone")
+                });
+            } else if (!name && (get(r, "email") || get(r, "phone"))) {
+                problems.push("Line " + line + ": contact details with no name — skipped.");
+            }
+            if (!name && get(r, "notes")) {
+                currentG.notes = [currentG.notes, get(r, "notes")].filter(Boolean).join("; ");
+            }
+        }
+        Object.keys(unknownStatus).forEach(function (word) {
+            var n = unknownStatus[word];
+            problems.push("Status '" + word + "' on " + n + " group" + (n === 1 ? "" : "s") +
+                " is not one the site uses — they will come in as Prospective, and you can change them afterwards.");
+        });
+
+        return { groups: groups, problems: problems };
+    }
+
+    var importReady = null;
+
+    function renderImportPreview(parsed) {
+        var host = $("group-import-preview");
+        host.textContent = "";
+
+        var existing = {};
+        state.groups.forEach(function (g) { existing[String(g.name || "").trim().toLowerCase()] = true; });
+
+        var toCreate = [], skipped = [];
+        parsed.groups.forEach(function (g) {
+            if (existing[g.name.toLowerCase()]) { skipped.push(g); return; }
+            toCreate.push(g);
+        });
+
+        var leaders = toCreate.reduce(function (n, g) { return n + g.leaders.length; }, 0);
+
+        host.appendChild(el("p", { class: "form-status show info",
+            text: toCreate.length + " group" + (toCreate.length === 1 ? "" : "s") + " to add, with " +
+                  leaders + " contact" + (leaders === 1 ? "" : "s") + "." }));
+
+        if (skipped.length) {
+            host.appendChild(el("p", { class: "hint",
+                text: "Already on the site, so left alone: " + skipped.map(function (g) { return g.name; }).join(", ") }));
+        }
+        parsed.problems.forEach(function (p) {
+            host.appendChild(el("p", { class: "hint", text: p }));
+        });
+
+        var list = el("ul", { class: "import-list" });
+        toCreate.slice(0, 12).forEach(function (g) {
+            var where = [g.city, g.area].filter(Boolean).join(", ");
+            list.appendChild(el("li", {}, [
+                el("strong", { text: g.name }),
+                document.createTextNode(
+                    (where ? " — " + where : "") +
+                    (g.households ? " · " + g.households + " households" : "") +
+                    " · " + g.leaders.length + " contact" + (g.leaders.length === 1 ? "" : "s"))
+            ]));
+        });
+        if (toCreate.length > 12) list.appendChild(el("li", { class: "hint", text: "…and " + (toCreate.length - 12) + " more." }));
+        host.appendChild(list);
+
+        importReady = toCreate;
+        $("group-import-run").disabled = !importReady || !toCreate.length;
+        $("group-import-run").textContent = toCreate.length ? "Import " + toCreate.length + " groups" : "Import";
+    }
+
+    function runImport() {
+        var queue = importReady || [];
+        var log = $("group-import-log");
+        log.textContent = "";
+        $("group-import-run").disabled = true;
+        $("group-import-file").disabled = true;
+
+        var status = el("p", { class: "form-status show info", text: "Adding 1 of " + queue.length + "…" });
+        log.appendChild(status);
+        var failures = el("ul", { class: "import-list" });
+        log.appendChild(failures);
+
+        var done = 0, failed = 0;
+
+        // One at a time, on purpose: a volunteer site's API is not the place
+        // for forty parallel writes, and a sequential run makes the log read
+        // in the same order as the file.
+        function step() {
+            if (!queue.length) {
+                status.className = "form-status show " + (failed ? "err" : "ok");
+                status.textContent = done + " group" + (done === 1 ? "" : "s") + " added" +
+                    (failed ? ", " + failed + " failed — see below." : ".");
+                $("group-import-file").disabled = false;
+                return refresh("group").then(function () { renderGroups(); });
+            }
+            var g = queue.shift();
+            status.textContent = "Adding " + (done + failed + 1) + " of " + (done + failed + 1 + queue.length) + ": " + g.name;
+
+            var body = {
+                name: g.name, status: g.status,
+                city: g.city || undefined,
+                area: g.area || undefined,
+                zips: g.zips || "",
+                households: g.households || "",
+                recognizedYear: g.recognizedYear || "",
+                notes: g.notes || undefined,
+                leaders: g.leaders
+            };
+            return api("POST", "/groups", body)
+                .then(function () { done++; })
+                .catch(function (e) {
+                    failed++;
+                    failures.appendChild(el("li", {}, [
+                        el("strong", { text: g.name }), document.createTextNode(" (line " + g.line + "): " + e.message)
+                    ]));
+                })
+                .then(step);
+        }
+        step();
+    }
+
+    function openImport() {
+        $("group-import").hidden = false;
+        $("group-import-preview").textContent = "";
+        $("group-import-log").textContent = "";
+        $("group-import-file").value = "";
+        $("group-import-file").disabled = false;
+        $("group-import-run").disabled = true;
+        importReady = null;
+    }
+
+    /* ------------------------------------------------------------ */
     /* Wiring                                                        */
     /* ------------------------------------------------------------ */
 
-    Array.prototype.forEach.call(document.querySelectorAll(".admin-nav .tab"), function (t) {
+    $("group-import-open").addEventListener("click", openImport);
+    $("group-import-cancel").addEventListener("click", function () { $("group-import").hidden = true; });
+    $("group-import-run").addEventListener("click", runImport);
+    $("group-import-file").addEventListener("change", function (e) {
+        var file = e.target.files && e.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+            try {
+                var text = String(reader.result || "");
+                var rows = parseDelimited(text, sniffDelimiter(text));
+                if (rows.length < 2) throw new Error("That file has headings but no rows under them.");
+                renderImportPreview(rowsToGroups(rows));
+            } catch (err) {
+                $("group-import-preview").textContent = "";
+                $("group-import-preview").appendChild(el("p", { class: "form-status show err", text: err.message }));
+                $("group-import-run").disabled = true;
+            }
+        };
+        reader.readAsText(file);
+    });
+
+    /* [data-section] matters. Training and Help are .tab elements too, and
+       getAttribute returns null for a missing attribute — so an unfiltered
+       selector wired them to showSection(null), which hid every section and
+       then, because null === null, handed aria-current="page" to Training and
+       Help instead of the real tab. Everything that asks "which tab is
+       current" read Training back, found no lesson for a section named null,
+       and hid the Training button until another tab was clicked. */
+    Array.prototype.forEach.call(document.querySelectorAll(".admin-nav .tab[data-section]"), function (t) {
         t.addEventListener("click", function () { showSection(t.getAttribute("data-section")); });
     });
 

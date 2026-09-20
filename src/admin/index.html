@@ -303,7 +303,41 @@
         <div id="section-groups" hidden>
             <div class="admin-actions">
                 <button type="button" class="btn btn-primary btn-small" id="group-new">+ Add a Firewise group</button>
+                <button type="button" class="btn btn-outline btn-small" id="group-import-open">Import from a file</button>
             </div>
+
+            <!-- Import panel. Hidden until asked for, so the ordinary job of
+                 adding one group is not crowded by a job done once a year.
+                 Nothing is sent until the preview has been read and Import
+                 pressed. -->
+            <div id="group-import" class="import-panel" hidden>
+                <h3>Import Firewise groups from a file</h3>
+                <p class="hint">
+                    A spreadsheet saved as CSV or tab-separated text, with headings in the first
+                    row. A row with a group name starts a new group; a row with no group name adds
+                    another contact to the group above it.
+                </p>
+                <p class="hint">
+                    Columns read: <strong>Name</strong>, City, ZIP Code, # Households, Status,
+                    Area it covers, Year recognized, First Name, Last Name, Role, Phone, Email,
+                    NOTES. Anything else is ignored.
+                </p>
+
+                <div class="field">
+                    <label for="group-import-file">Choose the file</label>
+                    <input type="file" id="group-import-file" accept=".csv,.tsv,.txt,text/csv,text/plain">
+                </div>
+
+                <div id="group-import-preview" aria-live="polite"></div>
+
+                <div class="admin-actions">
+                    <button type="button" class="btn btn-primary btn-small" id="group-import-run" disabled>Import</button>
+                    <button type="button" class="btn btn-outline btn-small" id="group-import-cancel">Close</button>
+                </div>
+
+                <div id="group-import-log" aria-live="polite"></div>
+            </div>
+
             <div id="group-list" aria-live="polite"></div>
         </div>
 

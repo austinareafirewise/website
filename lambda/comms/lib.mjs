@@ -46,7 +46,7 @@ export const ENV = {
 
 export const LIMITS = {
     name: 120, firstName: 60, lastName: 60, area: 120, notes: 1000, zip: 10,
-    groupName: 120, groupArea: 300, groupAbout: 2000, role: 80, personName: 120,
+    groupName: 120, groupCity: 80, groupArea: 300, groupAbout: 2000, role: 80, personName: 120,
     commName: 120, subject: 150, emailBody: 20000, smsBody: 480,
     smsSegmentChars: 160, smsMaxSegments: 3,
 };
@@ -563,7 +563,7 @@ export async function allGroups() {
    list of volunteers' phone numbers is not something to publish by
    accident. */
 export function publicGroup(g) {
-    return { groupId: g.groupId, name: g.name, area: g.area || "", status: g.status };
+    return { groupId: g.groupId, name: g.name, city: g.city || "", area: g.area || "", status: g.status };
 }
 
 export async function allBoard() {

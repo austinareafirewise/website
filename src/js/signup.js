@@ -62,7 +62,11 @@
         groups.forEach(function (g) {
             var o = document.createElement("option");
             o.value = g.groupId;
-            o.textContent = g.name + (g.area ? " — " + g.area : "");
+            // City first, then the area, so two groups with similar names are
+            // told apart by the town they are in. Most groups have a city and
+            // no area, so this is usually the only thing distinguishing them.
+            var where = [g.city, g.area].filter(Boolean).join(", ");
+            o.textContent = g.name + (where ? " — " + where : "");
             sel.appendChild(o);
         });
         document.getElementById("wrap-group").hidden = false;

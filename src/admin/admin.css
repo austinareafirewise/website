@@ -428,3 +428,28 @@ blockquote.md-demo { margin: 0; padding-left: 12px; border-left: 3px solid var(-
 #notice-modal h2 { font-size: 1.4rem; margin-bottom: .4em; }
 #notice-modal p { margin-bottom: 0; color: var(--muted); }
 #notice-modal .admin-buttons { margin-top: 20px; }
+
+/* ---------- Import panel ----------
+   Sunk into the page rather than raised, because it is a workbench you open,
+   fill and close again, not a record that lives on the screen. */
+
+.import-panel {
+    background: var(--sunk, #f2f1ea);
+    border: 1px solid var(--line, #e2e0d8);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin: 0 0 20px;
+}
+
+.import-panel h3 { margin-top: 0; }
+
+.import-panel .field { margin: 14px 0; }
+
+.import-list {
+    margin: 12px 0 0;
+    padding-left: 20px;
+    font-size: .93rem;
+    line-height: 1.6;
+}
+
+.import-list li { margin-bottom: 3px; }
