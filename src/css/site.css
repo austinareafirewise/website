@@ -32,7 +32,11 @@
     --alert-bg: #FDF0E4;
     --alert-line: var(--orange);
 
-    --wrap: 1140px;
+    /* The page's own column. Wide enough that a laptop is not reading a
+       narrow strip down the middle of its screen, and still short enough
+       that a line of body text does not run past what an eye tracks
+       comfortably -- the prose blocks set their own limit in ch below. */
+    --wrap: 1280px;
     --radius: 12px;
     --shadow: 0 8px 26px rgba(25, 70, 43, .08);
 }
@@ -156,16 +160,20 @@ section[id] { scroll-margin-top: 92px; }
 /* ---------- Conditions banner ----------
    Current fire conditions / burn ban. Edit or remove per season. */
 
+/* One line, and a short one. It sits above the header on every page, so
+   every pixel it takes is taken from the page underneath it. The county's
+   wording and the time of the reading hang off it as a tooltip and are read
+   out to a screen reader; they are not worth a second line here. */
 .conditions {
     background: var(--alert-bg);
     border-bottom: 3px solid var(--alert-line);
-    padding: 12px 20px;
-    font-size: .97rem;
+    padding: 7px 20px;
+    font-size: .92rem;
 }
 
 .conditions .wrap {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     align-items: baseline;
     flex-wrap: wrap;
     justify-content: center;
@@ -395,6 +403,19 @@ section[id] { scroll-margin-top: 92px; }
     gap: 12px;
 }
 
+/* One row from tablet width up. The four are a set -- four ways in, read
+   across -- and three-and-one reads as three, plus an afterthought. They are
+   allowed to give up padding and a little type size to stay on the line
+   rather than wrapping; below that they stack properly instead. */
+@media (min-width: 760px) {
+    .cta-strip .wrap { flex-wrap: nowrap; gap: 10px; }
+    .cta-strip .btn {
+        white-space: nowrap;
+        padding: 12px clamp(10px, 1.6vw, 22px);
+        font-size: clamp(.86rem, 1.15vw, .98rem);
+    }
+}
+
 .hero .kicker,
 .page-head .kicker {
     text-transform: uppercase;
@@ -491,6 +512,7 @@ section[id] { scroll-margin-top: 92px; }
 }
 .conditions.is-clear .label { color: var(--green-700); }
 
+/* Kept for a reading that is shown in full somewhere other than the bar. */
 .conditions .checked {
     display: block;
     font-size: .82rem;

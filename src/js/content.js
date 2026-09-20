@@ -506,14 +506,24 @@
         bar.className = "conditions " + (ban ? "is-ban" : "is-clear");
         label.textContent = ban ? "Burn ban in effect" : "No burn ban";
 
+        // One line. This bar sits above everything on every page, so it says
+        // the one thing that has to be read from across the room and keeps
+        // the county's own wording and the reading time within reach.
+        var detail = [status.detail || "", "Checked " + fmtDate(status.checkedAt, true) + "."]
+            .filter(Boolean).join(" ");
+
         text.textContent = "";
-        text.appendChild(document.createTextNode((status.detail || "") + " "));
-        text.appendChild(el("a", {
+        var link = el("a", {
             href: status.source, class: "ext", target: "_blank", rel: "noopener",
             text: "Travis County's burn ban page"
-        }));
-        text.appendChild(document.createTextNode(" is the authority."));
-        text.appendChild(el("span", { class: "checked", text: "Checked " + fmtDate(status.checkedAt, true) + "." }));
+        });
+        text.appendChild(link);
+
+        // The detail hangs off the bar as a tooltip, and is also read out --
+        // a title attribute alone is a mouse-only fact, and somebody on a
+        // phone or a screen reader would simply never get it.
+        bar.title = detail;
+        text.appendChild(el("span", { class: "sr-only", text: " " + detail }));
     }
 
     function loadBurnBan() {
