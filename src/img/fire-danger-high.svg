@@ -4,11 +4,11 @@
 
     <!-- The gauge. Every level is drawn; the one in force is the one at full
          strength, so the sign reads at a glance and still lists the scale. -->
-        <path d="M 450.0 400.0 L 150.0 400.0 A 300 300 0 0 1 207.3 223.7 Z" fill="#3f9c35" stroke="#1a1a1a" stroke-width="3" />
-        <path d="M 450.0 400.0 L 207.3 223.7 A 300 300 0 0 1 357.3 114.7 Z" fill="#2e9bd6" stroke="#1a1a1a" stroke-width="3" />
-        <path d="M 450.0 400.0 L 357.3 114.7 A 300 300 0 0 1 542.7 114.7 Z" fill="#f7e017" stroke="#1a1a1a" stroke-width="4" />
-        <path d="M 450.0 400.0 L 542.7 114.7 A 300 300 0 0 1 692.7 223.7 Z" fill="#f18a21" stroke="#1a1a1a" stroke-width="3" />
-        <path d="M 450.0 400.0 L 692.7 223.7 A 300 300 0 0 1 750.0 400.0 Z" fill="#c8202f" stroke="#1a1a1a" stroke-width="3" />
+        <path d="M 450.0 400.0 L 150.0 400.0 A 300 300 0 0 1 207.3 223.7 Z" fill="#3f9c35" stroke="#1a1a1a" stroke-width="3" stroke-linejoin="round" />
+        <path d="M 450.0 400.0 L 207.3 223.7 A 300 300 0 0 1 357.3 114.7 Z" fill="#2e9bd6" stroke="#1a1a1a" stroke-width="3" stroke-linejoin="round" />
+        <path d="M 450.0 400.0 L 357.3 114.7 A 300 300 0 0 1 542.7 114.7 Z" fill="#f7e017" stroke="#1a1a1a" stroke-width="4" stroke-linejoin="round" />
+        <path d="M 450.0 400.0 L 542.7 114.7 A 300 300 0 0 1 692.7 223.7 Z" fill="#f18a21" stroke="#1a1a1a" stroke-width="3" stroke-linejoin="round" />
+        <path d="M 450.0 400.0 L 692.7 223.7 A 300 300 0 0 1 750.0 400.0 Z" fill="#c8202f" stroke="#1a1a1a" stroke-width="3" stroke-linejoin="round" />
     <line x1="150" y1="400" x2="750" y2="400" stroke="#1a1a1a" stroke-width="5" />
         <text x="124.7" y="294.3" transform="rotate(288.0 124.7 294.3)" text-anchor="middle" dominant-baseline="middle" font-family="Oswald, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif" font-size="38" font-weight="700" fill="#1a1a1a" letter-spacing="1">LOW</text>
         <text x="249.0" y="123.3" transform="rotate(324.0 249.0 123.3)" text-anchor="middle" dominant-baseline="middle" font-family="Oswald, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif" font-size="38" font-weight="700" fill="#1a1a1a" letter-spacing="1">MODERATE</text>
@@ -27,7 +27,19 @@
             <stop offset="0.78" stop-color="#ef7d19" />
             <stop offset="1" stop-color="#d0341c" />
         </linearGradient>
+        <!-- The pointer is cut off at the baseline. Turned far enough, the
+             corner at the foot of the shaft swings below the line and shows
+             as a nick under it; this is the one shape that has to stop
+             exactly where the gauge does.
+
+             The clip sits on a group outside the rotation. On the rotating
+             group itself it turns with the arrow, which clips the wrong half
+             and leaves the nick exactly where it was. -->
+        <clipPath id="gauge-high">
+            <rect x="0" y="0" width="900" height="400" />
+        </clipPath>
     </defs>
+    <g clip-path="url(#gauge-high)">
     <g transform="rotate(0.0 450 400)">
         <path d="M 450 116
                  L 508 212
@@ -38,15 +50,11 @@
                  L 392 212 Z"
               fill="url(#arrow-high)" stroke="#1a1a1a" stroke-width="5" stroke-linejoin="round" />
     </g>
-        <path d="M 390 400 C 389.76 382 373 364 387.36 346 C 420 366 421 384 421 400 Z" fill="#d0341c" />
-        <path d="M 479 400 C 479.03999999999996 383 480 366 512.64 349 C 527 368 510 385 510 400 Z" fill="#d0341c" />
-        <path d="M 407 400 C 406.79999999999995 372 391 346 412.32 318 C 447 349 444 375 444 400 Z" fill="#e2521b" />
-        <path d="M 457 400 C 457.20000000000005 373 455 349 490.32 322 C 511 352 495 377 495 400 Z" fill="#e2521b" />
-        <path d="M 421 400 C 421.08000000000004 363 407 328 434.16 291 C 468 332 462 367 462 400 Z" fill="#ef7d19" />
-        <path d="M 441 400 C 441.36 365 437 333 469.68 298 C 493 337 479 369 479 400 Z" fill="#ef7d19" />
-        <path d="M 431 400 C 431.28 356 420 314 446.4 270 C 476 319 469 361 469 400 Z" fill="#f9a81a" />
-        <path d="M 441 400 C 441.3 369 438 340 455.04 308 C 468 343 462 373 462 400 Z" fill="#ffd645" />
-    <circle cx="450" cy="400" r="14" fill="#1a1a1a" />
+    </g>
+        <path transform="translate(450 400) scale(0.95)" d="M -75 0 C -79 -44 -54 -63 -45 -97 C -41 -71 -31 -59 -19 -53 C -15 -85 -5 -113 6 -136 C 16 -109 25 -87 33 -63 C 44 -73 57 -67 63 -43 C 70 -29 74 -15 75 0 Z" fill="#d0341c" />
+        <path transform="translate(456 400) scale(0.68)" d="M -75 0 C -79 -44 -54 -63 -45 -97 C -41 -71 -31 -59 -19 -53 C -15 -85 -5 -113 6 -136 C 16 -109 25 -87 33 -63 C 44 -73 57 -67 63 -43 C 70 -29 74 -15 75 0 Z" fill="#ef7d19" />
+        <path transform="translate(445 400) scale(0.44)" d="M -75 0 C -79 -44 -54 -63 -45 -97 C -41 -71 -31 -59 -19 -53 C -15 -85 -5 -113 6 -136 C 16 -109 25 -87 33 -63 C 44 -73 57 -67 63 -43 C 70 -29 74 -15 75 0 Z" fill="#f9c01b" />
+        <path transform="translate(453 400) scale(0.23)" d="M -75 0 C -79 -44 -54 -63 -45 -97 C -41 -71 -31 -59 -19 -53 C -15 -85 -5 -113 6 -136 C 16 -109 25 -87 33 -63 C 44 -73 57 -67 63 -43 C 70 -29 74 -15 75 0 Z" fill="#ffe884" />
 
     <!-- The word, which is what somebody actually reads -->
     <rect x="154" y="432" width="592" height="132" rx="8"

@@ -76,42 +76,45 @@ def wedge(i):
     return f"M {CX:.1f} {CY:.1f} L {x0:.1f} {y0:.1f} A {R_ARC} {R_ARC} 0 0 1 {x1:.1f} {y1:.1f} Z"
 
 
+# One flame silhouette, drawn once around a base at the origin with the tips
+# running up in negative y. Three tongues of unequal height with real valleys
+# between them: a flame is not a leaf, and a symmetrical one always looks like
+# one. Everything else about the fire is this shape at four sizes.
+FLAME = (
+    "M -75 0 "
+    "C -79 -44 -54 -63 -45 -97 "     # up the left edge to the left tongue
+    "C -41 -71 -31 -59 -19 -53 "     # down into the valley beside it
+    "C -15 -85 -5 -113 6 -136 "      # up to the tall middle tip
+    "C 16 -109 25 -87 33 -63 "       # down its right shoulder
+    "C 44 -73 57 -67 63 -43 "        # the short right tongue
+    "C 70 -29 74 -15 75 0 Z"         # and back down to the base
+)
+
+
 def flames():
     """Fire licking up out of the middle of the gauge.
 
     Drawn outside the pointer's rotation so it always rises, whichever way the
-    pointer is turned -- fire does not lean because the needle does.
+    pointer is turned -- fire does not lean because the needle does. Kept low
+    and close in, the way it is on the roadside sign, rather than climbing the
+    shaft it is supposed to be burning under.
 
-    Each lick is two curves meeting at a point, with a lean that carries the
-    tip off to one side. Symmetrical ones read as a leaf; the lean is what
-    makes them read as flame.
+    The nesting is what makes it read as fire rather than as a shape: the same
+    silhouette at four sizes, each one hotter, each shifted a little off the
+    one under it so no two edges run parallel.
     """
-    #  x, half width, height, lean at the tip, color
-    licks = [
-        (-62, 20, 104, -30, "#d0341c"),
-        (62, 20, 98, 30, "#d0341c"),
-        (-34, 24, 158, -22, "#e2521b"),
-        (36, 24, 150, 24, "#e2521b"),
-        (-12, 26, 210, -12, "#ef7d19"),
-        (14, 24, 196, 16, "#ef7d19"),
-        (0, 24, 250, -6, "#f9a81a"),
-        (2, 13, 176, 6, "#ffd645"),
+    #  scale, sideways shift, color
+    layers = [
+        (0.95, 0, "#d0341c"),
+        (0.68, 6, "#ef7d19"),
+        (0.44, -5, "#f9c01b"),
+        (0.23, 3, "#ffe884"),
     ]
-    # Kept low and close in. On the roadside sign the fire sits at the foot of
-    # the arrow; any taller and it hides the thing it is burning under.
-    out = []
-    for x0, hw, h, lean, col in licks:
-        x0, hw, h, lean = x0 * 0.72, hw * 0.78, h * 0.52, lean * 0.6
-        x = CX + x0
-        tip_x, tip_y = x + lean, CY - h
-        out.append(
-            f'        <path d="M {x - hw:.0f} {CY} '
-            f'C {x - hw} {CY - h * 0.34:.0f} {x - hw * 1.5 + lean * 0.5:.0f} {CY - h * 0.66:.0f} '
-            f'{tip_x} {tip_y:.0f} '
-            f'C {x + hw * 1.5 + lean * 0.5:.0f} {CY - h * 0.62:.0f} {x + hw:.0f} {CY - h * 0.3:.0f} '
-            f'{x + hw:.0f} {CY} Z" fill="{col}" />'
-        )
-    return "\n".join(out)
+    return "\n".join(
+        f'        <path transform="translate({CX + dx} {CY}) scale({sc})" '
+        f'd="{FLAME}" fill="{col}" />'
+        for sc, dx, col in layers
+    )
 
 
 def sign(slug, label, color, ink, index, theme, suffix):
@@ -120,9 +123,12 @@ def sign(slug, label, color, ink, index, theme, suffix):
     mid = 180 + 36 * index + 18          # the middle of this level's wedge
     turn = mid - 270                     # the pointer is drawn upright, then turned
 
+    # Round joins: five wedges meeting at a point is five mitered corners, and
+    # a miter on a 36-degree apex shoots a spike out the far side of the
+    # center. It showed as a thorn hanging under the baseline.
     wedges = "\n".join(
         f'        <path d="{wedge(i)}" fill="{LEVELS[i][2]}" '
-        f'stroke="{line}" stroke-width="{4 if i == index else 3}" />'
+        f'stroke="{line}" stroke-width="{4 if i == index else 3}" stroke-linejoin="round" />'
         for i in range(5)
     )
 
@@ -162,7 +168,19 @@ def sign(slug, label, color, ink, index, theme, suffix):
             <stop offset="0.78" stop-color="#ef7d19" />
             <stop offset="1" stop-color="#d0341c" />
         </linearGradient>
+        <!-- The pointer is cut off at the baseline. Turned far enough, the
+             corner at the foot of the shaft swings below the line and shows
+             as a nick under it; this is the one shape that has to stop
+             exactly where the gauge does.
+
+             The clip sits on a group outside the rotation. On the rotating
+             group itself it turns with the arrow, which clips the wrong half
+             and leaves the nick exactly where it was. -->
+        <clipPath id="gauge-{slug}{suffix}">
+            <rect x="0" y="0" width="{W}" height="{CY}" />
+        </clipPath>
     </defs>
+    <g clip-path="url(#gauge-{slug}{suffix})">
     <g transform="rotate({turn:.1f} {CX} {CY})">
         <path d="M {CX} {CY - R_ARC + 16}
                  L {CX + 58} {CY - R_ARC + 112}
@@ -173,8 +191,8 @@ def sign(slug, label, color, ink, index, theme, suffix):
                  L {CX - 58} {CY - R_ARC + 112} Z"
               fill="url(#arrow-{slug}{suffix})" stroke="{line}" stroke-width="5" stroke-linejoin="round" />
     </g>
+    </g>
 {flames()}
-    <circle cx="{CX}" cy="{CY}" r="14" fill="{line}" />
 
     <!-- The word, which is what somebody actually reads -->
     <rect x="{CX - 296}" y="{BANNER_TOP}" width="592" height="132" rx="8"
