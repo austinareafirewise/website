@@ -38,7 +38,9 @@
           paint-order="stroke" letter-spacing="2">HIGH</text>
 
     <text x="450" y="656" text-anchor="middle" font-family="Oswald, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif"
-          font-size="84" font-weight="700" fill="#8f1d1d" letter-spacing="2">TODAY&#8217;S FIRE</text>
+          font-size="84" font-weight="700" fill="#8f1d1d" stroke="none" stroke-width="0"
+          stroke-linejoin="round" paint-order="stroke" letter-spacing="2">TODAY&#8217;S FIRE</text>
     <text x="450" y="744" text-anchor="middle" font-family="Oswald, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif"
-          font-size="84" font-weight="700" fill="#8f1d1d" letter-spacing="2">DANGER</text>
+          font-size="84" font-weight="700" fill="#8f1d1d" stroke="none" stroke-width="0"
+          stroke-linejoin="round" paint-order="stroke" letter-spacing="2">DANGER</text>
 </svg>

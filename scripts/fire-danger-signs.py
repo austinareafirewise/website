@@ -53,8 +53,13 @@ FONT = "Oswald, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif"
 # What changes between the two versions: the outlines and the two runs of
 # text that sit on the transparent background. Nothing else.
 THEMES = {
-    "": {"line": "#1a1a1a", "label": "#1a1a1a", "title": "#8f1d1d"},
-    "-on-dark": {"line": "#f2f2f2", "label": "#ffffff", "title": "#ff9d90"},
+    "": {"line": "#1a1a1a", "label": "#1a1a1a", "title": "#8f1d1d",
+         "title_edge": "none", "title_edge_w": 0},
+    # The title keeps its red on a dark page and is cut out from it with a
+    # white edge instead, rather than being tinted to something paler. The red
+    # is the one thing on the sign that is the Alliance's own color.
+    "-on-dark": {"line": "#f2f2f2", "label": "#ffffff", "title": "#8f1d1d",
+                 "title_edge": "#ffffff", "title_edge_w": 8},
 }
 
 
@@ -73,6 +78,7 @@ def wedge(i):
 
 def sign(slug, label, color, ink, index, theme, suffix):
     line, label_ink, title_ink = theme["line"], theme["label"], theme["title"]
+    edge, edge_w = theme["title_edge"], theme["title_edge_w"]
     mid = 180 + 36 * index + 18          # the middle of this level's wedge
     turn = mid - 270                     # the pointer is drawn upright, then turned
 
@@ -129,9 +135,11 @@ def sign(slug, label, color, ink, index, theme, suffix):
           paint-order="stroke" letter-spacing="2">{label}</text>
 
     <text x="{CX}" y="{BANNER_TOP + 224}" text-anchor="middle" font-family="{FONT}"
-          font-size="84" font-weight="700" fill="{title_ink}" letter-spacing="2">TODAY&#8217;S FIRE</text>
+          font-size="84" font-weight="700" fill="{title_ink}" stroke="{edge}" stroke-width="{edge_w}"
+          stroke-linejoin="round" paint-order="stroke" letter-spacing="2">TODAY&#8217;S FIRE</text>
     <text x="{CX}" y="{BANNER_TOP + 312}" text-anchor="middle" font-family="{FONT}"
-          font-size="84" font-weight="700" fill="{title_ink}" letter-spacing="2">DANGER</text>
+          font-size="84" font-weight="700" fill="{title_ink}" stroke="{edge}" stroke-width="{edge_w}"
+          stroke-linejoin="round" paint-order="stroke" letter-spacing="2">DANGER</text>
 </svg>
 '''
 
