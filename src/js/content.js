@@ -293,12 +293,70 @@
         var lede = document.querySelector(".hero .lede");
         if (lede && home.lede) lede.textContent = home.lede;
 
-        var pic = (home.pictures || [])[0];
-        if (!pic) return;
         var wrap = document.querySelector(".hero .wrap");
         if (!wrap) return;
+
+        var pic = (home.pictures || [])[0];
+        if (pic) {
+            wrap.classList.add("hero-with-picture");
+            wrap.insertBefore(figure(pic, false, "hero-figure"), wrap.firstChild);
+            return;
+        }
+        // No picture: today's fire danger goes there instead, unless the
+        // board has turned it off. A picture the board chose always wins --
+        // it is the one thing in the banner somebody decided on purpose.
+        if (home.showFireDanger !== false) loadFireDanger(wrap);
+    }
+
+    /* ------------------------------------------------------------ */
+    /* Today's fire danger, in the banner                            */
+    /* ------------------------------------------------------------ */
+
+    /* A day and a half. The rating is for a named day, and one that old is
+       yesterday's danger -- which is worse than no sign at all, because a
+       sign is read as today. Longer than the burn ban's six hours because
+       this is published once a day, not continuously. */
+    var FIRE_DANGER_MAX_AGE_MS = 36 * 60 * 60 * 1000;
+
+    var FIRE_DANGER_STATES = {
+        "low": 1, "moderate": 1, "high": 1, "very-high": 1, "extreme": 1
+    };
+
+    function loadFireDanger(wrap) {
+        fetch(cfg.contentBase.replace(/\/$/, "") + "/firedanger.json", { credentials: "omit" })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (status) { renderFireDanger(wrap, status); })
+            .catch(function () { /* no sign, and no error in front of a visitor */ });
+    }
+
+    function renderFireDanger(wrap, status) {
+        if (!status || !FIRE_DANGER_STATES[status.state]) return;
+        var checked = Date.parse(status.checkedAt);
+        if (isNaN(checked) || Date.now() - checked > FIRE_DANGER_MAX_AGE_MS) return;
+        // The banner may have gained a picture between the page loading and
+        // this answering. The picture wins.
+        if (wrap.querySelector(".hero-figure")) return;
+
+        var img = el("img", {
+            src: "img/fire-danger-" + status.state + ".svg",
+            // The credit lives here rather than under the sign: it belongs to
+            // the rating, and a line of small print under a road sign is the
+            // first thing a reader's eye throws away.
+            alt: "Today's fire danger: " + (status.label || status.state) +
+                 ". Rating from " + (status.credit || "Texas A&M Forest Service") + ".",
+            width: "900", height: "800"
+        });
+        var link = el("a", {
+            class: "fire-danger-link",
+            href: status.source || "https://twc.tamu.edu/tfd",
+            target: "_blank",
+            rel: "noopener"
+        });
+        link.appendChild(img);
+
+        var fig = el("figure", { class: "hero-figure fire-danger" });
+        fig.appendChild(link);
         wrap.classList.add("hero-with-picture");
-        var fig = figure(pic, false, "hero-figure");
         wrap.insertBefore(fig, wrap.firstChild);
     }
 

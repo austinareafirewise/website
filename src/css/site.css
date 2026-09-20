@@ -447,6 +447,31 @@ section[id] { scroll-margin-top: 92px; }
     .hero-figure { display: none; }
 }
 
+/* Today's fire danger, drawn in the banner when the board has not put a
+   picture there. It is not decoration, so unlike a picture it stays on a
+   phone -- a rating is the one thing in the banner somebody might act on. */
+.hero-figure.fire-danger { margin: 0; }
+.hero-figure.fire-danger img {
+    border-radius: 0;
+    box-shadow: none;
+}
+.fire-danger-link {
+    display: block;
+    border-radius: var(--radius);
+}
+.fire-danger-link:focus-visible {
+    outline: 3px solid var(--green-700);
+    outline-offset: 4px;
+}
+
+@media (max-width: 899px) {
+    .hero-figure.fire-danger {
+        display: block;
+        max-width: 300px;
+        margin: 0 auto 24px;
+    }
+}
+
 /* ---------- The burn ban, in the conditions bar ----------
    It lives in the bar rather than the hero because it is a standing condition
    of the county, not part of the introduction to the Alliance -- and because

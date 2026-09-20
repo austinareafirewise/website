@@ -1134,6 +1134,7 @@
     }
 
     function fillHome() {
+        $("f-home-firedanger").checked = home.showFireDanger !== false;
         $("f-home-kicker").value = home.kicker || "";
         $("f-home-headline").value = home.headline || "";
         $("f-home-lede").value = home.lede || "";
@@ -1142,6 +1143,7 @@
 
     function saveHome(quiet) {
         var body = {
+            showFireDanger: $("f-home-firedanger").checked,
             kicker: $("f-home-kicker").value,
             headline: $("f-home-headline").value,
             lede: $("f-home-lede").value,
@@ -1228,6 +1230,7 @@
         ["f-home-kicker", "f-home-headline", "f-home-lede"].forEach(function (id) {
             $(id).addEventListener("input", function () { homeDirty = true; });
         });
+        $("f-home-firedanger").addEventListener("change", function () { homeDirty = true; });
         $("home-save").addEventListener("click", function () { saveHome().catch(function () {}); });
         $("home-preview").addEventListener("click", function () {
             var ensure = homeDirty ? saveHome(true) : Promise.resolve(home);

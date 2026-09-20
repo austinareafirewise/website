@@ -55,6 +55,9 @@ const KINDS = new Set(["news", "notice"]);
    the day this arrives and changes only when somebody chooses to change it. */
 const HOME_KEY = "__home";
 const HOME_DEFAULT = {
+    // On by default. A banner with no picture and no sign is a banner with a
+    // hole in it, and the sign is the more useful of the two.
+    showFireDanger: true,
     kicker: "Travis County, Texas",
     headline: "Wildfire moves fast.\nPrepare before it happens.",
     lede: "The Austin Area Firewise Alliance is a volunteer organization helping Travis " +
@@ -274,6 +277,9 @@ async function putHome(input, who) {
         id: HOME_KEY,
         // The small line above the headline. Optional: empty means the page
         // shows no line at all rather than an empty one.
+        // Only consulted when there is no picture: a picture the board chose
+        // beats a sign the site drew.
+        showFireDanger: input.showFireDanger !== false,
         kicker: str(input.kicker, "The line above the headline", 60),
         headline: str(input.headline, "Headline", 160, true),
         lede: str(input.lede, "Opening paragraph", 1200, true),

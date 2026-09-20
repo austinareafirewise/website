@@ -226,6 +226,7 @@ Resources:
             Resource:
               - !Sub "${ContentBucket.Arn}/content.json"
               - !Sub "${ContentBucket.Arn}/burnban.json"
+              - !Sub "${ContentBucket.Arn}/firedanger.json"
               - !Sub "${ContentBucket.Arn}/images/*"
 
   # ==================================================================
@@ -302,6 +303,79 @@ Resources:
   BurnBanInvoke:
     Type: AWS::Lambda::Permission
     Properties: {FunctionName: !Ref BurnBanFunction, Action: lambda:InvokeFunction, Principal: events.amazonaws.com, SourceArn: !GetAtt BurnBanSchedule.Arn}
+
+  # ==================================================================
+  # Today's fire danger rating, read from Texas A&M Forest Service's
+  # daily NFDRS file and published as firedanger.json. The home page
+  # draws the five-level sign from it when the board has not put a
+  # picture in the banner. Publishes nothing it cannot read today's
+  # rating from: see the head of lambda/firedanger/index.mjs.
+  # ==================================================================
+
+  FireDangerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: aafa-firedanger-function
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: lambda.amazonaws.com}
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+      Policies:
+        - PolicyName: publish-fire-danger
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              # One key, as with the burn ban.
+              - Effect: Allow
+                Action: [s3:PutObject]
+                Resource: !Sub "${ContentBucket.Arn}/firedanger.json"
+
+  FireDangerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: aafa-firedanger
+      Description: Reads the Texas Fire Danger daily file and publishes firedanger.json.
+      Runtime: nodejs22.x
+      Handler: index.handler
+      Architectures: [arm64]
+      MemorySize: 256
+      Timeout: 25
+      Role: !GetAtt FireDangerRole.Arn
+      Code: ../lambda/firedanger
+      Environment:
+        Variables:
+          CONTENT_BUCKET: !Ref ContentBucket
+          CONTENT_KEY: firedanger.json
+          SOURCE_BASE: https://twc.tamu.edu/weather_images
+          SOURCE_URL: https://twc.tamu.edu/tfd
+          CONTACT_URL: !Ref SiteOrigin
+      Tags:
+        - {Key: project, Value: website}
+
+  FireDangerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${FireDangerFunction}"
+      RetentionInDays: 90
+
+  # Every three hours. The rating changes once a day, but the observed file
+  # for today replaces the forecast some time during the morning, and this is
+  # what picks that up without watching for it.
+  FireDangerSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: aafa-firedanger-check
+      Description: Read today's Texas fire danger rating.
+      ScheduleExpression: rate(3 hours)
+      Targets: [{Id: firedanger, Arn: !GetAtt FireDangerFunction.Arn}]
+
+  FireDangerInvoke:
+    Type: AWS::Lambda::Permission
+    Properties: {FunctionName: !Ref FireDangerFunction, Action: lambda:InvokeFunction, Principal: events.amazonaws.com, SourceArn: !GetAtt FireDangerSchedule.Arn}
 
   # ==================================================================
   # The API
