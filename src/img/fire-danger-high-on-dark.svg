@@ -16,7 +16,18 @@
         <text x="651.0" y="123.3" transform="rotate(396.0 651.0 123.3)" text-anchor="middle" dominant-baseline="middle" font-family="Oswald, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif" font-size="38" font-weight="700" fill="#ffffff" letter-spacing="1">VERY HIGH</text>
         <text x="775.3" y="294.3" transform="rotate(432.0 775.3 294.3)" text-anchor="middle" dominant-baseline="middle" font-family="Oswald, 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif" font-size="38" font-weight="700" fill="#ffffff" letter-spacing="1">EXTREME</text>
 
-    <!-- The pointer -->
+    <!-- The pointer. The same yellow-to-ember on every sign: it is one object
+         that moves, not five that change color, and the wedge it lands on is
+         what says the level. Fire comes up out of the middle underneath it. -->
+    <defs>
+        <linearGradient id="arrow-high-on-dark" gradientUnits="userSpaceOnUse"
+                        x1="450" y1="116" x2="450" y2="400">
+            <stop offset="0" stop-color="#ffd83a" />
+            <stop offset="0.45" stop-color="#f9c01b" />
+            <stop offset="0.78" stop-color="#ef7d19" />
+            <stop offset="1" stop-color="#d0341c" />
+        </linearGradient>
+    </defs>
     <g transform="rotate(0.0 450 400)">
         <path d="M 450 116
                  L 508 212
@@ -25,9 +36,17 @@
                  L 426 400
                  L 426 212
                  L 392 212 Z"
-              fill="#f7e017" stroke="#f2f2f2" stroke-width="5" stroke-linejoin="round" />
+              fill="url(#arrow-high-on-dark)" stroke="#f2f2f2" stroke-width="5" stroke-linejoin="round" />
     </g>
-    <circle cx="450" cy="400" r="16" fill="#f2f2f2" />
+        <path d="M 390 400 C 389.76 382 373 364 387.36 346 C 420 366 421 384 421 400 Z" fill="#d0341c" />
+        <path d="M 479 400 C 479.03999999999996 383 480 366 512.64 349 C 527 368 510 385 510 400 Z" fill="#d0341c" />
+        <path d="M 407 400 C 406.79999999999995 372 391 346 412.32 318 C 447 349 444 375 444 400 Z" fill="#e2521b" />
+        <path d="M 457 400 C 457.20000000000005 373 455 349 490.32 322 C 511 352 495 377 495 400 Z" fill="#e2521b" />
+        <path d="M 421 400 C 421.08000000000004 363 407 328 434.16 291 C 468 332 462 367 462 400 Z" fill="#ef7d19" />
+        <path d="M 441 400 C 441.36 365 437 333 469.68 298 C 493 337 479 369 479 400 Z" fill="#ef7d19" />
+        <path d="M 431 400 C 431.28 356 420 314 446.4 270 C 476 319 469 361 469 400 Z" fill="#f9a81a" />
+        <path d="M 441 400 C 441.3 369 438 340 455.04 308 C 468 343 462 373 462 400 Z" fill="#ffd645" />
+    <circle cx="450" cy="400" r="14" fill="#f2f2f2" />
 
     <!-- The word, which is what somebody actually reads -->
     <rect x="154" y="432" width="592" height="132" rx="8"

@@ -76,6 +76,44 @@ def wedge(i):
     return f"M {CX:.1f} {CY:.1f} L {x0:.1f} {y0:.1f} A {R_ARC} {R_ARC} 0 0 1 {x1:.1f} {y1:.1f} Z"
 
 
+def flames():
+    """Fire licking up out of the middle of the gauge.
+
+    Drawn outside the pointer's rotation so it always rises, whichever way the
+    pointer is turned -- fire does not lean because the needle does.
+
+    Each lick is two curves meeting at a point, with a lean that carries the
+    tip off to one side. Symmetrical ones read as a leaf; the lean is what
+    makes them read as flame.
+    """
+    #  x, half width, height, lean at the tip, color
+    licks = [
+        (-62, 20, 104, -30, "#d0341c"),
+        (62, 20, 98, 30, "#d0341c"),
+        (-34, 24, 158, -22, "#e2521b"),
+        (36, 24, 150, 24, "#e2521b"),
+        (-12, 26, 210, -12, "#ef7d19"),
+        (14, 24, 196, 16, "#ef7d19"),
+        (0, 24, 250, -6, "#f9a81a"),
+        (2, 13, 176, 6, "#ffd645"),
+    ]
+    # Kept low and close in. On the roadside sign the fire sits at the foot of
+    # the arrow; any taller and it hides the thing it is burning under.
+    out = []
+    for x0, hw, h, lean, col in licks:
+        x0, hw, h, lean = x0 * 0.72, hw * 0.78, h * 0.52, lean * 0.6
+        x = CX + x0
+        tip_x, tip_y = x + lean, CY - h
+        out.append(
+            f'        <path d="M {x - hw:.0f} {CY} '
+            f'C {x - hw} {CY - h * 0.34:.0f} {x - hw * 1.5 + lean * 0.5:.0f} {CY - h * 0.66:.0f} '
+            f'{tip_x} {tip_y:.0f} '
+            f'C {x + hw * 1.5 + lean * 0.5:.0f} {CY - h * 0.62:.0f} {x + hw:.0f} {CY - h * 0.3:.0f} '
+            f'{x + hw:.0f} {CY} Z" fill="{col}" />'
+        )
+    return "\n".join(out)
+
+
 def sign(slug, label, color, ink, index, theme, suffix):
     line, label_ink, title_ink = theme["line"], theme["label"], theme["title"]
     edge, edge_w = theme["title_edge"], theme["title_edge_w"]
@@ -113,7 +151,18 @@ def sign(slug, label, color, ink, index, theme, suffix):
     <line x1="{CX - R_ARC}" y1="{CY}" x2="{CX + R_ARC}" y2="{CY}" stroke="{line}" stroke-width="5" />
 {chr(10).join(names)}
 
-    <!-- The pointer -->
+    <!-- The pointer. The same yellow-to-ember on every sign: it is one object
+         that moves, not five that change color, and the wedge it lands on is
+         what says the level. Fire comes up out of the middle underneath it. -->
+    <defs>
+        <linearGradient id="arrow-{slug}{suffix}" gradientUnits="userSpaceOnUse"
+                        x1="{CX}" y1="{CY - R_ARC + 16}" x2="{CX}" y2="{CY}">
+            <stop offset="0" stop-color="#ffd83a" />
+            <stop offset="0.45" stop-color="#f9c01b" />
+            <stop offset="0.78" stop-color="#ef7d19" />
+            <stop offset="1" stop-color="#d0341c" />
+        </linearGradient>
+    </defs>
     <g transform="rotate({turn:.1f} {CX} {CY})">
         <path d="M {CX} {CY - R_ARC + 16}
                  L {CX + 58} {CY - R_ARC + 112}
@@ -122,9 +171,10 @@ def sign(slug, label, color, ink, index, theme, suffix):
                  L {CX - 24} {CY}
                  L {CX - 24} {CY - R_ARC + 112}
                  L {CX - 58} {CY - R_ARC + 112} Z"
-              fill="{color}" stroke="{line}" stroke-width="5" stroke-linejoin="round" />
+              fill="url(#arrow-{slug}{suffix})" stroke="{line}" stroke-width="5" stroke-linejoin="round" />
     </g>
-    <circle cx="{CX}" cy="{CY}" r="16" fill="{line}" />
+{flames()}
+    <circle cx="{CX}" cy="{CY}" r="14" fill="{line}" />
 
     <!-- The word, which is what somebody actually reads -->
     <rect x="{CX - 296}" y="{BANNER_TOP}" width="592" height="132" rx="8"
