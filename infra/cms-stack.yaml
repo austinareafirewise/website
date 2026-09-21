@@ -227,7 +227,11 @@ Resources:
               - !Sub "${ContentBucket.Arn}/content.json"
               - !Sub "${ContentBucket.Arn}/burnban.json"
               - !Sub "${ContentBucket.Arn}/firedanger.json"
+              - !Sub "${ContentBucket.Arn}/resources.json"
               - !Sub "${ContentBucket.Arn}/images/*"
+              # Resource files. A draft's file is readable by anybody who
+              # has its address, which is a random id nobody has been given.
+              - !Sub "${ContentBucket.Arn}/files/*"
 
   # ==================================================================
   # Burn ban watch
