@@ -42,6 +42,7 @@
             <button type="button" class="tab" data-section="comms">Messages</button>
             <button type="button" class="tab" data-section="groups">Firewise groups</button>
             <button type="button" class="tab" data-section="board">Alliance board</button>
+            <button type="button" class="tab" data-section="resources">Resources</button>
             <!-- Help for whichever section is showing. Reads the selected tab
                  when it opens, so it never needs telling which one that is. -->
             <!-- Training for whichever section is showing. Hidden until the
@@ -357,6 +358,38 @@
             </div>
             <p class="hint" id="board-note"></p>
             <div id="person-list" aria-live="polite"></div>
+        </div>
+
+        <!-- Resources: links out to other organizations, and files of ours.
+             Categories are edited in their own panel rather than as a record
+             kind of their own — there are five of them, they change once a
+             year, and a whole tab for five names would be a tab nobody
+             visits. -->
+        <div id="section-resources" hidden>
+            <div class="admin-actions">
+                <button type="button" class="btn btn-primary btn-small" id="resource-new">+ Add a resource</button>
+                <button type="button" class="btn btn-outline btn-small" id="resource-categories">Categories</button>
+            </div>
+
+            <div id="resource-category-panel" class="import-panel" hidden>
+                <h3>Categories</h3>
+                <p class="hint">
+                    The headings the Resources page groups things under, in the order they appear.
+                    Renaming one moves every resource under it — nothing is lost. A category can
+                    only be removed once nothing is filed in it.
+                </p>
+                <div id="resource-category-rows"></div>
+                <div class="admin-actions">
+                    <button type="button" class="btn btn-outline btn-small" id="resource-category-add">+ Add a category</button>
+                </div>
+                <div class="admin-actions">
+                    <button type="button" class="btn btn-primary btn-small" id="resource-category-save">Save categories</button>
+                    <button type="button" class="btn btn-outline btn-small" id="resource-category-close">Close</button>
+                </div>
+                <div id="resource-category-msg" aria-live="polite"></div>
+            </div>
+
+            <div id="resource-list" aria-live="polite"></div>
         </div>
 
         <!-- One editor serves every data section; admin-data.js builds the
@@ -931,6 +964,61 @@
                 People who chose that group when they signed up are not deleted with it — their
                 records are kept and simply lose the group. The dialog tells you how many were
                 affected.
+            </p>
+        </section>
+
+        <section data-help="resources" data-title="Resources">
+            <p class="help-lede">
+                The Resources page: links to other organizations' pages, and documents of our own
+                for people to download, grouped under a handful of headings.
+            </p>
+
+            <h3>A link, or a file</h3>
+            <p>
+                <strong>A link</strong> sends somebody to another organization's website. Paste the
+                address of the page that has the thing on it — not the organization's front page,
+                which leaves the reader to go hunting. It has to start with <strong>https://</strong>.
+            </p>
+            <p>
+                <strong>A file</strong> is something of ours to download: a PDF, a Word document, a
+                spreadsheet, plain text, or an MP4 video.
+            </p>
+
+            <h3>Files go up exactly as you give them</h3>
+            <p>
+                Unlike photographs, documents are not re-saved on the way up. That means whatever
+                is inside goes up too — the author's name, comments in the margins, tracked changes
+                nobody accepted, rows hidden rather than deleted. Open the file, read it as a
+                stranger would, and save a clean copy first.
+            </p>
+            <p class="help-note">
+                A video already on YouTube or Vimeo is better added as a link. It plays better on a
+                phone, carries its own captions, and costs the Alliance nothing to serve.
+            </p>
+
+            <h3>Categories</h3>
+            <p>
+                The <strong>Categories</strong> button changes the headings. Renaming one moves
+                everything under it with no work. A category cannot be removed while anything is
+                still filed in it — move those first. Keep the list short: a page with more headings
+                than things under them stops being read.
+            </p>
+
+            <h3>The weekly check</h3>
+            <p>
+                Every Sunday morning the site tries each link and records what happened. You do not
+                have to do anything for that.
+            </p>
+            <p>
+                A link that fails once is marked here but <strong>stays on the website</strong>. The
+                sites worth linking to often refuse automated requests even when they are working
+                perfectly, so one failure proves nothing. Only after <strong>three weeks running</strong>
+                does the site take a link down by itself — and if it starts answering again, it comes
+                back on its own.
+            </p>
+            <p class="help-note">
+                So a warning here is an invitation to check, not an emergency. Open the link yourself.
+                If the page has moved, paste the new address. If it is really gone, take ours down too.
             </p>
         </section>
 

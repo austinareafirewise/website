@@ -19,6 +19,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomBytes } from "node:crypto";
+import * as R from "./resources.mjs";
 
 const TABLE = process.env.TABLE_NAME;
 const BUCKET = process.env.CONTENT_BUCKET;
@@ -113,9 +114,44 @@ export const handler = async (event) => {
         if (route === "PUT /home") return await putHome(parseBody(event), who);
         if (route === "POST /home/pictures") return await homePictureUploadUrl();
 
+        /* Resources. One GET brings back both the list and the categories,
+           because a resource is meaningless without the heading it sits
+           under and the editor needs the list to build its dropdown. */
+        if (route === "GET /resources") {
+            const [resources, categories] = await Promise.all([
+                R.listResources(ddb, TABLE), R.getCategories(ddb, TABLE),
+            ]);
+            return respond(200, { resources, categories });
+        }
+        if (route === "POST /resources" || route === "PUT /resources/{id}") {
+            const categories = await R.getCategories(ddb, TABLE);
+            const saved = await R.putResource(ddb, TABLE, route === "POST /resources" ? null : id, parseBody(event), who, categories);
+            await R.publishResources(ddb, s3, TABLE, BUCKET);
+            return respond(200, { resource: saved });
+        }
+        if (route === "DELETE /resources/{id}") {
+            await R.deleteResource(ddb, s3, TABLE, BUCKET, id);
+            await R.publishResources(ddb, s3, TABLE, BUCKET);
+            return respond(200, { ok: true });
+        }
+        if (route === "POST /resources/upload") {
+            return respond(200, await R.fileUploadUrl(s3, BUCKET, parseBody(event)));
+        }
+        if (route === "GET /resource-categories") {
+            return respond(200, { categories: await R.getCategories(ddb, TABLE) });
+        }
+        if (route === "PUT /resource-categories") {
+            const categories = await R.putCategories(ddb, TABLE, parseBody(event), who);
+            await R.publishResources(ddb, s3, TABLE, BUCKET);
+            return respond(200, { categories });
+        }
+
         return respond(404, { error: "Unknown route." });
     } catch (err) {
-        if (err instanceof ValidationError) {
+        // Two ValidationError classes, because resources live in their own
+        // module. Both mean the same thing: the editor can fix this, and the
+        // message is written for them to read.
+        if (err instanceof ValidationError || err instanceof R.ResourceValidationError) {
             return respond(400, { error: err.message });
         }
         console.error(err);

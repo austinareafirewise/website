@@ -1030,3 +1030,79 @@ section { padding: 52px 0; }
 .prose li { margin-bottom: 6px; }
 
 .opt-note { font-weight: 400; color: var(--muted); font-size: .88rem; }
+
+/* ---------- Resources ----------
+
+   Each entry is a link wrapping the whole card rather than a link inside one.
+   The tap target is then the card, which is what somebody reaches for on a
+   phone, and a screen reader announces the title, the description and what
+   kind of thing it is as one thing rather than three.
+
+   Files and links are drawn identically on purpose. To a reader the useful
+   distinction is not "is this hosted by us" but "where does this take me",
+   which the line underneath already says. */
+
+.resource-group { margin: 0 0 40px; }
+
+.resource-group h2 { margin-bottom: .3em; }
+
+.resource-group-blurb {
+    color: var(--muted);
+    max-width: 62ch;
+    margin: 0 0 18px;
+}
+
+.resource-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+}
+
+.resource {
+    display: block;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: border-color .12s ease, transform .12s ease;
+}
+
+.resource:hover {
+    border-color: var(--sage);
+    transform: translateY(-1px);
+    color: var(--ink);
+}
+
+.resource-title {
+    margin: 0 0 .35em;
+    color: var(--green-700);
+    font-size: 1.08rem;
+}
+
+.resource:hover .resource-title { color: var(--orange-dark); }
+
+.resource-desc {
+    margin: 0 0 .6em;
+    font-size: .95rem;
+    color: var(--ink);
+}
+
+/* The one line that differs between a file and a link: what it is and how big,
+   or which site it goes to. Small, quiet, and never the reason to tap. */
+.resource-meta {
+    margin: 0;
+    font-size: .82rem;
+    color: var(--sage-text);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-weight: 600;
+}
+
+.resource .ext-mark { font-size: .8em; color: var(--sage-text); }
+
+@media (max-width: 640px) {
+    .resource-list { grid-template-columns: 1fr; }
+    .resource { padding: 16px 18px; }
+}

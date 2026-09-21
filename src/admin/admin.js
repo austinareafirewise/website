@@ -340,7 +340,8 @@
         members: "add-someone-to-the-list",
         comms: "send-a-message",
         groups: "firewise-groups",
-        board: "alliance-board-roster"
+        board: "alliance-board-roster",
+        resources: "manage-resources"
     };
 
     var trainingWindow = null;

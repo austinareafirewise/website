@@ -305,6 +305,84 @@ Resources:
     Properties: {FunctionName: !Ref BurnBanFunction, Action: lambda:InvokeFunction, Principal: events.amazonaws.com, SourceArn: !GetAtt BurnBanSchedule.Arn}
 
   # ==================================================================
+  # The weekly link check for the Resources page. Records what every
+  # external link answered, and takes one down only after three
+  # consecutive weekly failures — see lambda/linkcheck for why one
+  # failure is not enough to act on.
+  # ==================================================================
+
+  LinkCheckRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: aafa-linkcheck
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement: [{Effect: Allow, Principal: {Service: lambda.amazonaws.com}, Action: sts:AssumeRole}]
+      ManagedPolicyArns: [arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole]
+      Policies:
+        - PolicyName: read-and-mark-resources
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              # Scan to find the links; UpdateItem to record what each
+              # answered. No PutItem and no DeleteItem: this function marks
+              # records, it does not write or remove them.
+              - Effect: Allow
+                Action: [dynamodb:Scan, dynamodb:UpdateItem, dynamodb:GetItem]
+                Resource: !GetAtt ContentTable.Arn
+              - Effect: Allow
+                Action: [s3:PutObject]
+                Resource: !Sub "${ContentBucket.Arn}/resources.json"
+
+  LinkCheckFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: aafa-linkcheck
+      Description: Weekly check of the external links on the Resources page.
+      Runtime: nodejs22.x
+      # Packaged from lambda/ rather than lambda/linkcheck, and the handler
+      # names the subdirectory. The checker shares cms/resources.mjs with the
+      # API so there is one definition of what a resource is and one of what
+      # gets published — a second copy would drift, and the drift would show
+      # up as a page that disagrees with itself. Packaging the parent is the
+      # cost of keeping that single copy without introducing a build step.
+      Handler: linkcheck/index.handler
+      Architectures: [arm64]
+      MemorySize: 256
+      # Generous: twenty links, each allowed twenty seconds, checked one at a
+      # time so the Alliance is never a burst of requests at somebody else.
+      Timeout: 600
+      Role: !GetAtt LinkCheckRole.Arn
+      Code: ../lambda
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ContentTable
+          CONTENT_BUCKET: !Ref ContentBucket
+          CONTACT_URL: !Ref SiteOrigin
+      Tags:
+        - {Key: project, Value: website}
+
+  LinkCheckLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${LinkCheckFunction}"
+      RetentionInDays: 90
+
+  # Sunday morning, so a board member coming to the site on Monday sees a
+  # week-old answer at worst rather than one from six days ago.
+  LinkCheckSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: aafa-linkcheck-weekly
+      Description: Check every external link on the Resources page once a week.
+      ScheduleExpression: cron(0 13 ? * SUN *)
+      Targets: [{Id: linkcheck, Arn: !GetAtt LinkCheckFunction.Arn}]
+
+  LinkCheckInvoke:
+    Type: AWS::Lambda::Permission
+    Properties: {FunctionName: !Ref LinkCheckFunction, Action: lambda:InvokeFunction, Principal: events.amazonaws.com, SourceArn: !GetAtt LinkCheckSchedule.Arn}
+
+  # ==================================================================
   # Today's fire danger rating, read from Texas A&M Forest Service's
   # daily NFDRS file and published as firedanger.json. The home page
   # draws the five-level sign from it when the board has not put a
@@ -500,6 +578,30 @@ Resources:
   RouteHomePicture:
     Type: AWS::ApiGatewayV2::Route
     Properties: {ApiId: !Ref Api, RouteKey: "POST /home/pictures", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
+
+  # Resources: the links and files on resources.html, and the categories they
+  # are grouped under. Same function, same authorizer, same table.
+  RouteResourcesList:
+    Type: AWS::ApiGatewayV2::Route
+    Properties: {ApiId: !Ref Api, RouteKey: "GET /resources", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
+  RouteResourceCreate:
+    Type: AWS::ApiGatewayV2::Route
+    Properties: {ApiId: !Ref Api, RouteKey: "POST /resources", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
+  RouteResourceUpdate:
+    Type: AWS::ApiGatewayV2::Route
+    Properties: {ApiId: !Ref Api, RouteKey: "PUT /resources/{id}", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
+  RouteResourceDelete:
+    Type: AWS::ApiGatewayV2::Route
+    Properties: {ApiId: !Ref Api, RouteKey: "DELETE /resources/{id}", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
+  RouteResourceUpload:
+    Type: AWS::ApiGatewayV2::Route
+    Properties: {ApiId: !Ref Api, RouteKey: "POST /resources/upload", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
+  RouteResourceCategoriesGet:
+    Type: AWS::ApiGatewayV2::Route
+    Properties: {ApiId: !Ref Api, RouteKey: "GET /resource-categories", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
+  RouteResourceCategoriesPut:
+    Type: AWS::ApiGatewayV2::Route
+    Properties: {ApiId: !Ref Api, RouteKey: "PUT /resource-categories", AuthorizationType: JWT, AuthorizerId: !Ref Authorizer, Target: !Sub "integrations/${Integration}"}
 
   Stage:
     Type: AWS::ApiGatewayV2::Stage

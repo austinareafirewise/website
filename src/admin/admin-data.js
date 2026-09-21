@@ -20,7 +20,7 @@
     if (!cfg || !cfg.apiUrl) return;
     var API = cfg.apiUrl.replace(/\/$/, "");
 
-    var state = { members: [], comms: [], groups: [], board: [], logins: [], loaded: {} };
+    var state = { members: [], comms: [], groups: [], board: [], logins: [], resources: [], categories: [], loaded: {} };
     var current = null;          // { kind, record }
 
     /* ------------------------------------------------------------ */
@@ -81,7 +81,51 @@
         }));
     }
 
+    /* What the file picker offers. Deliberately a list rather than a wildcard:
+       the type restriction is the whole safety check for a file that is stored
+       exactly as provided, and anything that a browser would run (HTML, SVG)
+       served from our own address is a way in. */
+    var FILE_ACCEPT = [
+        ".pdf", "application/pdf",
+        ".doc", ".docx", "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".xls", ".xlsx", "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ".csv", "text/csv", ".txt", "text/plain",
+        ".mp4", "video/mp4"
+    ].join(",");
+
+    function categoryOptions() {
+        return state.categories.map(function (c) { return { value: c.id, label: c.name }; });
+    }
+
     var FIELDS = {
+        resource: function () {
+            return [
+                { k: "status", label: "On the website?", type: "select", required: true, options: [
+                    { value: "draft", label: "Draft — saved, and nobody can see it" },
+                    { value: "published", label: "Published — on the Resources page" }],
+                  hint: "Published resources still wait for their Show from time, if one is set." },
+                { k: "title", label: "Title", type: "text", required: true,
+                  hint: "What a reader will see. Say what the thing is, not what the organization calls itself." },
+                { k: "category", label: "Category", type: "select", required: true, options: categoryOptions(), row: "filing" },
+                { k: "kind", label: "What is it?", type: "select", required: true, row: "filing", options: [
+                    { value: "link", label: "A link to another organization's page" },
+                    { value: "file", label: "A file of ours, to download" }] },
+                { k: "description", label: "Description", type: "textarea", required: true,
+                  hint: "Two or three sentences. Why somebody in Travis County would want this, and what they find when they get there." },
+                { k: "url", label: "Web address", type: "url",
+                  hint: "For a link. Must start with https:// — and point at the page with the thing on it, not the organization's front page." },
+                { k: "file", label: "File", type: "file",
+                  hint: "PDF, Word, spreadsheet, plain text or video. Stored exactly as you provide it, so check it first for comments, tracked changes and hidden rows." },
+                { k: "dateLabel", label: "Date shown to readers", type: "text", row: "when",
+                  hint: "Optional, in your own words — \"Updated March 2026\". Leave blank if it does not matter." },
+                { k: "startsAt", label: "Show from", type: "datetime-local", row: "when" },
+                { k: "endsAt", label: "Show until", type: "datetime-local",
+                  hint: "Leave blank for a resource with no end. Set it for a grant that closes or a form replaced each year." },
+                { k: "notes", label: "Notes (board only)", type: "textarea" }
+            ];
+        },
         member: function () {
             return [
                 { k: "firstName", label: "First name", type: "text" },
@@ -200,6 +244,15 @@
             });
         } else if (f.type === "leaders") {
             return leadersField(value || []);
+        } else if (f.type === "file") {
+            // A file input's value cannot be set from script — assigning
+            // anything but "" throws — so what is already stored is shown as
+            // a line of text beside the picker rather than inside it.
+            input = el("input", { type: "file", id: id, accept: FILE_ACCEPT });
+            if (value) {
+                wrap.appendChild(el("p", { class: "hint",
+                    text: "Currently: " + value + ". Choosing a file replaces it; leaving this empty keeps it." }));
+            }
         } else {
             input = el("input", { type: f.type, id: id });
             if (f.min != null) input.setAttribute("min", f.min);
@@ -317,7 +370,7 @@
         // trusting the record's kind would show two sections at once.
         var tab = document.querySelector('.admin-nav .tab[data-section][aria-current="page"]');
         var name = tab ? tab.getAttribute("data-section") : null;
-        ["content", "home", "members", "comms", "groups", "board"].forEach(function (n) {
+        ["content", "home", "members", "comms", "groups", "board", "resources"].forEach(function (n) {
             var sec = $("section-" + n);
             if (sec) sec.hidden = n !== name;
         });
@@ -337,6 +390,11 @@
                 }).filter(function (v) { return v.firstName || v.lastName; });
                 return;
             }
+            // A file input's value is a fake "C:\fakepath\..." string, not the
+            // file. saveRecord uploads the chosen file itself and fills in
+            // what is stored; reading it here would send that fake path, and
+            // on an edit with no new file chosen would wipe the stored one.
+            if (f.type === "file") return;
             var e = $("f_" + f.k);
             if (!e) return;
             var v = e.value;
@@ -347,10 +405,48 @@
     }
 
     function idKey(kind) {
-        return kind === "member" ? "memberId" : kind === "group" ? "groupId" : kind === "person" ? "personId" : "commId";
+        return kind === "member" ? "memberId" : kind === "group" ? "groupId" : kind === "person" ? "personId" : kind === "resource" ? "resourceId" : "commId";
     }
     function basePath(kind) {
-        return kind === "member" ? "/members" : kind === "group" ? "/groups" : kind === "person" ? "/board" : "/comms";
+        return kind === "member" ? "/members" : kind === "group" ? "/groups" : kind === "person" ? "/board" : kind === "resource" ? "/resources" : "/comms";
+    }
+
+    /* A resource file goes straight from this browser to storage on a
+       short-lived signed address, and only the stored name is then saved on
+       the record. The file never passes through the API, which has a size
+       limit a short video would break. It is sent exactly as chosen: nothing
+       here re-saves or reads inside it. */
+    function uploadResourceFile(body) {
+        var input = $("f_file");
+        var chosen = input && input.files && input.files[0];
+
+        if (body.kind !== "file") {
+            ["file", "fileName", "fileType", "fileSize"].forEach(function (k) { delete body[k]; });
+            return Promise.resolve(body);
+        }
+
+        if (!chosen) {
+            // No new file: keep the one already stored.
+            var r = current.record;
+            if (!r.file) return Promise.reject(new Error("Choose a file to upload."));
+            body.file = r.file; body.fileName = r.fileName; body.fileType = r.fileType; body.fileSize = r.fileSize;
+            return Promise.resolve(body);
+        }
+
+        var type = chosen.type || "";
+        $("rec-msg").textContent = "Uploading " + chosen.name + "…";
+        return api("POST", "/resources/upload", { fileType: type, fileSize: chosen.size })
+            .then(function (u) {
+                return fetch(u.uploadUrl, { method: "PUT", headers: { "Content-Type": type }, body: chosen })
+                    .then(function (r) {
+                        if (!r.ok) throw new Error("The file did not upload. Check your connection and try again — nothing was saved.");
+                        body.file = u.key;
+                        body.fileName = chosen.name;
+                        body.fileType = type;
+                        body.fileSize = chosen.size;
+                        return body;
+                    });
+            });
     }
 
     function saveRecord() {
@@ -359,10 +455,11 @@
         $("rec-save").disabled = true;
         $("rec-msg").className = "form-status show info";
         $("rec-msg").textContent = "Saving…";
-        api(id ? "PUT" : "POST", basePath(kind) + (id ? "/" + id : ""), body)
+        (kind === "resource" ? uploadResourceFile(body) : Promise.resolve(body))
+            .then(function (b) { return api(id ? "PUT" : "POST", basePath(kind) + (id ? "/" + id : ""), b); })
             .then(function (j) {
                 closeEditor();
-                var who = body.name || [body.firstName, body.lastName].filter(Boolean).join(" ") || body.email || body.phone || "The record";
+                var who = body.title || body.name || [body.firstName, body.lastName].filter(Boolean).join(" ") || body.email || body.phone || "The record";
                 var extra = "";
                 if (j.confirmationsSent && j.confirmationsSent.length) {
                     extra = " A confirmation was sent by " + j.confirmationsSent.join(" and ") +
@@ -389,7 +486,7 @@
 
     function deleteRecord() {
         var kind = current.kind, id = current.record[idKey(kind)];
-        var what = current.record.name || current.record.email || "this record";
+        var what = current.record.title || current.record.name || current.record.email || "this record";
         var extra = kind === "group" ? "\n\nAnyone who chose this group keeps their sign-up; only the group link is removed."
                   : kind === "person" ? "\n\nThis does not remove their website login, if they have one."
                   : "";
@@ -404,14 +501,14 @@
         }).catch(function (e) { $("rec-msg").className = "form-status show err"; $("rec-msg").textContent = e.message; });
     }
 
-    function sectionFor(kind) { return kind === "member" ? "members" : kind === "group" ? "groups" : kind === "person" ? "board" : "comms"; }
+    function sectionFor(kind) { return kind === "member" ? "members" : kind === "group" ? "groups" : kind === "person" ? "board" : kind === "resource" ? "resources" : "comms"; }
 
     function notify(title, text) {
         if (window.AAFA_ADMIN && window.AAFA_ADMIN.notify) window.AAFA_ADMIN.notify(title, text);
         else window.alert(title + "\n\n" + text);   // never fail silently
     }
 
-    var LABEL = { member: "member", group: "Firewise group", person: "board member", comm: "message" };
+    var LABEL = { member: "member", group: "Firewise group", person: "board member", comm: "message", resource: "resource" };
 
     /* ------------------------------------------------------------ */
     /* Lists                                                         */
@@ -706,13 +803,158 @@
         members: function () { return api("GET", "/members").then(function (j) { state.members = j.members || []; }); },
         groups: function () { return api("GET", "/groups").then(function (j) { state.groups = j.groups || []; }); },
         board: function () { return api("GET", "/board").then(function (j) { state.board = j.board || []; state.logins = j.logins || []; }); },
-        comms: function () { return api("GET", "/comms").then(function (j) { state.comms = j.comms || []; }); }
+        comms: function () { return api("GET", "/comms").then(function (j) { state.comms = j.comms || []; }); },
+        // One call brings back both, because a resource is meaningless without
+        // the category it is filed under and the editor needs the list to
+        // build its dropdown.
+        resources: function () {
+            return api("GET", "/resources").then(function (j) {
+                state.resources = j.resources || [];
+                state.categories = j.categories || [];
+            });
+        }
     };
-    var RENDER = { members: renderMembers, groups: renderGroups, board: renderBoard, comms: renderComms };
+    /* ------------------------------------------------------------ */
+    /* Resources                                                     */
+    /* ------------------------------------------------------------ */
+
+    function resourceWhen(r) {
+        var now = Date.now();
+        if (r.status !== "published") return { cls: "draft", word: "Draft" };
+        if (r.autoDisabled) return { cls: "scheduled", word: "Taken down — link failed 3 weeks running" };
+        if (r.startsAt && Date.parse(r.startsAt) > now) return { cls: "scheduled", word: "Scheduled for " + fmt(r.startsAt) };
+        if (r.endsAt && Date.parse(r.endsAt) < now) return { cls: "draft", word: "Ended" };
+        return { cls: "live", word: "On the site" };
+    }
+
+    function renderResources() {
+        var host = $("resource-list");
+        host.textContent = "";
+
+        var byId = {};
+        state.categories.forEach(function (c) { byId[c.id] = c.name; });
+
+        if (!state.resources.length) {
+            host.appendChild(el("p", { class: "hint", text: "Nothing here yet. Add a link to another organization's page, or a file of ours." }));
+            return;
+        }
+
+        // Grouped the way the public page groups them, so what the board sees
+        // here is the shape of what a reader sees there.
+        var order = state.categories.map(function (c) { return c.id; });
+        var seen = {};
+        order.concat(["__none"]).forEach(function (cid) {
+            var mine = state.resources.filter(function (r) {
+                var c = byId[r.category] ? r.category : "__none";
+                return c === cid;
+            });
+            if (!mine.length) return;
+            mine.forEach(function (r) { seen[r.resourceId] = true; });
+
+            host.appendChild(el("h3", { class: "admin-group-head",
+                text: cid === "__none" ? "Not filed in a category" : byId[cid] }));
+
+            mine.forEach(function (r) {
+                var when = resourceWhen(r);
+                var bits = [];
+                bits.push(r.kind === "file" ? "File" : "Link");
+                if (r.kind === "link" && r.url) {
+                    try { bits.push(new URL(r.url).hostname.replace(/^www\./, "")); } catch (e) { /* shown as typed */ }
+                }
+                if (r.kind === "file" && r.fileName) bits.push(r.fileName);
+                if (r.dateLabel) bits.push(r.dateLabel);
+
+                var card = el("div", { class: "item " + when.cls }, [
+                    el("div", { class: "item-main" }, [
+                        el("p", { class: "kicker", text: when.word }),
+                        el("h4", { text: r.title || "(no title)" }),
+                        el("p", { class: "muted", text: bits.join(" · ") }),
+                        // A failing link is said out loud, with how long it has
+                        // been failing, because "check this" without "since
+                        // when" is a job nobody starts.
+                        r.linkFailures ? el("p", { class: "form-status show err",
+                            text: r.linkFailures === 1
+                                ? "The link did not answer when it was last checked, on " + fmt(r.linkCheckedAt) + ". Worth opening it yourself."
+                                : "The link has failed " + r.linkFailures + " weekly checks in a row, most recently on " + fmt(r.linkCheckedAt) + "." }) : null
+                    ]),
+                    el("div", { class: "item-actions" }, [
+                        el("button", { type: "button", class: "btn btn-outline btn-small", "data-open": r.resourceId, text: "Open" })
+                    ])
+                ]);
+                host.appendChild(card);
+            });
+        });
+
+        Array.prototype.forEach.call(host.querySelectorAll("button[data-open]"), function (b) {
+            b.addEventListener("click", function () {
+                var id = b.getAttribute("data-open");
+                var rec = state.resources.filter(function (r) { return r.resourceId === id; })[0];
+                if (rec) openEditor("resource", rec);
+            });
+        });
+    }
+
+    /* Categories. Edited in a panel rather than as a record kind of their own:
+       there are five, they change once a year, and a whole tab for five names
+       is a tab nobody visits. */
+
+    function categoryRows() {
+        var host = $("resource-category-rows");
+        host.textContent = "";
+        state.categories.forEach(function (c) {
+            var used = state.resources.filter(function (r) { return r.category === c.id; }).length;
+            var input = el("input", { type: "text", value: c.name, maxlength: "60", "data-cat": c.id, "aria-label": "Category name" });
+            var remove = el("button", {
+                type: "button", class: "btn btn-outline btn-small", "data-remove": c.id,
+                title: used ? "In use by " + used + " resource" + (used === 1 ? "" : "s") : "Remove",
+                text: "Remove"
+            });
+            if (used) remove.disabled = true;
+            host.appendChild(el("div", { class: "admin-two cat-row" }, [
+                input,
+                el("div", {}, [
+                    remove,
+                    el("span", { class: "hint", text: used ? "  " + used + " filed here" : "  empty" })
+                ])
+            ]));
+        });
+
+        Array.prototype.forEach.call(host.querySelectorAll("button[data-remove]"), function (b) {
+            b.addEventListener("click", function () {
+                var id = b.getAttribute("data-remove");
+                state.categories = state.categories.filter(function (c) { return c.id !== id; });
+                categoryRows();
+            });
+        });
+    }
+
+    function saveCategories() {
+        var rows = $("resource-category-rows").querySelectorAll("input[data-cat]");
+        var out = [];
+        Array.prototype.forEach.call(rows, function (i) {
+            var name = i.value.trim();
+            if (name) out.push({ id: i.getAttribute("data-cat"), name: name });
+        });
+        var msg = $("resource-category-msg");
+        msg.className = "form-status show info";
+        msg.textContent = "Saving…";
+        api("PUT", "/resource-categories", { categories: out })
+            .then(function () {
+                msg.className = "form-status show ok";
+                msg.textContent = "Saved. The Resources page will show it within a minute.";
+                return refresh("resource").then(renderResources);
+            })
+            .catch(function (e) {
+                msg.className = "form-status show err";
+                msg.textContent = e.message;
+            });
+    }
+
+    var RENDER = { members: renderMembers, groups: renderGroups, board: renderBoard, comms: renderComms, resources: renderResources };
 
     /* Members, groups and board all show each other's names, so a section
        loads whatever it needs to display, not just its own table. */
-    var NEEDS = { members: ["members", "groups"], groups: ["groups", "members"], board: ["board", "groups"], comms: ["comms"] };
+    var NEEDS = { members: ["members", "groups"], groups: ["groups", "members"], board: ["board", "groups"], comms: ["comms"], resources: ["resources"] };
 
     function refresh(kind) {
         var section = sectionFor(kind);
@@ -752,7 +994,7 @@
     function showSection(name) {
         rememberSection(name);
         $("rec-screen").hidden = true;
-        ["content", "home", "members", "comms", "groups", "board"].forEach(function (n) {
+        ["content", "home", "members", "comms", "groups", "board", "resources"].forEach(function (n) {
             var sec = $("section-" + n);
             if (sec) sec.hidden = n !== name;
         });
@@ -765,7 +1007,7 @@
         ["screen-signin", "screen-denied", "screen-list", "screen-edit"].forEach(function (id) { if ($(id)) $(id).hidden = true; });
         // The home page is one record rather than a list, so it loads itself.
         if (name === "home") { window.AAFA_ADMIN.showHome(); window.scrollTo(0, 0); return; }
-        var host = $(name === "members" ? "member-list" : name === "groups" ? "group-list" : name === "board" ? "person-list" : "comm-list");
+        var host = $(name === "members" ? "member-list" : name === "groups" ? "group-list" : name === "board" ? "person-list" : name === "resources" ? "resource-list" : "comm-list");
         if (!state.loaded[name]) host.textContent = "Loading…";
         Promise.all(NEEDS[name].map(function (n) { return LOADERS[n](); }))
             .then(function () { state.loaded[name] = true; RENDER[name](); })
@@ -1029,6 +1271,28 @@
     /* ------------------------------------------------------------ */
     /* Wiring                                                        */
     /* ------------------------------------------------------------ */
+
+    $("resource-new").addEventListener("click", function () { openEditor("resource", null); });
+    $("resource-categories").addEventListener("click", function () {
+        $("resource-category-panel").hidden = false;
+        $("resource-category-msg").textContent = "";
+        categoryRows();
+    });
+    $("resource-category-close").addEventListener("click", function () {
+        // Reload rather than keep whatever was typed: closing without saving
+        // should leave nothing half-changed behind it.
+        $("resource-category-panel").hidden = true;
+        refresh("resource").then(renderResources);
+    });
+    $("resource-category-add").addEventListener("click", function () {
+        state.categories = state.categories.concat([{
+            id: "c" + Date.now().toString(36), name: ""
+        }]);
+        categoryRows();
+        var inputs = $("resource-category-rows").querySelectorAll("input[data-cat]");
+        if (inputs.length) inputs[inputs.length - 1].focus();
+    });
+    $("resource-category-save").addEventListener("click", saveCategories);
 
     $("group-import-open").addEventListener("click", openImport);
     $("group-import-cancel").addEventListener("click", function () { $("group-import").hidden = true; });
