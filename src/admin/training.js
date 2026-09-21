@@ -28,7 +28,8 @@
         "add-someone-to-the-list.md",
         "send-a-message.md",
         "firewise-groups.md",
-        "alliance-board-roster.md"
+        "alliance-board-roster.md",
+        "manage-resources.md"
     ];
 
     var lessons = [];

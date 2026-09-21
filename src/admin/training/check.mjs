@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PAGE = join(HERE, "..", "index.html");
-const SECTIONS = new Set(["content", "home", "members", "comms", "groups", "board"]);
+const SECTIONS = new Set(["content", "home", "resources", "members", "comms", "groups", "board"]);
 const SCREENS = new Set(["list", "editor"]);
 const REQUIRED_META = ["lesson-id", "sections", "order", "minutes", "description"];
 

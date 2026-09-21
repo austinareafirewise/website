@@ -3,13 +3,13 @@
 <!-- lesson-id: manage-resources -->
 <!-- sections: resources -->
 <!-- primary-for: resources -->
-<!-- order: 70 -->
+<!-- order: 80 -->
 <!-- minutes: 6 -->
 <!-- description: Links out to other organizations, documents of our own, and the categories they sit in. -->
 
-<!-- No audio yet. The words are ready to record, and every `target:` below
-     was checked against the built screen: #resource-* are in admin/index.html,
-     and #f_* are the ids the shared editor gives each resource field at
+<!-- Every `target:` below was checked against the built screen: #resource-*
+     are in admin/index.html, and #f_* are the ids the shared editor gives
+     each resource field at
      runtime (admin-data.js names them "f_" + the field's key). Run
      generate-audio.mjs for this lesson to add the audio: lines. -->
 
@@ -17,6 +17,8 @@
 ## What belongs on the Resources page
 - section: resources
 - target: #resource-new
+- audio: manage-resources-01-4760bd.mp3
+- audio-hash: 2d2ab076
 
 Resources. This is a page of things we point people at: guidance from the fire
 agencies, the paperwork a neighborhood needs to become a Firewise community,
@@ -33,6 +35,8 @@ and it is not editable from this screen on purpose.
 ## Categories keep it findable
 - section: resources
 - target: #resource-categories
+- audio: manage-resources-02-9d49c7.mp3
+- audio-hash: 4886819a
 
 Every resource sits in a category, and the page groups them under those
 headings. We start with five — preparing your home, Firewise communities,
@@ -47,18 +51,27 @@ being useful.
 If you find yourself wanting a new category for a single item, it usually
 belongs in one you already have.
 
-Policy and advocacy needs one extra care. It holds two different kinds of
-thing: rules somebody has to follow, like the city's wildland-urban interface
-code, and papers saying what the Alliance thinks the rules ought to be. Those
-are not the same, and a reader who mistakes the second for the first has been
-misled by us. Whichever one you are adding, say so in the first few words of
-the description.
+## The one category to be careful with
+- section: resources
+- target: #resource-categories
+- audio: manage-resources-03-ea9b57.mp3
+- audio-hash: 64c3445e
+
+Policy and advocacy holds two different kinds of thing: rules somebody has to
+follow, like the city's wildland-urban interface code, and papers saying what
+the Alliance thinks the rules ought to be.
+
+Those are not the same, and a reader who takes the second for the first has
+been misled by us. Whichever you are adding, say which it is in the first few
+words of the description.
 
 ## Adding a link to somebody else's page
 - section: resources
 - screen: editor
 - open: #resource-new
 - target: #f_url
+- audio: manage-resources-04-35758f.mp3
+- audio-hash: 2c6b04e6
 
 For a link out, this is where the address goes. Paste the whole thing,
 beginning with https.
@@ -71,7 +84,10 @@ publish, to be sure it is the page you meant.
 ## Say what it is, in your own words
 - section: resources
 - screen: editor
+- open: #resource-new
 - target: #f_description
+- audio: manage-resources-05-cabe0f.mp3
+- audio-hash: 027b8645
 
 The description. Two or three sentences at most, in plain words.
 
@@ -83,7 +99,10 @@ than the official title ever will.
 ## Uploading a document of our own
 - section: resources
 - screen: editor
+- open: #resource-new
 - target: #f_file
+- audio: manage-resources-06-e7a010.mp3
+- audio-hash: 2a590399
 
 For something of ours, drop the file here. PDFs, Word documents, spreadsheets,
 plain text and video are all accepted, and the file is stored exactly as you
@@ -98,7 +117,10 @@ clean copy before you upload.
 ## Video is different
 - section: resources
 - screen: editor
+- open: #resource-new
 - target: #f_file
+- audio: manage-resources-07-07ea29.mp3
+- audio-hash: 5d801f7d
 
 A word about video specifically. A short video is a very large file compared
 with everything else here — it is the one thing on this page that costs the
@@ -113,7 +135,10 @@ live.
 ## When it shows, and when it stops
 - section: resources
 - screen: editor
+- open: #resource-new
 - target: #f_startsAt
+- audio: manage-resources-08-7b76d2.mp3
+- audio-hash: d837e512
 
 Show from and Show until, the same pair you know from meeting notices. The
 resource appears at the start and disappears at the stop, on its own.
@@ -125,6 +150,8 @@ workshop that has a date on it, a form that is replaced every year.
 ## The weekly check, and what a warning means
 - section: resources
 - target: #resource-list
+- audio: manage-resources-09-862f42.mp3
+- audio-hash: 59e38549
 
 Once a week, the site quietly tries every link on this page to see whether it
 still works. You do not have to do anything for that to happen.
@@ -141,7 +168,10 @@ ours down too.
 ## Draft or published, then Save
 - section: resources
 - screen: editor
+- open: #resource-new
 - target: #f_status
+- audio: manage-resources-10-1729a6.mp3
+- audio-hash: e7f0b26b
 
 This one is different from news and notices, so it is worth a moment. There is
 no separate Publish button here. Instead, this box at the top says whether the
