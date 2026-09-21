@@ -25,7 +25,7 @@ import {
     getMember, findByEmail, findByPhone, allMembers, deriveStatus, publicMember, audienceFor,
     splitName, displayName,
     renderEmail, renderSms, markdownToHtml, twilioConfig, sha1Base64Hmac,
-    allGroups, publicGroup, allBoard,
+    allGroups, publicGroup, allBoard, publicBoardMember,
 } from "./lib.mjs";
 import { sendEmail, sendPlainEmail, emailEnabled } from "./email.mjs";
 import { sendSms, smsEnabled, classifyKeyword } from "./sms.mjs";
@@ -37,6 +37,16 @@ export const handler = async (event) => {
     try {
         // ---- Public ----
         if (route === "GET /signup/options") return respond(200, { sms: smsEnabled(), email: await emailEnabled(), consent: CONSENT });
+        // Who serves on the board, for the roster on board.html. Current
+        // members only: a past member is part of the record the board keeps,
+        // not an answer to "who runs this today".
+        if (route === "GET /board/public") {
+            const board = (await allBoard())
+                .filter((p) => p.status === "current")
+                .map(publicBoardMember)
+                .filter((p) => p.name);
+            return respond(200, { board }, { "cache-control": "public, max-age=300" });
+        }
         if (route === "GET /groups/public") return respond(200, { groups: (await allGroups()).filter((g) => g.status !== "inactive").map(publicGroup) }, { "cache-control": "public, max-age=300" });
         if (route === "POST /signup") return await signup(event);
         if (route === "POST /confirm") return await confirmEmail(event);

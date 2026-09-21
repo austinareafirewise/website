@@ -557,6 +557,9 @@ Resources:
   RMembersUnsub:  {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /members/{id}/unsubscribe", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
   RMembersResend: {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /members/{id}/resend", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
   RGroupsPublic:  {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "GET /groups/public", Target: !Sub "integrations/${Integration}"}}
+  # Names and offices of serving board members, for the public roster. No
+  # authorizer, like the groups list: it answers what the page shows anyway.
+  RBoardPublic:   {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "GET /board/public", Target: !Sub "integrations/${Integration}"}}
   RGroupsList:    {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "GET /groups", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
   RGroupsCreate:  {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "POST /groups", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}
   RGroupsUpdate:  {Type: AWS::ApiGatewayV2::Route, Properties: {ApiId: !ImportValue aafa-cms-ApiId, RouteKey: "PUT /groups/{id}", AuthorizationType: JWT, AuthorizerId: !ImportValue aafa-cms-AuthorizerId, Target: !Sub "integrations/${Integration}"}}

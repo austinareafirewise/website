@@ -994,6 +994,47 @@ section { padding: 52px 0; }
 .news-back { margin-top: 26px; }
 .news-empty { color: var(--muted); }
 
+/* ---------- The board roster ----------
+   Names and offices, and deliberately nothing else. There is no contact
+   detail on these cards: the Alliance's own officers are volunteers, and a
+   public page of their phone numbers is a different thing from a page saying
+   who serves. */
+
+.board-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+}
+
+.board-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 6px solid var(--sage);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+}
+
+.board-name {
+    font-family: Oswald, "Arial Narrow", sans-serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--green-900);
+    margin: 0;
+}
+
+.board-role {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: .95rem;
+}
+
+.board-note { margin-top: 26px; color: var(--muted); max-width: 60ch; }
+.board-empty { color: var(--muted); }
+
 /* Preview banner: only ever seen by a signed-in board member. */
 .preview-banner {
     background: #9c2b16; color: #fff; text-align: center; padding: 10px 20px; font-size: .95rem;

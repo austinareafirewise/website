@@ -566,6 +566,18 @@ export function publicGroup(g) {
     return { groupId: g.groupId, name: g.name, city: g.city || "", area: g.area || "", status: g.status };
 }
 
+/* What an anonymous visitor may see of the board: who serves, and in what
+   office. Nothing else leaves this function.
+ *
+ * Email and phone are on every board record and are how the Alliance reaches
+ * its own officers. They are not published. A roster on a public page is a
+ * normal thing for a nonprofit to have; a page of volunteers' mobile numbers
+ * is not, and the difference is one careless spread operator. Hence naming
+ * the three fields rather than deleting the two. */
+export function publicBoardMember(p) {
+    return { name: displayName(p), role: p.role || "", termStart: p.termStart || "" };
+}
+
 export async function allBoard() {
     const out = [];
     let ExclusiveStartKey;

@@ -9,11 +9,14 @@
 ## The Alliance's board, and nobody else
 - section: board
 - target: #board-note
-- audio: alliance-board-roster-01-a7a6cd.mp3
-- audio-hash: 849ab389
+- audio: alliance-board-roster-01-13c377.mp3
+- audio-hash: 742b8749
 
 The Alliance board roster. This tab is who serves on the board of directors of
-the Austin Area Firewise Alliance.
+the Austin Area Firewise Alliance, and it is published: everybody marked a
+current board member is listed on the website, under Board members in the
+footer of every page. The name and the role are shown and nothing else — the
+email and phone here are how we reach each other, and they stay here.
 
 It is not where a neighborhood group's officers go. A Firewise group has its
 own chair and its own contacts, and those are entered on that group's record
