@@ -443,8 +443,14 @@
         var list = el("div", { class: "news-list" });
         news.forEach(function (n) {
             var href = "news.html?id=" + encodeURIComponent(n.id);
-            var card = el("article", { class: "news-card accent-" + accentOf(n.id) });
-            if (n.pictures && n.pictures.length) {
+            var hasThumb = !!(n.pictures && n.pictures.length);
+            // The card is two columns only when there is a picture to put in
+            // the first one. Said in the markup rather than left to CSS to
+            // work out, so the layout does not depend on :has().
+            var card = el("article", {
+                class: "news-card accent-" + accentOf(n.id) + (hasThumb ? " has-thumb" : "")
+            });
+            if (hasThumb) {
                 card.appendChild(el("a", { href: href, class: "news-thumb-link", "aria-hidden": "true", tabindex: "-1" }, [figure(n.pictures[0], true)]));
             }
             var text = el("div", { class: "news-card-text" }, [
