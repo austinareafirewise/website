@@ -16,21 +16,6 @@
     var root = document.getElementById("board-root");
     if (!root || !cfg || !cfg.apiUrl) return;
 
-    /* The order the offices are usually read in. Anything not named here —
-       "Event coordinator", "Member at large" — follows, alphabetically by the
-       person's name, rather than being dropped or floated to the top. */
-    var OFFICES = [
-        "president", "chair", "chairman", "chairwoman",
-        "vice president", "vice-president", "vice chair", "vice-chair",
-        "secretary", "treasurer"
-    ];
-
-    function rank(role) {
-        var r = String(role || "").trim().toLowerCase();
-        for (var i = 0; i < OFFICES.length; i++) if (r === OFFICES[i]) return i;
-        return OFFICES.length;
-    }
-
     function el(tag, attrs, kids) {
         var n = document.createElement(tag);
         if (attrs) Object.keys(attrs).forEach(function (k) {
@@ -39,6 +24,13 @@
         });
         (kids || []).forEach(function (k) { if (k) n.appendChild(k); });
         return n;
+    }
+
+    /* The stored name is one string. The first word of it is the given name
+       for the purpose of this sort; a name that does not work that way sorts
+       on the whole string instead, which is at least stable. */
+    function firstName(p) {
+        return String(p.name || "").trim().split(/\s+/)[0] || "";
     }
 
     function card(p) {
@@ -53,9 +45,12 @@
         // standing wording in place rather than replacing it with a blank.
         if (!board.length) return;
 
+        // By first name. A roster of volunteers is a list of neighbors rather
+        // than a table of organization, and ordering it by office would put
+        // the same two people at the top of it every year.
         board.sort(function (a, b) {
-            var d = rank(a.role) - rank(b.role);
-            return d !== 0 ? d : String(a.name).localeCompare(String(b.name));
+            var first = firstName(a).localeCompare(firstName(b), undefined, { sensitivity: "base" });
+            return first !== 0 ? first : String(a.name).localeCompare(String(b.name));
         });
 
         root.textContent = "";
