@@ -21,6 +21,12 @@
     var codeBox = document.getElementById("signup-code");
     var pendingMemberId = null;
 
+    /* Until texts actually arrive, the messages a person reads say so: the
+       form said it before they signed up, and being told "you are on the
+       list" is the moment they would otherwise wonder which list. */
+    var comingSoon = window.AAFA_TEXT_COMING_SOON !== false;
+    var EMAIL_ONLY = window.AAFA_TEXT_COMING_SOON_TEXT || "";
+
     function setStatus(kind, text) {
         statusEl.className = "form-status show " + kind;
         statusEl.textContent = text;
@@ -47,8 +53,10 @@
         // All three choices are in the markup and visible without JavaScript;
         // this only swaps the hint underneath, because what happens to a
         // mobile number differs before and after the number is approved.
+        // The note goes when texts work, not when the API says the sending
+        // side is configured -- those are different days.
         var note = document.getElementById("sms-soon");
-        if (note) note.hidden = smsOn;
+        if (note) note.hidden = !comingSoon;
         syncFields();
     }).catch(function () { /* leave the email-only default */ });
 
@@ -124,7 +132,8 @@
                     "We've texted you a six-digit code — enter it below to confirm your mobile number.");
                 if (codeBox) { codeBox.hidden = false; document.getElementById("signup-code-input").focus(); }
             } else {
-                setStatus("ok", j.message + " Check your email for the confirmation link — it can take a minute, and sometimes lands in spam.");
+                setStatus("ok", j.message + " Check your email for the confirmation link — it can take a minute, and sometimes lands in spam." +
+                    (comingSoon && EMAIL_ONLY ? " " + EMAIL_ONLY : ""));
                 form.reset(); syncFields();
             }
         }).catch(function (e) {

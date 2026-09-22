@@ -79,6 +79,11 @@
 
                 <div class="form-status" id="notice" role="status" aria-live="polite"></div>
 
+                <!-- Shown until texting is switched on. Unhidden by manage.js
+                     when the API says so, rather than being written into the
+                     page for somebody to remember to take out later. -->
+                <p class="hint" id="email-only-note" hidden>At this time only email is available, text will be provided in the near future.</p>
+
                 <!-- Text-code confirmation, for people added by a board member -->
                 <div class="signup" id="code-box" hidden>
                     <h2>Confirm your mobile number</h2>

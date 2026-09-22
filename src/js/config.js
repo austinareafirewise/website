@@ -26,3 +26,19 @@ window.AAFA_CMS = {
        the site. An Amplify rewrite proxies this prefix to the content bucket. */
     contentBase: "/content"
 };
+
+
+/* Text messages are not going out yet.
+
+   The API reports texting as switched on -- the sending side is configured --
+   but the number is still in carrier registration, so nothing arrives. That
+   gap is why this is a switch of its own rather than a reading of the API:
+   the API is describing the software, and this is describing what a person
+   will actually receive.
+
+   Set it to false on the day texts start working. Three places follow it:
+   the note under "Contact me by" on the sign-up form, the message somebody
+   reads after signing up, and the confirmation page. */
+window.AAFA_TEXT_COMING_SOON = true;
+window.AAFA_TEXT_COMING_SOON_TEXT =
+    "At this time only email is available, text will be provided in the near future.";

@@ -26,6 +26,17 @@
         n.textContent = text;
     }
 
+    /* Until texts actually arrive, say so. Somebody who has just confirmed is
+       at the one moment they are thinking about what they will get, and the
+       form they filled in offered email and text. One switch in config.js
+       turns this off everywhere it appears. */
+    (function () {
+        var note = $("email-only-note");
+        if (!note || window.AAFA_TEXT_COMING_SOON === false) return;
+        note.textContent = window.AAFA_TEXT_COMING_SOON_TEXT || note.textContent;
+        note.hidden = false;
+    })();
+
     function call(method, path, body) {
         return fetch(api + path, {
             method: method,
