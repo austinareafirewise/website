@@ -8,8 +8,8 @@
 ## An article, not a notice
 - section: content
 - target: #new-news
-- audio: write-a-news-article-01-76ef58.mp3
-- audio-hash: c8c7f41a
+- audio: write-a-news-article-01-3ed205.mp3
+- audio-hash: 5b97cd17
 
 Write a news article. This lesson is about the longer pieces that get a page
 of their own, and how they differ from a notice.
@@ -20,6 +20,10 @@ something happening on a date.
 
 If it has a date and a place, it is probably a notice. If it is something to
 read, it is an article.
+
+Articles are the second list on this screen, under the notices. An article you
+cannot find on the site is nearly always sitting under Drafts, or under Ended
+with its stop date behind it.
 
 ## Write it
 - section: content

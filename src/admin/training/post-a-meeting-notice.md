@@ -9,14 +9,18 @@
 ## What a notice is
 - section: content
 - target: #new-notice
-- audio: post-a-meeting-notice-01-2e6a09.mp3
-- audio-hash: 81058a9c
+- audio: post-a-meeting-notice-01-4056cd.mp3
+- audio-hash: 4dedb80c
 
 Post a meeting notice. This lesson takes you through getting a meeting, a
 seminar or a chipper day onto the top of the home page.
 
 A meeting notice is the band across the top of the home page, above the big
 headline. It is for something happening on a date.
+
+This screen holds two lists. Notices are the first one, articles the second,
+and each is grouped by what it is doing now — on the site, scheduled, draft,
+ended.
 
 Press "New meeting notice" to start one.
 
