@@ -186,7 +186,14 @@ async function listItems() {
         out.push(...(page.Items || []));
         ExclusiveStartKey = page.LastEvaluatedKey;
     } while (ExclusiveStartKey);
-    return out.filter((i) => i.id !== HOME_KEY).sort((a, b) => (a.id < b.id ? 1 : -1));
+    // The table holds more than the board's writing: the home banner, the
+    // resource records and the category list share it. Return what this list
+    // is about -- a notice or an article -- rather than excluding the things
+    // that happen to exist today, so the next record shape added to the table
+    // does not turn up in the editor's list as an untitled News item.
+    return out
+        .filter((i) => i.kind === "notice" || i.kind === "news")
+        .sort((a, b) => (a.id < b.id ? 1 : -1));
 }
 
 async function getItem(id) {

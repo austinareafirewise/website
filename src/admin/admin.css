@@ -38,8 +38,14 @@
 /* ---------- List ---------- */
 
 .list-group { margin-bottom: 28px; }
-.list-group h2 { font-size: 1.25rem; margin-bottom: 10px; }
+.list-group h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 10px; color: var(--muted); }
 .list-group.dim .item { opacity: .72; }
+
+/* Notices and articles are kept apart, each with its own heading, so a row
+   never has to be read to know which of the two it is. */
+.list-kind { margin-bottom: 34px; }
+.list-kind + .list-kind { border-top: 1px solid var(--line); padding-top: 26px; }
+.list-kind-head { font-size: 1.35rem; margin-bottom: 14px; }
 
 .item {
     display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center;

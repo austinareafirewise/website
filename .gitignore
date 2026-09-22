@@ -52,3 +52,5 @@ src/img/_preview-*
 # Local preview: the stand-in for the content files the CMS publishes to S3,
 # so a page can be looked at before its back end exists.
 src/content/
+
+users.txt

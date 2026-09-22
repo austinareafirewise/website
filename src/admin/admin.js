@@ -521,10 +521,31 @@
             ["live", "On the site now", false], ["scheduled", "Scheduled — will appear on their own", false],
             ["draft", "Drafts — visitors cannot see these", true], ["ended", "Ended", true]
         ];
+
+        /* Two lists, not one. A notice and an article are different jobs --
+           a band at the top of the home page for a date, against a page of
+           its own to read -- and mixing them meant scanning a row's badge to
+           know which you were looking at. Notices first: they are the ones
+           with a date coming, and the ones somebody is usually here to fix. */
+        var kinds = [
+            ["notice", "Meeting notices"],
+            ["news", "News articles"]
+        ];
+
+        kinds.forEach(function (k) {
+            var mine = items.filter(function (i) { return (i.kind === "notice" ? "notice" : "news") === k[0]; });
+            if (!mine.length) return;
+            var kindSection = node("section", { class: "list-kind" }, [node("h2", { class: "list-kind-head", text: k[1] })]);
+            renderGroups(mine, groups, kindSection);
+            root.appendChild(kindSection);
+        });
+    }
+
+    function renderGroups(items, groups, root) {
         groups.forEach(function (g) {
             var list = items.filter(function (i) { return stateOf(i) === g[0]; });
             if (!list.length) return;
-            var sec = node("div", { class: "list-group" + (g[2] ? " dim" : "") }, [node("h2", { text: g[1] })]);
+            var sec = node("div", { class: "list-group" + (g[2] ? " dim" : "") }, [node("h3", { text: g[1] })]);
             list.forEach(function (i) {
                 var when = g[0] === "scheduled" ? "Appears " + fmt(i.startsAt) : g[0] === "live" ? "Until " + fmt(i.endsAt) : g[0] === "ended" ? "Ended " + fmt(i.endsAt) : "Last saved " + fmt(i.updatedAt);
                 var row = node("div", { class: "item " + g[0] }, [
@@ -554,6 +575,7 @@
             root.appendChild(sec);
         });
     }
+
 
     function node(tag, attrs, children) {
         var n = document.createElement(tag);
