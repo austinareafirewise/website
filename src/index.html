@@ -22,6 +22,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Oswald:wght@500;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/site.css">
+    <!-- With scripting off, the text-size buttons and anything else that
+         only works through JavaScript should not sit there looking live. -->
+    <noscript>
+        <style>
+            .text-size { display: none; }
+        </style>
+    </noscript>
+
     <script>
         try {
             var s = localStorage.getItem("aafa-text-scale");
@@ -113,6 +121,33 @@
                 <a class="btn btn-outline" href="#updates">Get Alliance updates</a>
             </div>
         </nav>
+
+        <noscript>
+            <section>
+                <div class="wrap">
+                    <div class="noscript-note">
+                        <h2>Some of this page is missing</h2>
+                        <p>
+                            Your browser has JavaScript switched off. The meeting notices, the news
+                            headlines and today&#8217;s fire danger rating are fetched from the board
+                            when the page opens, so none of them are here. Everything else on the
+                            page is what it always is.
+                        </p>
+                        <p>
+                            Turn JavaScript on for austinareafirewise.org and reload to see them.
+                        </p>
+                        <p>
+                            In a fire emergency, call 911. Official alerts for this region come from
+                            <a class="ext" href="https://warncentraltexas.org/" target="_blank" rel="noopener">Warn
+                            Central Texas</a>, whichever way your browser is set. Burn rules are set
+                            by
+                            <a class="ext" href="https://www.traviscountytx.gov/fire-marshal/burn-ban" target="_blank" rel="noopener">Travis
+                            County</a>, not by this page.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </noscript>
 
         <!-- Titles of news articles the board flagged for the home page.
              Filled by js/content.js; hidden when there are none. -->
@@ -304,6 +339,17 @@
                         If you see fire or smoke, call 911.
                     </p>
                 </div>
+
+                <noscript>
+                    <div class="noscript-note">
+                        <h2>This form needs JavaScript</h2>
+                        <p>
+                            With scripting off the form cannot send anything, so filling it in would
+                            do nothing. Turn JavaScript on for austinareafirewise.org and reload, or
+                            write to us at P.O. Box 4211-A, Austin, TX 78731 and we will add you.
+                        </p>
+                    </div>
+                </noscript>
 
                 <form class="signup" id="signup-form" novalidate>
                     <div class="field">

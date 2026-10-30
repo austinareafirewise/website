@@ -994,6 +994,31 @@ section { padding: 52px 0; }
 .news-back { margin-top: 26px; }
 .news-empty { color: var(--muted); }
 
+/* ---------- When JavaScript is off ----------
+   The board's writing -- notices, news, resources, the roster, today's fire
+   danger -- is drawn in the browser from what the editor publishes. With
+   scripting off those pages have nothing in them, and a blank page reads as
+   a broken organization rather than as a browser setting. These blocks say
+   which it is, and keep pointing at the one thing that matters anyway. */
+
+.noscript-note {
+    border: 1px solid var(--alert-line);
+    border-left: 6px solid var(--alert-line);
+    background: var(--alert-bg);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin: 0 0 26px;
+    max-width: 68ch;
+}
+
+.noscript-note h2 {
+    font-size: 1.15rem;
+    margin: 0 0 .4em;
+}
+
+.noscript-note p { margin: 0 0 .7em; }
+.noscript-note p:last-child { margin-bottom: 0; }
+
 /* ---------- The board roster ----------
    Names and offices, and deliberately nothing else. There is no contact
    detail on these cards: the Alliance's own officers are volunteers, and a

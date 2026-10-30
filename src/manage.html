@@ -15,6 +15,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Oswald:wght@500;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/site.css">
+    <!-- With scripting off, the text-size buttons and anything else that
+         only works through JavaScript should not sit there looking live. -->
+    <noscript>
+        <style>
+            .text-size { display: none; }
+        </style>
+    </noscript>
+
     <script>
         try {
             var s = localStorage.getItem("aafa-text-scale");
@@ -76,6 +84,23 @@
                 <!-- Everything below is shown or hidden by js/manage.js depending on
                      what brought the person here: a confirmation link, an unsubscribe
                      link, a manage link, or nothing (they typed the address). -->
+
+                <noscript>
+                    <div class="noscript-note">
+                        <h2>This page needs JavaScript</h2>
+                        <p>
+                            Your browser has it switched off, so nothing on this page will work —
+                            including an unsubscribe or confirmation link you followed from an
+                            email. <strong>Your request has not been carried out.</strong> Turn
+                            JavaScript on for austinareafirewise.org and open the link again.
+                        </p>
+                        <p>
+                            To stop texts without this page, reply <strong>STOP</strong> to any text
+                            we have sent. To stop email, write to us at P.O. Box 4211-A, Austin, TX
+                            78731 and we will remove you.
+                        </p>
+                    </div>
+                </noscript>
 
                 <div class="form-status" id="notice" role="status" aria-live="polite"></div>
 

@@ -14,6 +14,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Oswald:wght@500;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/site.css">
+    <!-- With scripting off, the text-size buttons and anything else that
+         only works through JavaScript should not sit there looking live. -->
+    <noscript>
+        <style>
+            .text-size { display: none; }
+        </style>
+    </noscript>
+
     <script>
         try {
             var s = localStorage.getItem("aafa-text-scale");
@@ -76,6 +84,21 @@
                      the standing answer, so a visitor who arrives while the
                      list cannot be read is told where to ask rather than shown
                      an error or an empty page. -->
+                <noscript>
+                    <div class="noscript-note">
+                        <h2>The roster is not showing</h2>
+                        <p>
+                            Your browser has JavaScript switched off, and this site uses it to fetch
+                            the list of board members from the board. Turn JavaScript on for austinareafirewise.org and
+                            reload the page, and it will appear.
+                        </p>
+                        <p>
+                            In a fire emergency, call 911. Official alerts for this region come from
+                            <a class="ext" href="https://warncentraltexas.org/" target="_blank" rel="noopener">Warn
+                            Central Texas</a>, whichever way your browser is set.
+                        </p>
+                    </div>
+                </noscript>
                 <div id="board-root" aria-live="polite">
                     <p class="board-empty">
                         The current roster is on its way. If it does not appear,

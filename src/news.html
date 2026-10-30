@@ -14,6 +14,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Oswald:wght@500;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/site.css">
+    <!-- With scripting off, the text-size buttons and anything else that
+         only works through JavaScript should not sit there looking live. -->
+    <noscript>
+        <style>
+            .text-size { display: none; }
+        </style>
+    </noscript>
+
     <script>
         try {
             var s = localStorage.getItem("aafa-text-scale");
@@ -70,6 +78,21 @@
             <div class="wrap">
                 <!-- Filled by js/content.js from the board-published content file.
                      Shows a list, or one article when the URL has ?id=. -->
+                <noscript>
+                    <div class="noscript-note">
+                        <h2>The news is not showing</h2>
+                        <p>
+                            Your browser has JavaScript switched off, and this site uses it to fetch
+                            the articles from the board. Turn JavaScript on for austinareafirewise.org and
+                            reload the page, and it will appear.
+                        </p>
+                        <p>
+                            In a fire emergency, call 911. Official alerts for this region come from
+                            <a class="ext" href="https://warncentraltexas.org/" target="_blank" rel="noopener">Warn
+                            Central Texas</a>, whichever way your browser is set.
+                        </p>
+                    </div>
+                </noscript>
                 <div id="news-root" aria-live="polite"></div>
             </div>
         </section>
