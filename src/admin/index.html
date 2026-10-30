@@ -59,6 +59,26 @@
 
     <main id="main" tabindex="-1" class="wrap admin-main">
 
+        <!-- Every screen below starts hidden and is shown by admin.js. With
+             scripting off that leaves a page with a header and nothing else,
+             which looks like the editing area is broken rather than like a
+             browser setting. -->
+        <noscript>
+            <div class="noscript-note">
+                <h2>The editing area needs JavaScript</h2>
+                <p>
+                    Your browser has it switched off, so none of this screen will load — not the
+                    sign-in, not the lists, not the forms. Turn JavaScript on for
+                    austinareafirewise.org and reload.
+                </p>
+                <p>
+                    Nothing is wrong with the website, and nothing you published before has
+                    changed. If you cannot turn it on where you are, ask another board member to
+                    make the change, or come back from a different computer.
+                </p>
+            </div>
+        </noscript>
+
         <!-- Signed-out -->
         <section id="screen-signin" hidden>
             <div class="admin-card admin-signin">

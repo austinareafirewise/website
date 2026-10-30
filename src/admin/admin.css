@@ -459,3 +459,8 @@ blockquote.md-demo { margin: 0; padding-left: 12px; border-left: 3px solid var(-
 }
 
 .import-list li { margin-bottom: 3px; }
+
+/* The no-JavaScript notice sits on its own in the editing area, where there
+   is no page body behind it to give it margins. */
+.admin .noscript-note { margin: 28px auto; }
+.training-window .noscript-note { margin: 16px; }
