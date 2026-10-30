@@ -31,6 +31,7 @@ Under **$25 a year**, nearly all of it the domain name.
 | [field-guide.html](field-guide.html) | **For board members** — one page covering what the site does, the editing screen, and what it costs. Open it in a browser | reference |
 | [05-runbook.md](05-runbook.md) | Everything afterwards — editing, rollback, removing people, costs | reference |
 | [06-cms-design.md](06-cms-design.md) | How the board-editing feature works and why it is built that way | reference |
+| [08-making-changes.md](08-making-changes.md) | **For whoever edits the code** — Claude Code, pushing to GitHub, and which of the three deploy paths a change needs | reference |
 
 Do them in order. Step 2 fails in confusing ways if step 1 was not finished.
 

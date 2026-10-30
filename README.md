@@ -18,6 +18,11 @@ credentials are needed to publish — the workflow gets short-lived credentials
 from GitHub OIDC. To republish without a content change, run the **Deploy to
 Amplify** workflow from the Actions tab.
 
+That loop covers `src/` only. Lambda code and the CloudFormation templates are
+deployed by hand, and board content is published from `/admin/` without Git at
+all — step by step for all three, plus working in Claude Code, is
+[docs/08-making-changes.md](docs/08-making-changes.md).
+
 ## Pages
 
 | File | Covers |
