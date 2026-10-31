@@ -26,7 +26,7 @@ export GIT_CONFIG_KEY_1=color.diff GIT_CONFIG_VALUE_1=never
 : "${REF:?}" "${AFTER:?}"
 BEFORE="${BEFORE:-}"
 TMP="${RUNNER_TEMP:-$(mktemp -d)}"
-# gitleaks never scans the config file it was given, so it gets copies held
+# gitleaks can skip the config file it was given, so it gets copies held
 # outside the repository; the files themselves are then scanned like any
 # others. CONFIGS are the copies, in the same order as REPO_CONFIGS.
 REPO_CONFIGS=(.gitleaks.toml .gitleaks-standard.toml)

@@ -190,7 +190,8 @@ gh pr merge <number> --squash --delete-branch
 
 A change under `src/` is live about a minute after the merge (§3.1).
 
-Afterwards, back on your computer:
+Afterwards, back on your computer (if you merged with `gh pr merge
+--delete-branch`, skip the last line; see below):
 
 ```bash
 git switch main
@@ -200,7 +201,9 @@ git branch -D bknowles/fix/2026-11-02-burn-ban-wording
 
 `-D`, not `-d`: after a squash merge the branch's own commits aren't in
 `main` — the squashed one is — so git can't tell it was merged and `-d`
-refuses.
+refuses. After `gh pr merge --delete-branch` there is nothing to delete:
+it removes the local branch as well, and `git branch -D` reports that the
+branch isn't found.
 
 ### 2.4 Make GitHub hold the line
 
@@ -220,8 +223,8 @@ ruleset**:
 Also under **Settings → General → Pull Requests**, turn on **Automatically
 delete head branches**, so a merged branch doesn't linger on GitHub.
 
-Leave **Block force pushes** off only for the one planned history rewrite,
-and turn it straight back on.
+If history ever has to be rewritten, turn **Block force pushes** off only
+for that, and straight back on afterwards.
 
 ### 2.5 Undo a bad change
 
@@ -389,10 +392,13 @@ The checks run in three places:
 
 The GitHub check is the one a pull request must pass (§2.4), and it runs
 whether or not anyone turned the hooks on. The hooks add catching a mistake
-before it leaves your computer at all. `git merge` runs only the
-commit-message hook, and `cherry-pick` and `rebase` run neither; the GitHub
-check covers all three. To turn
-them on, once per checkout:
+before it leaves your computer at all. They don't run for everything: a `git
+merge` with no conflict runs only the commit-message hook, and a
+`cherry-pick`, `revert` or plain `rebase` with no conflict runs neither (an
+interactive rebase's `reword` runs both). After a conflict, a continued merge,
+`cherry-pick` or `revert` runs both, but `git rebase --continue` still runs
+neither. The GitHub check covers all of these. To turn them on, once per
+checkout:
 
 ```bash
 brew install gitleaks
