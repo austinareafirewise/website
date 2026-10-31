@@ -3,7 +3,8 @@
 The Austin Area Firewise Alliance website: static pages in `src/`, published
 to AWS Amplify by GitHub Actions; Lambdas and CloudFormation in `lambda/` and
 `infra/`, deployed by hand. `docs/08-making-changes.md` is the how-to for
-making and shipping a change. This file holds the rules for working here, and
+making and shipping a change. This file holds the standard work is done
+to, the principles the website is run by, the rules for working here, and
 what has been learned the hard way.
 
 ## The standard
@@ -41,8 +42,8 @@ pull request of its own.
 2. **JavaScript only where it earns its place** — where a page can't work
    without it, or where it makes a large difference to how well the page
    works. Pages that need it say so to visitors who have it switched off.
-3. **No ads.** None of our own, and no links to ad sources, so an ad blocker
-   (AdGuard and the like) finds nothing to block.
+3. **No ads.** None of our own, and nothing loaded from ad sources, so an
+   ad blocker (AdGuard and the like) finds nothing to block.
 4. **No trackers** of our own.
 5. **Nothing loaded from anyone else's servers.** Fonts and everything else
    the pages need come from our own site. Privacy Badger should find nothing
@@ -58,20 +59,23 @@ pull request of its own.
 ### Where the site stands
 
 Checked against the live site and `src/` on 2026-10-31. Update this table
-when a gap closes, and re-check it when a change could affect it.
+when a gap closes, and re-check it when a change could affect it. *Meets*:
+checked and true. *Believed met*: true as far as checked, but not yet
+confirmed the way the principle names. *Not yet checked*: no evidence either
+way. *Falls short*: a gap, listed.
 
 | # | Status | As found |
 | --- | --- | --- |
-| 1 | Short | Automated checks pass on every public page — language, image text alternatives, form labels, accessible names, landmarks, unique ids, skip link, AA text contrast — except one: the footer's headings skip a level (`h4` after `h2`). Not yet checked: keyboard use and focus, screen readers, dark mode, small screens. |
-| 2 | Short | The information pages work without JavaScript. News, the board, resources, the home page's notices, fire danger and burn ban, and the sign-up and manage forms need it. |
+| 1 | Falls short | Scripted checks (a subset of WCAG 2.2 AA, not a full audit) pass on every public page — language, image text alternatives, form labels, accessible names, landmarks, unique ids, skip link, text contrast — except that on most pages the footer's headings skip a level (`h4` straight after an `h2`). Not yet checked: keyboard use and focus, screen readers, dark mode, small screens. |
+| 2 | Falls short | The information pages work without JavaScript. News, the board, resources, the home page's notices, fire danger and burn ban, and the sign-up and manage forms need it. |
 | 3 | Meets | No ad code and no ad hosts. |
-| 4 | Meets | No analytics or tracking code; no cookies, local storage or session storage set. (The text-size control reads a saved preference.) |
-| 5 | Short | Fonts come from Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) on every page. Everything else is our own site and our own API. |
-| 6 | Believed met | No cookies are set; our responses carry only content and caching headers (including ETags, which caching uses). Not yet checked with the extension. |
-| 7 | Believed met | The only requests to other parties are the Google Fonts ones (5). Not yet checked with the extension. |
-| 8 | Short | Google Fonts, as in 5. The API is at `execute-api.us-east-2.amazonaws.com`. |
-| 9 | Short | TLS 1.0 and 1.1 are refused. TLS 1.2 is still accepted, by the site, the API and the admin sign-in, and TLS 1.3 offers ChaCha20-Poly1305 alongside AES-GCM. Whether each AWS service can be set to require TLS 1.3 is not yet established. |
-| 10 | Not yet checked | Not tested in Firefox. The only requests to other parties are the Google Fonts ones (5). |
+| 4 | Meets | No analytics or tracking code, and no cookies on the public pages. Local storage holds only the text-size choice, once a visitor makes one, and it never leaves the browser. The admin pages keep their own state in session storage. |
+| 5 | Falls short | Fonts come from Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) on every page. Everything else is our own site, our own API, and — on the admin pages — our own sign-in. |
+| 6 | Believed met | The public pages set no cookies. Responses carry content, caching and CDN headers; the ETags are each file's MD5 hash, the same for every visitor. Not yet checked with the extension. |
+| 7 | Believed met | On the public pages, the only requests to other parties are the Google Fonts ones (5). Not yet checked with the extension. |
+| 8 | Falls short | Google Fonts, as in 5. The API is at `execute-api.us-east-2.amazonaws.com`. |
+| 9 | Falls short | TLS 1.0 and 1.1 are refused. TLS 1.2 is still accepted — by the site, the API and the admin sign-in — with ciphers besides AES-GCM, and TLS 1.3 also accepts ChaCha20-Poly1305. Whether each AWS service can be set to require TLS 1.3 is not yet established. |
+| 10 | Not yet checked | Not tested in Firefox. On the public pages, the only requests to other parties are the Google Fonts ones (5). |
 
 ## Ground rules
 
@@ -350,9 +354,10 @@ files are to live there.)
   result. Feed it from a file instead when it must be able to stop the
   script.
 - `set -e` doesn't catch a failure inside `for x in $(cmd)`.
-- After `cmd | tail`, `$?` is `tail`'s exit status, not `cmd`'s. Read
-  `${PIPESTATUS[0]}`, or capture the output first and check the command on
-  its own.
+- After `cmd | tail`, `$?` is `tail`'s exit status without `pipefail`, and
+  the last non-zero status in the pipeline with it — `cmd`'s only by
+  accident. Read `${PIPESTATUS[0]}` straight away (the next command resets
+  it), or capture the output first and check the command on its own.
 - `gitleaks dir` scans only one path: given several (a file list through
   `xargs`, say), it scans the current directory instead.
 
@@ -390,11 +395,11 @@ files are to live there.)
   weaker ciphers itself, so a "refused" can be the client's doing. Probe
   with `-cipher 'DEFAULT:@SECLEVEL=0'`, and judge by the cipher actually
   negotiated: a failed handshake still prints `New,` — with
-  `Cipher is (NONE)`.
+  `Cipher is (NONE)` — and `s_client` can still exit 0.
 - The browser's list of what a page loaded (`performance` resource
-  entries) isn't complete: here it showed the font files on some page loads
-  and not on others. Confirm against the source.
-- This session's safety check won't run code fetched from a CDN in the
+  entries) isn't a complete record: the same page can list a file on one
+  load and not on the next. Confirm against the source.
+- Claude Code's safety checks won't run code fetched from a CDN in the
   browser, so a full automated accessibility audit (axe-core and the like)
   needs another route, set up and reviewed like any other tool.
 
