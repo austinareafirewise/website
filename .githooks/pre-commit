@@ -72,7 +72,7 @@ git -c core.quotePath=false diff --cached --numstat --no-renames --diff-filter=A
     | awk -F'\t' '$1 == "-" && $2 == "-" { print $3 }' \
     | .githooks/check-documents --binary || exit 1
 
-# gitleaks never scans the config file it was given, so it gets a copy held
+# gitleaks can skip the config file it was given, so it gets a copy held
 # outside the repository, and .gitleaks.toml is checked like any other file.
 for config in .gitleaks.toml .gitleaks-standard.toml; do
     cp "$config" "$copies/$config"

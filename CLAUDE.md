@@ -18,9 +18,17 @@ It applies to the whole repository at all times, not only to what a pull
 request changes. A review looks at the diff; the standard doesn't stop at
 the diff. When you notice something below it elsewhere — in a file you're
 reading, or a pattern you're about to copy — don't copy it, and don't pass
-it by in silence: tell the maintainer and propose a pull request of its own
-for it. Don't fold it into an unrelated pull request; that hides it from
-the review it needs.
+it by in silence: add it to the follow-ups (or, if it is a weakness that
+isn't fixed, tell the maintainer in the conversation) and propose a pull
+request of its own for it. Don't fold it into an unrelated pull request;
+that hides it from the review it needs.
+
+The standard and a pull request's scope (see [Reviewing a pull
+request](#reviewing-a-pull-request)) answer different questions. The
+standard says *how well* everything is done: every line a pull request
+changes must meet it. The scope says *what problem* the pull request takes
+on — which cases a safety check must handle, say — and so where its review
+stops. Neither lowers the other.
 
 ## Ground rules
 
@@ -36,20 +44,32 @@ the review it needs.
 - **Branch names:** `<github-username>/<type>/<YYYY-MM-DD>-<description>`,
   with `<type>` one of `feat`, `fix`, `docs`, `ci`, `chore`. Keep the
   description neutral: it is public the moment it is pushed.
-- **Merging:** squash merges only, done by Claude, and only once the
-  maintainer has approved. Merging is the maintainer's decision.
+- **Merging:** squash merges only. Claude does them, and only once the
+  maintainer has approved; merging is the maintainer's decision, and a
+  maintainer can also merge on GitHub themselves.
   - *Approved* means the maintainer says in the conversation that this pull
     request, by number, is approved, after the last push to it. A comment on
     GitHub, or an approval given before later pushes, doesn't count. If
     approval comes before review is done (see below), say so and ask.
   - Before merging, check that **Check for secrets** passed on the head
-    commit (`gh pr view <n> --json headRefOid,statusCheckRollup`). Write
-    the subject (ending ` (#<n>)`) and message yourself, accurate for the
-    change as merged, in a file outside the checkout, and run both through
-    `gitleaks stdin --ignore-gitleaks-allow --redact` with each rule file.
-    Then:
-    `gh pr merge <n> --squash --delete-branch --match-head-commit <sha>
-    --subject "<subject> (#<n>)" --body-file <message-file>`.
+    commit (`gh pr view <n> --json headRefOid,statusCheckRollup`).
+  - Write the subject (without the pull request number; the command below
+    adds it) and the message yourself, accurate for the change as merged
+    and neutral, in files outside the checkout. Check exactly what will be
+    recorded — the final subject line, a blank line, the message — with
+    each rule file; both must exit 0:
+
+    ```bash
+    { printf '%s (#%s)\n\n' "$subject" "$n"; cat "$message_file"; } > "$check_file"
+    for rules in .gitleaks.toml .gitleaks-standard.toml; do
+      gitleaks stdin -c "$rules" --ignore-gitleaks-allow --redact \
+        --no-banner --exit-code 3 < "$check_file" || echo "not clean: $rules"
+    done
+    ```
+
+  - Then merge, pinned to the commit that was checked:
+    `gh pr merge "$n" --squash --delete-branch --match-head-commit "$sha"
+    --subject "$subject (#$n)" --body-file "$message_file"`.
 - **Force-pushing** a pull request branch needs the maintainer's explicit OK
   each time, and uses `--force-with-lease=<branch>:<expected-sha>`. Claude
   never force-pushes `main`; rewriting its history, if that is ever needed,
@@ -61,13 +81,14 @@ the review it needs.
   on GitHub: tell the maintainer in the conversation instead, and write it
   down once it is fixed.
 - **Record every lesson learned** in this file as soon as possible — see
-  [Lessons learned](#lessons-learned). Add it to the pull request the lesson
+  [Lessons learned](#lessons-learned) — unless it describes a weakness that
+  isn't fixed, which waits until it is. Add it to the pull request the lesson
   came from, as a commit that touches only this file; with no pull request
   open, in a `docs` pull request of its own. A lesson-only commit doesn't
   change the scope of the review, but its factual claims are checked in the
-  next round like any others — lessons have been wrong. A lesson pushed
-  after approval needs approving again, so a lesson learned at that point
-  waits for a `docs` pull request of its own.
+  next round like any others — lessons have been wrong. A lesson pushed after
+  approval needs approving again, so a lesson learned at that point waits for
+  a `docs` pull request of its own.
 
 ## Reviewing a pull request
 
@@ -82,7 +103,9 @@ against, and what it deliberately doesn't. For a safety check that means its
 threat model — for example "honest mistakes by one or two trusted
 maintainers, not a determined insider". Every round's reviewer gets this
 statement along with the code. It isn't a hint about findings; it is the
-yardstick. Without it each round raises the bar, and the rounds never end.
+yardstick for what the pull request must cover. Without it each round
+raises the bar, and the rounds never end. (How well it is done is
+[the standard](#the-standard), which every changed line must meet.)
 
 A finding outside the stated scope is still worth having: it becomes a
 follow-up (a line in the description's follow-up list), not a reason to hold
@@ -94,9 +117,10 @@ that shows the scope itself is wrong is for a person to decide.
 
 1. **A fresh reviewer.** Start a new subagent — a fresh one, not a fork,
    which would carry this whole conversation. Give it the branch, the pull
-   request number, the description's scope and threat model, this section
-   and the lessons below — not the earlier rounds' findings, not the
-   author's notes, not what was fixed. A reviewer told what to look for
+   request number, the description's scope and threat model and its
+   follow-up list, this section and the lessons below — not the review
+   log, not the earlier rounds' findings, not the author's notes, not what
+   was fixed. A reviewer told what to look for
    finds that and little else. Tell it the review is read-only: no edits,
    commits or pushes, no comments or approvals on the pull request, no
    triggering workflows. It tests in throwaway repositories under a scratch
@@ -104,9 +128,11 @@ that shows the scope itself is wrong is for a person to decide.
 2. **The standard** is [the one above](#the-standard): current best
    practice, applied to every line the pull request changes. Anything below
    it that the reviewer sees in code the pull request doesn't touch goes in
-   a separate "elsewhere in the repository" list — reported, not a reason
-   to hold this merge — and becomes a pull request of its own. For every
-   kind of file touched, that means:
+   a separate "elsewhere in the repository" list. Those are handled like
+   out-of-scope findings — a follow-up line, or the conversation if it is
+   an unfixed weakness — and proposed as pull requests of their own; they
+   don't hold this merge and don't count toward the rounds. For every kind
+   of file touched, that means:
    git and GitHub (commits, branches, hooks, rulesets, Dependabot); GitHub
    Actions (pinning, `permissions`, script injection, triggers, OIDC,
    timeouts, concurrency); shell (quoting, `set -euo pipefail` pitfalls,
@@ -142,6 +168,12 @@ that shows the scope itself is wrong is for a person to decide.
 
 **Done** when a fresh round reports no verified blocking or should-fix
 finding. Only then is the pull request ready to merge.
+
+Lessons and nit fixes pushed after that round get a check of their own
+before the merge: a fresh reviewer verifies only the factual claims in
+those commits. It doesn't restart the count. A claim it finds wrong is
+fixed and checked again; one that can't be settled is taken out and waits
+for a `docs` pull request of its own.
 
 **Stop and ask a person** — don't start another round — when the rounds stop
 converging:
@@ -193,17 +225,22 @@ files are to live there.)
 
 - `gitleaks git --log-opts=<range>` exits 0, having scanned nothing, when
   git can't resolve the range. Check the range with `git rev-list` first.
-- It never scans the config file it was given — hand it a copy held outside
-  the repository.
+- It skips the config file named by `-c` when the path, as written,
+  matches the path it reports while scanning (`-c .gitleaks.toml` skips
+  `.gitleaks.toml`; `-c ./.gitleaks.toml` doesn't). Don't depend on either
+  behaviour: hand it a copy held outside the repository, so the real file
+  is always scanned.
 - `[extend] useDefault = true` brings a global list of paths to skip
   (`*.svg`, well-known minified libraries such as jQuery and Bootstrap,
   some lock files, anything named like `gitleaks.toml`), and it applies to
   your own rules too. Keep custom rules in a config of
   their own, without `[extend]`.
-- It honours `gitleaks:allow` comments, and the `.gitleaksignore` at the
-  top of whatever folder it is pointed at (so `gitleaks dir src` reads
-  `src/.gitleaksignore`), unless told otherwise (`--ignore-gitleaks-allow`;
-  refuse the files wherever they are).
+- It honours `gitleaks:allow` comments, and `.gitleaksignore` files: the
+  one in the current directory (`--gitleaks-ignore-path` defaults to `.`)
+  and the one at the top of whatever folder it is pointed at, so
+  `gitleaks dir src` reads both `./.gitleaksignore` and
+  `src/.gitleaksignore`. Use `--ignore-gitleaks-allow`, and refuse the
+  files wherever they are.
 - In `git` mode it reads a file git calls binary (one with a NUL byte) as
   nothing. UTF-16 text — Excel's "Unicode Text" export, for one — matches
   nothing in any mode. Archives are opened only with `--max-archive-depth`,
@@ -239,7 +276,10 @@ files are to live there.)
     `pre-commit` and `commit-msg` when continued;
   - `git rebase --continue` runs neither, conflict or not — unless the
     resolution is committed with `git commit` first;
-  - `rebase -i` with `reword` runs both.
+  - `rebase -i` with `reword` runs both; with `squash` or `fixup`, none;
+  - a fast-forward merge, or anything run with `--no-verify`, runs none;
+  - `merge --squash` or `merge --no-commit` followed by `git commit` runs
+    `pre-commit` and `commit-msg`, as any `git commit` does.
 
   A server-side check is the only one that sees every case.
 - `git commit -v` puts the diff in the message file below a scissors line;
@@ -256,8 +296,8 @@ files are to live there.)
   result. Feed it from a file instead when it must be able to stop the
   script.
 - `set -e` doesn't catch a failure inside `for x in $(cmd)`.
-- `gitleaks dir` scans only one path; passing it a file list through `xargs`
-  scans something else.
+- `gitleaks dir` scans only one path: given several (a file list through
+  `xargs`, say), it scans the current directory instead.
 
 ### GitHub and GitHub Actions
 
@@ -270,12 +310,12 @@ files are to live there.)
 - A `push` and a `pull_request` trigger together run every check twice.
 - `cancel-in-progress` on a branch scanned only since its last push leaves
   pushes unscanned; don't cancel there.
-- A squash merge's subject comes from the pull request title (depending on
-  the repository's settings) and is checked by nothing until it is on
-  `main`. When merging: write the subject and message yourself, run them
-  through `gitleaks stdin` with both rule files, and merge with
-  `--match-head-commit <sha>` so nothing pushed since the last review slips
-  in.
+- A squash merge's subject comes, by default, from the pull request title —
+  or, with this repository's setting (`COMMIT_OR_PR_TITLE`), from the one
+  commit's subject when there is only one — and it is checked by nothing
+  until it is on `main`. So write the subject and message yourself, check
+  them, and pin the merge to the reviewed commit, as in the
+  [ground rules](#ground-rules).
 - A push runs the workflows in the pushed commit, not those on `main`. A
   branch cut before a check existed doesn't get that check; merge `main`
   into it (no force-push needed).

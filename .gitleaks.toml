@@ -15,7 +15,8 @@
 # Email patterns start with (?i) because addresses are often capitalized
 # (Jane.Roe@Example.ORG), and these patterns are case-sensitive without it.
 #
-# gitleaks never scans the config file it was given, so every check hands it
+# gitleaks can skip the config file it was given (it does when the -c path
+# is spelled the way it names files while scanning), so every check hands it
 # a copy held outside the repository: an address typed into this file is
 # checked like one typed anywhere else.
 

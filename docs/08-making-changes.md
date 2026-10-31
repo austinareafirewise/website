@@ -190,7 +190,9 @@ gh pr merge <number> --squash --delete-branch
 
 A change under `src/` is live about a minute after the merge (§3.1).
 
-Afterwards, back on your computer:
+Afterwards, back on your computer. If you merged with `gh pr merge
+--delete-branch`, the last line isn't needed (see below); if you merged on
+GitHub's website, it is:
 
 ```bash
 git switch main
