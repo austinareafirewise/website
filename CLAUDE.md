@@ -74,16 +74,16 @@ either way. *Falls short*: a gap, listed.
 | # | Status | As found |
 | --- | --- | --- |
 | 1 | Falls short | Scripted checks (a subset of WCAG 2.2 AA, not a full audit, and not yet in the repository) pass on every public page — language, image text alternatives, form labels, landmarks, unique ids, skip link, text contrast — with two exceptions: on most pages the footer's headings skip a level (`h4` straight after an `h2`), and the three text-size buttons are each named only "A". Not yet checked: keyboard use and focus, screen readers, dark mode, small screens. |
-| 2 | Falls short | The information pages work without JavaScript, and the pages that need it say so. News, the board, resources, and the home page's notices, fire danger and burn ban need it, though they could be published as HTML; the sign-up and manage forms need it too. |
+| 2 | Falls short | The information pages work without JavaScript, and the pages that need it say so. News, the board, resources, and the home page's news headlines, notices, fire danger and burn ban need it, though they could be published as HTML; the sign-up and manage forms need it too. |
 | 3 | Believed met | No ad code and no ad hosts in `src/`. AdBlock found nothing to block, with a system-wide ad blocker also running; not yet checked with AdGuard on its own. |
 | 4 | Meets | No analytics or tracking code, and no cookies on the public pages. Local storage holds only the text-size choice, once a visitor makes one, and it never leaves the browser. The admin pages keep their own state in session storage. |
-| 5 | Falls short | Fonts come from Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) on every page; Privacy Badger lists `fonts.gstatic.com` as a tracker and blocks it. The API is on its own domain (see 8). On the admin pages, the sign-in page loads its styles, a script and an image from AWS's servers, and uploads go straight to the content bucket's AWS address. |
-| 6 | Falls short | Privacy Possum reported blocking Referer headers from 12 sources (it gives no detail): the pages' requests to other domains — Google Fonts, and our API on its own domain — send the page's address with them. The public pages set no cookies; the ETags are each file's MD5 hash, the same for every visitor. |
+| 5 | Falls short | Fonts come from Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) on every page; Privacy Badger lists `fonts.gstatic.com` as a tracker and blocks it. The API is on its own domain (see 11). On the admin pages, the page calls the sign-in domain directly, the sign-in page loads its styles, a script and an image from AWS's servers, and uploads go straight to the content bucket's AWS address. |
+| 6 | Falls short | Privacy Possum reported blocking Referer headers from 12 sources (it gives no detail): the pages' requests to other domains — Google Fonts, and our API on its own domain — carry the site's address in a Referer header. No Referrer-Policy is set, so the browser's default decides what is sent. The public pages set no cookies; the ETags are each file's MD5 hash, the same for every visitor. |
 | 7 | Believed met | The DuckDuckGo extension blocked nothing, with other blockers running first. On the public pages, the only requests to other domains are Google Fonts (5) and our own API (8). |
-| 8 | Falls short | uBlock Origin sees both Google Fonts domains (the maintainer's copy was told long ago to let them through). The API is at `execute-api.us-east-2.amazonaws.com`, which NoScript treats as someone else's (11). |
+| 8 | Falls short | uBlock Origin sees both Google Fonts domains (the maintainer's copy was told long ago to let them through). |
 | 9 | Falls short | TLS 1.0 and 1.1 are refused by the site, the API and the sign-in domain. TLS 1.2 is still accepted by all three, with ciphers besides AES-GCM, and TLS 1.3 also accepts ChaCha20-Poly1305. Whether each AWS service can be set to require TLS 1.3 is not yet established. |
 | 10 | Believed met | Firefox's Enhanced Tracking Protection blocked nothing, with other blockers running first. On the public pages, the only requests to other domains are Google Fonts (5) and our own API (8). |
-| 11 | Falls short | NoScript blocked our API as a third party until allowed; the maintainer saw no major difference either way. Google Fonts and the API's own domain are what blockers act on (5, 6, 8). |
+| 11 | Falls short | The API is at `execute-api.us-east-2.amazonaws.com`, which NoScript blocked as a third party until allowed; the maintainer saw no major difference either way. With the API blocked, the board page keeps its "on its way" text, and the sign-up and manage forms show the browser's own error message (Firefox: "NetworkError when attempting to fetch resource.") rather than saying what went wrong. Google Fonts and the API's own domain are what blockers act on (5, 6). |
 
 ## Ground rules
 
@@ -170,31 +170,31 @@ that shows the scope itself is wrong is for a person to decide.
 1. **A fresh reviewer.** Start a new subagent — a fresh one, not a fork, which
    would carry this whole conversation. Give it the branch, the pull request
    number, the description's scope and threat model and its follow-up list,
-   [the standard](#the-standard), this section and the lessons below — not the
-   review log, not the earlier rounds' findings, not the author's notes, not
-   what was fixed. Tell it not to read the pull request's description or
-   comments: what it needs from them is in its brief, and the review log is in
-   the description. A reviewer told what to look for finds that and little
-   else. Tell it the review is read-only: no edits, commits or pushes, no
-   comments or approvals on the pull request, no triggering workflows. It
-   tests in throwaway repositories under a scratch folder, never in the
-   checkout.
-2. **The standard** is [the one above](#the-standard): current best
-   practice, applied to every line the pull request changes. Anything below
-   it that the reviewer sees in code the pull request doesn't touch goes in
-   a separate "elsewhere in the repository" list. Those are handled like
-   out-of-scope findings — a follow-up line, or the conversation if it is
-   an unfixed weakness — and proposed as pull requests of their own; they
-   don't hold this merge and don't count toward the rounds. For every kind
-   of file touched, that means:
-   git and GitHub (commits, branches, hooks, rulesets, Dependabot); GitHub
-   Actions (pinning, `permissions`, script injection, triggers, OIDC,
-   timeouts, concurrency); shell (quoting, `set -euo pipefail` pitfalls,
-   macOS vs Linux tools, odd filenames); JavaScript and Node for the
+   [the standard](#the-standard), [How the website is
+   run](#how-the-website-is-run) with its table, this section and the lessons
+   below — not the review log, not the earlier rounds' findings, not the
+   author's notes, not what was fixed. Tell it not to read the pull request's
+   description or comments: what it needs from them is in its brief, and the
+   review log is in the description. A reviewer told what to look for finds
+   that and little else. Tell it the review is read-only: no edits, commits or
+   pushes, no comments or approvals on the pull request, no triggering
+   workflows. It tests in throwaway repositories under a scratch folder, never
+   in the checkout.
+2. **The standard** is [the one above](#the-standard): current best practice,
+   applied to every line the pull request changes. Anything below it that the
+   reviewer sees in code the pull request doesn't touch goes in a separate
+   "elsewhere in the repository" list. Those are handled like out-of-scope
+   findings — a follow-up line, or the conversation if it is an unfixed
+   weakness — and proposed as pull requests of their own; they don't hold this
+   merge and don't count toward the rounds. For every kind of file touched,
+   that means: git and GitHub (commits, branches, hooks, rulesets,
+   Dependabot); GitHub Actions (pinning, `permissions`, script injection,
+   triggers, OIDC, timeouts, concurrency); shell (quoting, `set -euo pipefail`
+   pitfalls, macOS vs Linux tools, odd filenames); JavaScript and Node for the
    Lambdas and the site; CloudFormation and IAM; Python; HTML, CSS and
-   accessibility for `src/`; gitleaks rules and Go regex semantics; and
-   Markdown, where every statement must be true of the code. Plus the
-   lessons below.
+   accessibility for `src/`, measured against the website's principles;
+   gitleaks rules and Go regex semantics; and Markdown, where every statement
+   must be true of the code. Plus the lessons below.
 3. **Test, don't assert.** Where a claim can be checked — a regex, a range, an
    exit code, a hook, a workflow path — the reviewer runs it and quotes the
    result, failure paths included, and for anything that is run, both its exit
@@ -362,7 +362,7 @@ files are to live there.)
   result. Feed it from a file instead when it must be able to stop the
   script.
 - `set -e` doesn't catch a failure inside `for x in $(cmd)`.
-- After `cmd | tail`, `$?` is `tail`'s exit status without `pipefail`; with
+- After `cmd | tail`, `$?` is `tail`'s exit code without `pipefail`; with
   it, it is the last non-zero status in the pipeline, so a failure shows but
   doesn't say which command failed. Read `${PIPESTATUS[0]}` straight away
   (the next command resets it), or capture the output first and check the
@@ -401,14 +401,17 @@ files are to live there.)
 
 ### Checking the live site
 
-- OpenSSL 3, at its default security level, won't offer TLS 1.0 or 1.1 or
-  weaker ciphers itself, so a "refused" can be the client's doing. Probe
-  with `-cipher 'DEFAULT:@SECLEVEL=0'`, and judge by the cipher actually
-  negotiated: a failed handshake still prints `New,` — with
-  `Cipher is (NONE)` — and `s_client` can still exit 0. The version on the
-  `New,` line is the cipher's, not the connection's (a TLS 1.2 connection
-  can show `New, TLSv1.0`); read the protocol from a successful handshake's
-  `Protocol` line, which on a failed one just repeats what was asked for.
+- OpenSSL 3, at its default security level, refuses to offer TLS 1.0 or 1.1
+  itself (it reports `no protocols available`), so a "refused" can be the
+  client's doing; it does still offer weaker ciphers, such as SHA-1 CBC
+  suites, when they are named. Probe old versions with `-cipher
+  'DEFAULT:@SECLEVEL=0'`, and judge by the cipher actually negotiated: a
+  failed negotiation still prints `New,` — with `Cipher is (NONE)` — and
+  `s_client` can still exit 0. The version on the `New,` line is the cipher's,
+  not the connection's (a TLS 1.2 connection can show `New, TLSv1.0`). Read
+  the protocol only from a successful handshake's `Protocol` line: on a failed
+  one it shows the version asked for, or `TLSv1.3` when the client itself
+  refused.
 - The browser's list of what a page loaded (`performance` resource
   entries) isn't a complete record: the same page can list a file on one
   load and not on the next. Confirm against the source.
