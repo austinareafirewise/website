@@ -69,7 +69,7 @@ blocker that "found nothing" may only mean another got there first. Update
 this table when a gap closes, and re-check it when a change could affect it.
 *Meets*: checked and true. *Believed met*: true as far as checked, but not
 yet confirmed the way the principle names. *Not yet checked*: no evidence
-either way. *Falls short*: a gap, listed.
+either way. *Falls short*: a gap, described in its row.
 
 | # | Status | As found |
 | --- | --- | --- |
@@ -81,9 +81,9 @@ either way. *Falls short*: a gap, listed.
 | 6 | Falls short | Privacy Possum reported blocking Referer headers from 12 sources (it gives no detail). Most likely these are the pages' requests to `fonts.googleapis.com` and to our API on its own domain, which carry the site's address in a Referer header. No Referrer-Policy is set, so the browser's default decides what is sent. The public pages set no cookies; the ETags are each file's MD5 hash, the same for every visitor. |
 | 7 | Believed met | The DuckDuckGo extension blocked nothing, with other blockers running first. On the public pages, the only requests to other domains are Google Fonts (5) and our own API (11). |
 | 8 | Falls short | uBlock Origin sees both Google Fonts domains (the maintainer's copy was told long ago to let them through). |
-| 9 | Falls short | TLS 1.0 and 1.1 are refused by the site, the API and the sign-in domain. TLS 1.2 is still accepted by all three, with ciphers besides AES-GCM, and TLS 1.3 also accepts ChaCha20-Poly1305. Whether each AWS service can be set to require TLS 1.3 is not yet established. |
+| 9 | Falls short | TLS 1.0 and 1.1 are refused by the site, the API and the sign-in domain. TLS 1.2 is still accepted by all three, with ciphers besides AES-GCM, and TLS 1.3 also accepts ChaCha20-Poly1305. The content bucket's upload address, used by the admin pages, is not yet checked. Whether each AWS service can be set to require TLS 1.3 is not yet established. |
 | 10 | Believed met | Firefox's Enhanced Tracking Protection blocked nothing, with other blockers running first. On the public pages, the only requests to other domains are Google Fonts (5) and our own API (11). |
-| 11 | Falls short | The API is at `execute-api.us-east-2.amazonaws.com`, which NoScript blocked as a third party until allowed; browsing, the maintainer saw no major difference either way. The code shows what a blocked API does: the board page keeps its "on its way" text, and the sign-up and manage forms show the browser's own error message (Firefox: "NetworkError when attempting to fetch resource.") rather than saying what went wrong. Google Fonts and the API's own domain are what blockers act on (5, 6, 8). |
+| 11 | Falls short | The API is at `execute-api.us-east-2.amazonaws.com`, which NoScript showed as blocked until allowed; browsing, the maintainer saw no major difference either way, and whether NoScript's settings actually stopped the page's requests to it isn't known. The code shows what a blocked API does: the board page keeps its "on its way" text, and the sign-up and manage forms show the browser's own error message (Firefox: "NetworkError when attempting to fetch resource.") rather than saying what went wrong. Google Fonts and the API's own domain are what blockers act on (5, 6, 8). |
 
 ## Ground rules
 
@@ -401,21 +401,21 @@ files are to live there.)
 
 ### Checking the live site
 
-- OpenSSL 3, at its default security level, refuses to offer TLS 1.0 or 1.1
-  itself (it reports `no protocols available`), so a "refused" can be the
-  client's doing; it does still offer weaker ciphers, such as SHA-1 CBC
-  suites, when they are named. Probe old versions with `-cipher
-  'DEFAULT:@SECLEVEL=0'`, and judge by the cipher actually negotiated: a
-  failed negotiation still prints `New,` — with `Cipher is (NONE)` — and
-  `s_client` can still exit 0. The version on the `New,` line is the cipher's,
-  not the connection's (a TLS 1.2 connection can show `New, TLSv1.0`). Read
-  the protocol only from a successful handshake's `Protocol` line: on a failed
-  one it shows the version asked for, or `TLSv1.3` when the client itself
-  refused.
+- OpenSSL 3 (tested with 3.4.1), at its default security level, refuses to
+  offer TLS 1.0 or 1.1 itself (it reports `no protocols available`), so a
+  "refused" can be the client's doing; it does still offer weaker ciphers,
+  such as SHA-1 CBC suites, when they are named. Probe old versions with
+  `-cipher 'DEFAULT:@SECLEVEL=0'`, and judge by the cipher actually
+  negotiated: a failed negotiation still prints `New,` — with `Cipher is
+  (NONE)` — and `s_client` can still exit 0. The version on the `New,` line is
+  the cipher's, not the connection's (a TLS 1.2 connection can show `New,
+  TLSv1.0`). Read the protocol only from a successful handshake's `Protocol`
+  line: on a failed one it shows the version asked for, or `TLSv1.3` when the
+  client itself refused.
 - The browser's list of what a page loaded (`performance` resource
   entries) isn't a complete record: the same page can list a file on one
   load and not on the next. Confirm against the source.
-- Claude Code's safety checks won't run code fetched from a CDN in the
+- Claude Code's safety checks won't let it run code fetched from a CDN in the
   browser, so a full automated accessibility audit (axe-core and the like)
   needs another route, set up and reviewed like any other tool.
 
