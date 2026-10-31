@@ -6,6 +6,22 @@ to AWS Amplify by GitHub Actions; Lambdas and CloudFormation in `lambda/` and
 making and shipping a change. This file holds the rules for working here, and
 what has been learned the hard way.
 
+## The standard
+
+Everything in this repository — code, scripts, workflows, infrastructure,
+pages and docs — is done to current best practice, as senior developers
+would do it to show junior developers the right way. Not "good enough for a
+volunteer site": the way you'd want it copied. Every rule below serves
+that.
+
+It applies to the whole repository at all times, not only to what a pull
+request changes. A review looks at the diff; the standard doesn't stop at
+the diff. When you notice something below it elsewhere — in a file you're
+reading, or a pattern you're about to copy — don't copy it, and don't pass
+it by in silence: tell the maintainer and propose a pull request of its own
+for it. Don't fold it into an unrelated pull request; that hides it from
+the review it needs.
+
 ## Ground rules
 
 - **Maintainers** are the people who approve merges and OK force-pushes.
@@ -85,7 +101,12 @@ that shows the scope itself is wrong is for a person to decide.
    commits or pushes, no comments or approvals on the pull request, no
    triggering workflows. It tests in throwaway repositories under a scratch
    folder, never in the checkout.
-2. **The standard.** Current best practice for every kind of file touched:
+2. **The standard** is [the one above](#the-standard): current best
+   practice, applied to every line the pull request changes. Anything below
+   it that the reviewer sees in code the pull request doesn't touch goes in
+   a separate "elsewhere in the repository" list — reported, not a reason
+   to hold this merge — and becomes a pull request of its own. For every
+   kind of file touched, that means:
    git and GitHub (commits, branches, hooks, rulesets, Dependabot); GitHub
    Actions (pinning, `permissions`, script injection, triggers, OIDC,
    timeouts, concurrency); shell (quoting, `set -euo pipefail` pitfalls,
