@@ -3,8 +3,9 @@
 The Austin Area Firewise Alliance website: static pages in `src/`, published
 to AWS Amplify by GitHub Actions; Lambdas and CloudFormation in `lambda/` and
 `infra/`, deployed by hand. `docs/08-making-changes.md` is the how-to for
-making and shipping a change. This file holds the rules for working here, and
-what has been learned the hard way.
+making and shipping a change. This file holds the standard all work meets,
+the principles the website is run by, the rules for working here, and what
+has been learned the hard way.
 
 ## The standard
 
@@ -29,6 +30,60 @@ standard says *how well* everything is done: every line a pull request
 changes must meet it. The scope says *what problem* the pull request takes
 on — which cases a safety check must handle, say — and so where its review
 stops. Neither lowers the other.
+
+## How the website is run
+
+These are the principles the site is held to. Where it falls short of one
+today, the principle still stands: the gap is work to do, not an exception.
+Every change moves toward them, none moves away, and each gap is closed in a
+pull request of its own.
+
+1. **Accessible.** WCAG best practice, as far as it can be followed.
+2. **JavaScript only where it earns its place** — where a page can't work
+   without it, or where it makes a large difference to how well the page
+   works. Pages that need it say so to visitors who have it switched off.
+3. **No ads.** None of our own, and nothing loaded from ad sources, so an
+   ad blocker (AdGuard and the like) finds nothing to block.
+4. **No trackers** of our own.
+5. **Nothing loaded from anyone else's servers.** Fonts and everything else
+   the pages need come from our own site. Privacy Badger should find nothing
+   to block.
+6. **No tracking headers**, so Privacy Possum finds nothing to block.
+7. **No tracking requests**, so the DuckDuckGo extension finds nothing to
+   block.
+8. **Nothing from `googleapis.com` or `gstatic.com`.** uBlock Origin should
+   have nothing to unblock.
+9. **TLS 1.3 only, with AES-GCM ciphers.**
+10. **Nothing that Firefox's Enhanced Tracking Protection would act on.**
+11. **Friendly to visitors who block a lot.** Someone running several
+    blockers at once — and NoScript — should find the site works, looks
+    right, and asks nothing of them: everything first-party, nothing sent
+    across sites that a blocker would strip, and pages that still work, or
+    say clearly what doesn't, when scripts or requests are blocked.
+
+### Where the site stands
+
+Checked against the live site and `src/` on 2026-10-31, and with the
+maintainer's own browser (Firefox) running several blockers at once — so a
+blocker that "found nothing" may only mean another got there first. Update
+this table when a gap closes, and re-check it when a change could affect it.
+*Meets*: checked and true. *Believed met*: true as far as checked, but not
+yet confirmed the way the principle names. *Not yet checked*: no evidence
+either way. *Falls short*: a gap, described in its row.
+
+| # | Status | As found |
+| --- | --- | --- |
+| 1 | Falls short | Scripted checks (a subset of WCAG 2.2 AA, not a full audit, and not yet in the repository) pass on every public page — language, image text alternatives, form labels, landmarks, unique ids, skip link, text contrast — with two exceptions: on most pages the footer's headings skip levels — an `h4` after an `h2`, or straight after the page's `h1` where no heading comes between — and the three text-size buttons are each named only "A". Not yet checked: keyboard use and focus, screen readers, dark mode, small screens. |
+| 2 | Falls short | The information pages work without JavaScript, and the pages that need it say so (though the home page's note leaves out the burn ban). News, the board, resources, and the home page's news headlines, notices, fire danger and burn ban need it, though they could be published as HTML; the sign-up and manage forms need it too. |
+| 3 | Believed met | No ad code and no ad hosts in `src/`. AdBlock found nothing to block, with a system-wide ad blocker also running; not yet checked with AdGuard on its own. |
+| 4 | Meets | No analytics or tracking code, and no cookies on the public pages. Local storage holds only the text-size choice, once a visitor makes one, and it never leaves the browser. The admin pages keep their own state in session storage. |
+| 5 | Falls short | Fonts come from Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) on every page; Privacy Badger flags `fonts.gstatic.com` and strips its cookies (yellow): it lets the requests through, but treats the domain as one that can track. The API is on its own domain (see 11). On the admin pages, the page calls the sign-in domain directly, the sign-in page loads its styles, a script and an image from AWS's servers, and uploads go straight to the content bucket's AWS address. |
+| 6 | Falls short | Privacy Possum reported blocking Referer headers from 12 sources (it gives no detail). Most likely these are the pages' requests to `fonts.googleapis.com` and to our API on its own domain, which carry the site's address in a Referer header. No Referrer-Policy is set, so the browser's default decides what is sent. The public pages set no cookies; the ETags are each file's MD5 hash, the same for every visitor. |
+| 7 | Believed met | The DuckDuckGo extension blocked nothing, with other blockers running first. On the public pages, the only requests to other domains are Google Fonts (5) and our own API (11). |
+| 8 | Falls short | uBlock Origin sees both Google Fonts domains (the maintainer's copy was told long ago to let them through). |
+| 9 | Falls short | TLS 1.0 and 1.1 are refused by the site, the API and the sign-in domain. TLS 1.2 is still accepted by all three, with ciphers besides AES-GCM, and TLS 1.3 also accepts ChaCha20-Poly1305. The content bucket's upload address, used by the admin pages, is not yet checked. Whether each AWS service can be set to require TLS 1.3 is not yet established. |
+| 10 | Believed met | Firefox's Enhanced Tracking Protection blocked nothing, with other blockers running first. On the public pages, the only requests to other domains are Google Fonts (5) and our own API (11). |
+| 11 | Falls short | The API is at `execute-api.us-east-2.amazonaws.com`, which NoScript showed as blocked until allowed; browsing, the maintainer saw no major difference either way, and whether NoScript's settings actually stopped the page's requests to it isn't known. The code shows what a blocked API does: the board page keeps its "on its way" text, and the sign-up and manage forms show the browser's own error message (Firefox: "NetworkError when attempting to fetch resource.") rather than saying what went wrong. Google Fonts and the API's own domain are what blockers act on (5, 6, 8). |
 
 ## Ground rules
 
@@ -115,35 +170,36 @@ that shows the scope itself is wrong is for a person to decide.
 1. **A fresh reviewer.** Start a new subagent — a fresh one, not a fork, which
    would carry this whole conversation. Give it the branch, the pull request
    number, the description's scope and threat model and its follow-up list,
-   [the standard](#the-standard), this section and the lessons below — not the
-   review log, not the earlier rounds' findings, not the author's notes, not
-   what was fixed. Tell it not to read the pull request's description or
-   comments: what it needs from them is in its brief, and the review log is in
-   the description. A reviewer told what to look for finds that and little
-   else. Tell it the review is read-only: no edits, commits or pushes, no
-   comments or approvals on the pull request, no triggering workflows. It
-   tests in throwaway repositories under a scratch folder, never in the
-   checkout.
-2. **The standard** is [the one above](#the-standard): current best
-   practice, applied to every line the pull request changes. Anything below
-   it that the reviewer sees in code the pull request doesn't touch goes in
-   a separate "elsewhere in the repository" list. Those are handled like
-   out-of-scope findings — a follow-up line, or the conversation if it is
-   an unfixed weakness — and proposed as pull requests of their own; they
-   don't hold this merge and don't count toward the rounds. For every kind
-   of file touched, that means:
-   git and GitHub (commits, branches, hooks, rulesets, Dependabot); GitHub
-   Actions (pinning, `permissions`, script injection, triggers, OIDC,
-   timeouts, concurrency); shell (quoting, `set -euo pipefail` pitfalls,
-   macOS vs Linux tools, odd filenames); JavaScript and Node for the
+   [the standard](#the-standard), [How the website is
+   run](#how-the-website-is-run) with its table, this section and the lessons
+   below — not the review log, not the earlier rounds' findings, not the
+   author's notes, not what was fixed. Tell it not to read the pull request's
+   description or comments: what it needs from them is in its brief, and the
+   review log is in the description. A reviewer told what to look for finds
+   that and little else. Tell it the review is read-only: no edits, commits or
+   pushes, no comments or approvals on the pull request, no triggering
+   workflows. It tests in throwaway repositories under a scratch folder, never
+   in the checkout.
+2. **The standard** is [the one above](#the-standard): current best practice,
+   applied to every line the pull request changes. Anything below it that the
+   reviewer sees in code the pull request doesn't touch goes in a separate
+   "elsewhere in the repository" list. Those are handled like out-of-scope
+   findings — a follow-up line, or the conversation if it is an unfixed
+   weakness — and proposed as pull requests of their own; they don't hold this
+   merge and don't count toward the rounds. For every kind of file touched,
+   that means: git and GitHub (commits, branches, hooks, rulesets,
+   Dependabot); GitHub Actions (pinning, `permissions`, script injection,
+   triggers, OIDC, timeouts, concurrency); shell (quoting, `set -euo pipefail`
+   pitfalls, macOS vs Linux tools, odd filenames); JavaScript and Node for the
    Lambdas and the site; CloudFormation and IAM; Python; HTML, CSS and
-   accessibility for `src/`; gitleaks rules and Go regex semantics; and
-   Markdown, where every statement must be true of the code. Plus the
-   lessons below.
-3. **Test, don't assert.** Where a claim can be checked — a regex, a range,
-   an exit code, a hook, a workflow path — the reviewer runs it and quotes
-   the result, failure paths included. A safety check in the changed code
-   that can pass without checking is always blocking.
+   accessibility for `src/`, measured against the website's principles;
+   gitleaks rules and Go regex semantics; and Markdown, where every statement
+   must be true of the code. Plus the lessons below.
+3. **Test, don't assert.** Where a claim can be checked — a regex, a range, an
+   exit code, a hook, a workflow path — the reviewer runs it and quotes the
+   result, failure paths included, and for anything that is run, both its exit
+   code and its output. A safety check in the changed code that can pass
+   without checking is always blocking.
 4. **Findings**, each with file and line, what is wrong, why it matters
    (written for someone new to the repository), evidence, a fix, and
    *verified* or *suspected*. Ranked blocking, should fix, nit, question.
@@ -153,9 +209,9 @@ that shows the scope itself is wrong is for a person to decide.
    Reviewers are wrong sometimes, and so are authors.
 6. **Fix or decline.** Fix every verified blocking and should-fix finding that
    is within scope, or on a changed line below the standard, and re-run the
-   affected tests — checking exit status as well as output. A nit is fixed, or
-   declined with a one-line reason. Fix what was found; don't add new
-   capability to answer a finding — new code is new surface for the next
+   affected tests — checking both the exit code and the output of each. A nit
+   is fixed, or declined with a one-line reason. Fix what was found; don't add
+   new capability to answer a finding — new code is new surface for the next
    round, and a pull request that grows each round can't converge.
 7. **Record the round** in the pull request description's review log:
    round number, counts by severity, verified / not reproduced, fixed /
@@ -306,6 +362,11 @@ files are to live there.)
   result. Feed it from a file instead when it must be able to stop the
   script.
 - `set -e` doesn't catch a failure inside `for x in $(cmd)`.
+- After `cmd | tail`, `$?` is `tail`'s exit code without `pipefail`; with
+  it, it is the last non-zero status in the pipeline, so a failure shows but
+  doesn't say which command failed. Read `${PIPESTATUS[0]}` straight away
+  (the next command resets it), or capture the output first and check the
+  command on its own.
 - `gitleaks dir` scans only one path: given several (a file list through
   `xargs`, say), it scans the current directory instead.
 
@@ -331,8 +392,32 @@ files are to live there.)
   branch cut before a check existed doesn't get that check; merge `main`
   into it (no force-push needed).
 - `gh pr merge --delete-branch` deletes the local branch too.
+- `gh pr merge --subject … --body-file …` was recorded byte for byte on a
+  pull request whose commits all had one author. With several authors,
+  GitHub may add `Co-authored-by:` lines of its own, so compare the recorded
+  message with what was checked after each merge.
 - Repository visibility, rulesets and merge settings are settings, not
   files: say exactly what to set, and who has to set it.
+
+### Checking the live site
+
+- OpenSSL 3 (tested with 3.4.1), at its default security level, refuses to
+  offer TLS 1.0 or 1.1 itself (it reports `no protocols available`), so a
+  "refused" can be the client's doing; it does still offer weaker ciphers,
+  such as SHA-1 CBC suites, when they are named. Probe old versions with
+  `-cipher 'DEFAULT:@SECLEVEL=0'`, and judge by the cipher actually
+  negotiated: a failed negotiation still prints `New,` — with `Cipher is
+  (NONE)` — and `s_client` can still exit 0. The version on the `New,` line is
+  the cipher's, not the connection's (a TLS 1.2 connection can show `New,
+  TLSv1.0`). Read the protocol only from a successful handshake's `Protocol`
+  line: on a failed one it shows the version asked for, or `TLSv1.3` when the
+  client itself refused.
+- The browser's list of what a page loaded (`performance` resource
+  entries) isn't a complete record: the same page can list a file on one
+  load and not on the next. Confirm against the source.
+- Claude Code's safety checks won't let it run code fetched from a CDN in the
+  browser, so a full automated accessibility audit (axe-core and the like)
+  needs another route, set up and reviewed like any other tool.
 
 ### Writing and reviewing
 
@@ -346,8 +431,11 @@ files are to live there.)
   you, check the test before the code.
 - **Independent review finds what the author misses** — and an independent
   reviewer is sometimes wrong. Reproduce before fixing.
-- **Test a check's exit status, not only its output.** A command that
-  prints "not clean" and exits 0 reports success to whatever runs it next.
+- **Test a check by both its exit code and its output — never one alone.** A
+  command that prints "not clean" and exits 0 reports success to whatever runs
+  it next; one that exits 0 and prints nothing may not have looked at all; and
+  one that exits non-zero may have failed to run rather than found something.
+  Each tells half the story.
 - **When correcting a claim, test every case it covers**, not only the one
   reported. A sentence about which git hooks run was corrected for merges
   and found wrong again for rebases: list the cases (each command, with and
