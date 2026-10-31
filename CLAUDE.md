@@ -16,13 +16,13 @@ volunteer site": the way you'd want it copied. Every rule below serves
 that.
 
 It applies to the whole repository at all times, not only to what a pull
-request changes. A review looks at the diff; the standard doesn't stop at
-the diff. When you notice something below it elsewhere — in a file you're
-reading, or a pattern you're about to copy — don't copy it, and don't pass
-it by in silence: add it to TODO.md (or, if it is a weakness that
-isn't fixed, tell the maintainer in the conversation) and propose a pull
-request of its own for it. Don't fold it into an unrelated pull request;
-that hides it from the review it needs.
+request changes. A review looks at the diff; the standard doesn't stop at the
+diff. When you notice something below it elsewhere — in a file you're reading,
+or a pattern you're about to copy — don't copy it, and don't pass it by in
+silence: add it to TODO.md — in general terms, with the details told to the
+maintainer in the conversation, if it is a weakness that isn't fixed — and
+propose a pull request of its own for it. Don't fold it into an unrelated pull
+request; that hides it from the review it needs.
 
 The standard and a pull request's scope (see [Reviewing a pull
 request](#reviewing-a-pull-request)) answer different questions. The
@@ -164,8 +164,10 @@ was done.
   own. An item learned after approval waits for a `docs` pull request.
 - **When an item is done**, the pull request that does it removes its row
   from TODO.md. Every pull request adds an entry to CHANGELOG.md before it
-  is approved: the date, the title and number, what changed, and the IDs it
-  closed.
+  is approved: under the date the entry is written, its title (the squash
+  subject it will merge with) and number, what changed, and the IDs it
+  closed. Dependabot's dependency updates are the exception: the git
+  history records them.
 - **A weakness that isn't fixed** goes into TODO.md only in general terms,
   or not at all; its details stay with the maintainer in the conversation,
   and go into the changelog once it is fixed.
@@ -190,7 +192,7 @@ raises the bar, and the rounds never end. (How well it is done is
 [the standard](#the-standard), which every changed line must meet.)
 
 A finding outside the stated scope is still worth having: it becomes a
-follow-up — an item in TODO.md and a line in the description's follow-up list
+follow-up — an item in TODO.md, and its ID in the description's follow-up list
 — not a reason to hold the merge — unless it describes a weakness that isn't
 fixed, which goes to the maintainer in the conversation, not into the
 description. A finding that shows the scope itself is wrong is for a person to

@@ -23,11 +23,13 @@ before this file started is in the git history.
   standard all work meets, the ground rules (maintainers, pull requests,
   approval and merging, force-pushes, the repository treated as public),
   the review process with its stop conditions, and lessons learned. Also
-  corrected which git hooks run when, in `docs/08-making-changes.md`.
+  corrected what testing showed wrong elsewhere: which git hooks run when
+  (`docs/08-making-changes.md` and a hook's comment), the cleanup after a
+  squash merge, and when gitleaks skips its own config file (comments in
+  the rules, the hook and the scan script).
 - **Check every change for secrets and personal data**
-  ([#3](https://github.com/austinareafirewise/website/pull/3)). gitleaks
-  rules for personal email addresses and passwords alongside the standard
-  ones; refusal of files gitleaks can't read; checks in local hooks, on
-  every branch push, and before every deploy, each failing closed.
-  `deploy.yml` hardened. The docs describe working through squash-merged
-  pull requests.
+  ([#3](https://github.com/austinareafirewise/website/pull/3)). gitleaks rules
+  for personal email addresses and passwords alongside the standard ones;
+  refusal of files gitleaks can't read; checks in opt-in local hooks, on every
+  branch push, and before every deploy, each failing closed. `deploy.yml`
+  hardened. The docs describe working through squash-merged pull requests.
