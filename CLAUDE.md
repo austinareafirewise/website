@@ -52,7 +52,7 @@ pull request of its own.
 7. **No tracking requests**, so the DuckDuckGo extension finds nothing to
    block.
 8. **Nothing from `googleapis.com` or `gstatic.com`.** uBlock Origin should
-   have nothing to unblock, apart from our own API.
+   have nothing to unblock.
 9. **TLS 1.3 only, with AES-GCM ciphers.**
 10. **Nothing that Firefox's Enhanced Tracking Protection would act on.**
 11. **Friendly to visitors who block a lot.** Someone running several
