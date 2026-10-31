@@ -28,8 +28,9 @@ Access is separate (see Needs).
 - **Hard** — open questions, or a redesign.
 
 **Needs** — anything beyond a pull request: *AWS access*, an *org owner* on
-GitHub, the *maintainer* (a decision, or something only they can check), or
-the *previous maintainer*; a short note in brackets says what for.
+GitHub, the *maintainer* (a decision, or something only they can check), the
+*board* (a decision that is the organization's, such as spending), or the
+*previous maintainer*; a short note in brackets says what for.
 
 **Depends on** — items that must be done first. An item that blocks a more
 important one takes on that importance, and says so in its text ("High:
@@ -54,12 +55,13 @@ are the most worth doing for the least work. IDs are never reused.
 | T12 | The privacy page says "We collect nothing about you personally", while every page loads fonts from Google: say so there until T1 is done. | PR #5, #6 reviews | High | Easy | — | — (unneeded once T1 is done) |
 | T33 | Email sign-ups: SES production access is requested and pending; follow it up until granted. | `infra/README.md` | High | Easy | AWS access | T4 |
 | T42 | Finish the AWS account handover steps in `docs/05-runbook.md` that need an organization mailbox. | Handover; PR #6 review | High | Easy | Previous maintainer | T4, T36 |
-| T43 | Move the GitHub organization to a paid plan (Team), so T3's ruleset still applies once the repository is private. *(High: T5 depends on it.)* | Maintainer; PR #6 review | High | Easy | Org owner; maintainer (the cost) | — |
+| T43 | Move the GitHub organization to a paid plan (Team), so T3's ruleset still applies once the repository is private. *(High: T5 depends on it.)* | Maintainer; PR #6 review | High | Easy | Org owner; board (approval, and who pays: see T44) | — |
 | T1 | Serve the fonts from our own site instead of Google Fonts (every page, the font files and their licence). | P5, P8; site check | High | Medium | — | — |
 | T2 | Stop sending the site's address to other domains with each request: a referrer policy in every page, or as a response header. | P6, P11; maintainer | High | Medium | AWS access (for a header) | T4 (for a header) |
 | T6 | A full accessibility check, including the admin pages: keyboard use and focus, screen readers, dark mode, small screens. | P1 | High | Medium | — | — |
 | T34 | Text alerts: carrier verification of the toll-free number (submitted), then lifting the SMS sandbox and the monthly spend limit (support cases); or Twilio with 10DLC registration instead. Then confirm the stack's provider setting (see T38) and turn off the "coming soon" note for texts in `src/js/config.js`. | `infra/README.md` | High | Medium | AWS access | T4 |
 | T36 | A real mailbox on our own domain (there is no MX record), replacing the interim personal Reply-To on Alliance email, and then the contact address on the site; then remove the interim address from the docs, its exception in `.gitleaks.toml`, and the GitHub organization's contact email. *(High in its own right; T42 also depends on it.)* | `infra/README.md`; maintainer | High | Medium | AWS access; maintainer | T4 |
+| T44 | Have the Alliance itself pay for the services the site runs on: the AWS account after its first year, which is covered for now on the organization's behalf, and any paid GitHub plan (T43). | Maintainer | High | Hard | Board | — |
 | T13 | Check the site with each blocker on its own, in a clean browser profile: AdGuard, the DuckDuckGo extension, Firefox's Enhanced Tracking Protection, and NoScript (whether it stops the API requests). | P3, P7, P10, P11 | Medium | Easy | Maintainer | — |
 | T35 | Review and merge Dependabot's PR #2 (configure-aws-credentials 6.2.4 → 6.3.0), then confirm a deploy works. | Open pull request | Medium | Easy | Maintainer (approval, deploy) | — |
 | T39 | `docs/05-runbook.md`'s everyday-editing and roll-back steps push straight to `main`; they should go through a pull request (`docs/08` §2). | PR #6 review | Medium | Easy | — | — |
