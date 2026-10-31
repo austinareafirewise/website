@@ -7,6 +7,11 @@ before this file started is in the git history.
 
 ## 2026-10-31
 
+- **Track the work: TODO.md and CHANGELOG.md**
+  ([#6](https://github.com/austinareafirewise/website/pull/6)). TODO.md
+  lists every known open item with where it came from, its importance and
+  its difficulty, most important and easiest first; this file records what
+  was done; CLAUDE.md says how both are kept.
 - **How the website is run, and where it stands today**
   ([#5](https://github.com/austinareafirewise/website/pull/5)). CLAUDE.md
   gains the eleven principles the site is run by, with a dated table of
