@@ -19,7 +19,7 @@ It applies to the whole repository at all times, not only to what a pull
 request changes. A review looks at the diff; the standard doesn't stop at
 the diff. When you notice something below it elsewhere — in a file you're
 reading, or a pattern you're about to copy — don't copy it, and don't pass
-it by in silence: add it to the follow-ups (or, if it is a weakness that
+it by in silence: add it to TODO.md (or, if it is a weakness that
 isn't fixed, tell the maintainer in the conversation) and propose a pull
 request of its own for it. Don't fold it into an unrelated pull request;
 that hides it from the review it needs.
@@ -117,8 +117,8 @@ either way. *Falls short*: a gap, described in its row.
     must fail closed: it passes only by having read all of that and found
     nothing, uses none of gitleaks' ways of silencing a finding, and is shown
     to catch samples it must catch. Anything else means don't merge. A script
-    that does this, with tests, is a follow-up; until it exists, Claude does
-    the check by hand to the same standard.
+    that does this, with tests, is a follow-up (TODO.md); until it exists,
+    Claude does the check by hand to the same standard.
   - Then merge, pinned to the commit that was checked:
     `gh pr merge <n> --squash --delete-branch --match-head-commit <sha>
     --subject "<subject> (#<n>)" --body-file <message-file>`.
@@ -142,6 +142,36 @@ either way. *Falls short*: a gap, described in its row.
   approval needs approving again, so a lesson learned at that point waits for
   a `docs` pull request of its own.
 
+## Tracking work: TODO.md and CHANGELOG.md
+
+[TODO.md](TODO.md) is the one list of what still needs doing, kept in the
+repository so work can be picked up without relying on anyone's memory —
+or on a Claude Code session's. [CHANGELOG.md](CHANGELOG.md) records what
+was done.
+
+- **Add an item as soon as it is known**, whatever it came from: a finding
+  outside a pull request's scope, something below the standard noticed
+  elsewhere, a principle the site doesn't meet, a maintainer's request.
+  Give it the next unused ID, where it came from, its importance, its
+  difficulty, and anything it needs beyond a pull request, using the
+  scales at the top of TODO.md, and keep the table sorted by importance,
+  then difficulty.
+- **Update an item when what is known about it changes** — a new finding,
+  a revised difficulty, a decision.
+- **Where the change goes:** in the pull request the item came from, as a
+  commit that touches only TODO.md, outside the review's scope like a
+  lesson commit; with no pull request open, in a `docs` pull request of its
+  own. An item learned after approval waits for a `docs` pull request.
+- **When an item is done**, the pull request that does it removes its row
+  from TODO.md. Every pull request adds an entry to CHANGELOG.md before it
+  is approved: the date, the title and number, what changed, and the IDs it
+  closed.
+- **A weakness that isn't fixed** goes into TODO.md only in general terms,
+  or not at all; its details stay with the maintainer in the conversation,
+  and go into the changelog once it is fixed.
+- **To choose what to do next**, start at the top of TODO.md: high
+  importance, low difficulty first.
+
 ## Reviewing a pull request
 
 Before a pull request is merged, it goes through rounds of independent
@@ -160,17 +190,18 @@ raises the bar, and the rounds never end. (How well it is done is
 [the standard](#the-standard), which every changed line must meet.)
 
 A finding outside the stated scope is still worth having: it becomes a
-follow-up (a line in the description's follow-up list), not a reason to hold
-the merge — unless it describes a weakness that isn't fixed, which goes to
-the maintainer in the conversation, not into the description. A finding
-that shows the scope itself is wrong is for a person to decide.
+follow-up — an item in TODO.md and a line in the description's follow-up list
+— not a reason to hold the merge — unless it describes a weakness that isn't
+fixed, which goes to the maintainer in the conversation, not into the
+description. A finding that shows the scope itself is wrong is for a person to
+decide.
 
 ### One round
 
 1. **A fresh reviewer.** Start a new subagent — a fresh one, not a fork, which
    would carry this whole conversation. Give it the branch, the pull request
    number, the description's scope and threat model and its follow-up list,
-   [the standard](#the-standard), [How the website is
+   TODO.md, [the standard](#the-standard), [How the website is
    run](#how-the-website-is-run) with its table, this section and the lessons
    below — not the review log, not the earlier rounds' findings, not the
    author's notes, not what was fixed. Tell it not to read the pull request's
@@ -184,7 +215,7 @@ that shows the scope itself is wrong is for a person to decide.
    applied to every line the pull request changes. Anything below it that the
    reviewer sees in code the pull request doesn't touch goes in a separate
    "elsewhere in the repository" list. Those are handled like out-of-scope
-   findings — a follow-up line, or the conversation if it is an unfixed
+   findings — an item in TODO.md, or the conversation if it is an unfixed
    weakness — and proposed as pull requests of their own; they don't hold this
    merge and don't count toward the rounds. For every kind of file touched,
    that means: git and GitHub (commits, branches, hooks, rulesets,
