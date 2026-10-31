@@ -206,7 +206,14 @@ files are to live there.)
   pushes unscanned; don't cancel there.
 - A squash merge's subject comes from the pull request title (depending on
   the repository's settings) and is checked by nothing until it is on
-  `main`. Check the title and squash message before merging.
+  `main`. When merging: write the subject and message yourself, run them
+  through `gitleaks stdin` with both rule files, and merge with
+  `--match-head-commit <sha>` so nothing pushed since the last review slips
+  in.
+- A push runs the workflows in the pushed commit, not those on `main`. A
+  branch cut before a check existed doesn't get that check; merge `main`
+  into it (no force-push needed).
+- `gh pr merge --delete-branch` deletes the local branch too.
 - Repository visibility, rulesets and merge settings are settings, not
   files: say exactly what to set, and who has to set it.
 
