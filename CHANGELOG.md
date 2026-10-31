@@ -1,10 +1,10 @@
 # Changelog
 
-What has been done, newest first: one entry per merged pull request (except
-Dependabot's dependency updates, which the git history records), naming any
-[TODO.md](TODO.md) items it closed. How this file is kept is in
-[CLAUDE.md](CLAUDE.md#tracking-work-todomd-and-changelogmd). Work from before
-this file started is in the git history.
+What has been done, newest first by the date each entry was written: one entry
+per merged pull request (except Dependabot's dependency updates, which the git
+history records), naming any [TODO.md](TODO.md) items it closed. How this file
+is kept is in [CLAUDE.md](CLAUDE.md#tracking-work-todomd-and-changelogmd).
+Work from before this file started is in the git history.
 
 ## 2026-10-31
 
