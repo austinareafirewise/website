@@ -3,9 +3,9 @@
 The Austin Area Firewise Alliance website: static pages in `src/`, published
 to AWS Amplify by GitHub Actions; Lambdas and CloudFormation in `lambda/` and
 `infra/`, deployed by hand. `docs/08-making-changes.md` is the how-to for
-making and shipping a change. This file holds the standard work is done
-to, the principles the website is run by, the rules for working here, and
-what has been learned the hard way.
+making and shipping a change. This file holds the standard all work meets,
+the principles the website is run by, the rules for working here, and what
+has been learned the hard way.
 
 ## The standard
 
@@ -55,27 +55,35 @@ pull request of its own.
    have nothing to unblock, apart from our own API.
 9. **TLS 1.3 only, with AES-GCM ciphers.**
 10. **Nothing that Firefox's Enhanced Tracking Protection would act on.**
+11. **Friendly to visitors who block a lot.** Someone running several
+    blockers at once — and NoScript — should find the site works, looks
+    right, and asks nothing of them: everything first-party, nothing sent
+    across sites that a blocker would strip, and pages that still work, or
+    say clearly what doesn't, when scripts or requests are blocked.
 
 ### Where the site stands
 
-Checked against the live site and `src/` on 2026-10-31. Update this table
-when a gap closes, and re-check it when a change could affect it. *Meets*:
-checked and true. *Believed met*: true as far as checked, but not yet
-confirmed the way the principle names. *Not yet checked*: no evidence either
-way. *Falls short*: a gap, listed.
+Checked against the live site and `src/` on 2026-10-31, and with the
+maintainer's own browser (Firefox) running several blockers at once — so a
+blocker that "found nothing" may only mean another got there first. Update
+this table when a gap closes, and re-check it when a change could affect it.
+*Meets*: checked and true. *Believed met*: true as far as checked, but not
+yet confirmed the way the principle names. *Not yet checked*: no evidence
+either way. *Falls short*: a gap, listed.
 
 | # | Status | As found |
 | --- | --- | --- |
-| 1 | Falls short | Scripted checks (a subset of WCAG 2.2 AA, not a full audit) pass on every public page — language, image text alternatives, form labels, accessible names, landmarks, unique ids, skip link, text contrast — except that on most pages the footer's headings skip a level (`h4` straight after an `h2`). Not yet checked: keyboard use and focus, screen readers, dark mode, small screens. |
-| 2 | Falls short | The information pages work without JavaScript. News, the board, resources, the home page's notices, fire danger and burn ban, and the sign-up and manage forms need it. |
-| 3 | Meets | No ad code and no ad hosts. |
+| 1 | Falls short | Scripted checks (a subset of WCAG 2.2 AA, not a full audit, and not yet in the repository) pass on every public page — language, image text alternatives, form labels, landmarks, unique ids, skip link, text contrast — with two exceptions: on most pages the footer's headings skip a level (`h4` straight after an `h2`), and the three text-size buttons are each named only "A". Not yet checked: keyboard use and focus, screen readers, dark mode, small screens. |
+| 2 | Falls short | The information pages work without JavaScript, and the pages that need it say so. News, the board, resources, and the home page's notices, fire danger and burn ban need it, though they could be published as HTML; the sign-up and manage forms need it too. |
+| 3 | Believed met | No ad code and no ad hosts in `src/`. AdBlock found nothing to block, with a system-wide ad blocker also running; not yet checked with AdGuard on its own. |
 | 4 | Meets | No analytics or tracking code, and no cookies on the public pages. Local storage holds only the text-size choice, once a visitor makes one, and it never leaves the browser. The admin pages keep their own state in session storage. |
-| 5 | Falls short | Fonts come from Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) on every page. Everything else is our own site, our own API, and — on the admin pages — our own sign-in. |
-| 6 | Believed met | The public pages set no cookies. Responses carry content, caching and CDN headers; the ETags are each file's MD5 hash, the same for every visitor. Not yet checked with the extension. |
-| 7 | Believed met | On the public pages, the only requests to other parties are the Google Fonts ones (5). Not yet checked with the extension. |
-| 8 | Falls short | Google Fonts, as in 5. The API is at `execute-api.us-east-2.amazonaws.com`. |
-| 9 | Falls short | TLS 1.0 and 1.1 are refused. TLS 1.2 is still accepted — by the site, the API and the admin sign-in — with ciphers besides AES-GCM, and TLS 1.3 also accepts ChaCha20-Poly1305. Whether each AWS service can be set to require TLS 1.3 is not yet established. |
-| 10 | Not yet checked | Not tested in Firefox. On the public pages, the only requests to other parties are the Google Fonts ones (5). |
+| 5 | Falls short | Fonts come from Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) on every page; Privacy Badger lists `fonts.gstatic.com` as a tracker and blocks it. The API is on its own domain (see 8). On the admin pages, the sign-in page loads its styles, a script and an image from AWS's servers, and uploads go straight to the content bucket's AWS address. |
+| 6 | Falls short | Privacy Possum reported blocking Referer headers from 12 sources (it gives no detail): the pages' requests to other domains — Google Fonts, and our API on its own domain — send the page's address with them. The public pages set no cookies; the ETags are each file's MD5 hash, the same for every visitor. |
+| 7 | Believed met | The DuckDuckGo extension blocked nothing, with other blockers running first. On the public pages, the only requests to other domains are Google Fonts (5) and our own API (8). |
+| 8 | Falls short | uBlock Origin sees both Google Fonts domains (the maintainer's copy was told long ago to let them through). The API is at `execute-api.us-east-2.amazonaws.com`, which NoScript treats as someone else's (11). |
+| 9 | Falls short | TLS 1.0 and 1.1 are refused by the site, the API and the sign-in domain. TLS 1.2 is still accepted by all three, with ciphers besides AES-GCM, and TLS 1.3 also accepts ChaCha20-Poly1305. Whether each AWS service can be set to require TLS 1.3 is not yet established. |
+| 10 | Believed met | Firefox's Enhanced Tracking Protection blocked nothing, with other blockers running first. On the public pages, the only requests to other domains are Google Fonts (5) and our own API (8). |
+| 11 | Falls short | NoScript blocked our API as a third party until allowed; the maintainer saw no major difference either way. Google Fonts and the API's own domain are what blockers act on (5, 6, 8). |
 
 ## Ground rules
 
@@ -354,10 +362,11 @@ files are to live there.)
   result. Feed it from a file instead when it must be able to stop the
   script.
 - `set -e` doesn't catch a failure inside `for x in $(cmd)`.
-- After `cmd | tail`, `$?` is `tail`'s exit status without `pipefail`, and
-  the last non-zero status in the pipeline with it — `cmd`'s only by
-  accident. Read `${PIPESTATUS[0]}` straight away (the next command resets
-  it), or capture the output first and check the command on its own.
+- After `cmd | tail`, `$?` is `tail`'s exit status without `pipefail`; with
+  it, it is the last non-zero status in the pipeline, so a failure shows but
+  doesn't say which command failed. Read `${PIPESTATUS[0]}` straight away
+  (the next command resets it), or capture the output first and check the
+  command on its own.
 - `gitleaks dir` scans only one path: given several (a file list through
   `xargs`, say), it scans the current directory instead.
 
@@ -384,7 +393,8 @@ files are to live there.)
   into it (no force-push needed).
 - `gh pr merge --delete-branch` deletes the local branch too.
 - `gh pr merge --subject … --body-file …` was recorded byte for byte on a
-  pull request whose commits all had one author; compare the recorded
+  pull request whose commits all had one author. With several authors,
+  GitHub may add `Co-authored-by:` lines of its own, so compare the recorded
   message with what was checked after each merge.
 - Repository visibility, rulesets and merge settings are settings, not
   files: say exactly what to set, and who has to set it.
@@ -395,7 +405,10 @@ files are to live there.)
   weaker ciphers itself, so a "refused" can be the client's doing. Probe
   with `-cipher 'DEFAULT:@SECLEVEL=0'`, and judge by the cipher actually
   negotiated: a failed handshake still prints `New,` — with
-  `Cipher is (NONE)` — and `s_client` can still exit 0.
+  `Cipher is (NONE)` — and `s_client` can still exit 0. The version on the
+  `New,` line is the cipher's, not the connection's (a TLS 1.2 connection
+  can show `New, TLSv1.0`); read the protocol from a successful handshake's
+  `Protocol` line, which on a failed one just repeats what was asked for.
 - The browser's list of what a page loaded (`performance` resource
   entries) isn't a complete record: the same page can list a file on one
   load and not on the next. Confirm against the source.
