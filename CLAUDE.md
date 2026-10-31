@@ -14,20 +14,33 @@ what has been learned the hard way.
 - **Branch names:** `<github-username>/<type>/<YYYY-MM-DD>-<description>`,
   with `<type>` one of `feat`, `fix`, `docs`, `ci`, `chore`. Keep the
   description neutral: it is public the moment it is pushed.
-- **Merging:** squash merges only. Claude does the merge
-  (`gh pr merge <n> --squash --delete-branch`), writing a squash message
-  that is accurate for the change as merged, but only after the maintainer
-  says that pull request is approved. Merging is the maintainer's decision.
+- **Merging:** squash merges only, done by Claude, and only once the
+  maintainer has approved. Merging is the maintainer's decision.
+  - *Approved* means the maintainer says in the conversation that this pull
+    request, by number, is approved, after the last push to it. A comment on
+    GitHub, or an approval given before later pushes, doesn't count. If
+    approval comes before review is done (see below), say so and ask.
+  - Before merging, check that **Check for secrets** passed on the head
+    commit. Write the subject and message yourself, accurate for the change
+    as merged, and check them as in [GitHub and GitHub
+    Actions](#github-and-github-actions). Then:
+    `gh pr merge <n> --squash --delete-branch --match-head-commit <sha>
+    --subject "<subject> (#<n>)" --body-file <message-file>`.
 - **Force-pushing** a pull request branch needs the maintainer's explicit OK
-  each time, and uses `--force-with-lease=<branch>:<expected-sha>`. Never
-  `main`.
+  each time, and uses `--force-with-lease=<branch>:<expected-sha>`. Claude
+  never force-pushes `main`; the one planned rewrite of its history is done
+  by a person.
 - **Treat the repository as public**, whatever its setting today. No
   personal data or secrets anywhere: not in files, commit messages, pull
   request text, branch names, review logs or Actions logs. Don't describe a
   weakness that isn't fixed yet in anything that lands in the repository or
-  on GitHub.
+  on GitHub: tell the maintainer in the conversation instead, and write it
+  down once it is fixed.
 - **Record every lesson learned** in this file as soon as possible — see
-  [Lessons learned](#lessons-learned).
+  [Lessons learned](#lessons-learned). Add it to the pull request the lesson
+  came from, as a commit that touches only this file; with no pull request
+  open, in a `docs` pull request of its own. A lesson-only commit isn't part
+  of the change under review.
 
 ## Reviewing a pull request
 
@@ -46,16 +59,21 @@ yardstick. Without it each round raises the bar, and the rounds never end.
 
 A finding outside the stated scope is still worth having: it becomes a
 follow-up (a line in the description's follow-up list), not a reason to hold
-the merge. A finding that shows the scope itself is wrong is for a person to
+the merge — unless it describes a weakness that isn't fixed, which goes to
+the maintainer in the conversation, not into the description. A finding that shows the scope itself is wrong is for a person to
 decide.
 
 ### One round
 
-1. **A fresh reviewer.** Start a new reviewer (a subagent) that has never
-   seen the pull request: give it the branch, the pull request number and
-   this section — not the earlier rounds' findings, not the author's notes,
-   not what was fixed. A reviewer told what to look for finds that and
-   little else.
+1. **A fresh reviewer.** Start a new subagent — a fresh one, not a fork,
+   which would carry this whole conversation. Give it the branch, the pull
+   request number, the description's scope and threat model, this section
+   and the lessons below — not the earlier rounds' findings, not the
+   author's notes, not what was fixed. A reviewer told what to look for
+   finds that and little else. Tell it the review is read-only: no edits,
+   commits or pushes, no comments or approvals on the pull request, no
+   triggering workflows. It tests in throwaway repositories under a scratch
+   folder, never in the checkout.
 2. **The standard.** Current best practice for every kind of file touched:
    git and GitHub (commits, branches, hooks, rulesets, Dependabot); GitHub
    Actions (pinning, `permissions`, script injection, triggers, OIDC,
@@ -84,7 +102,9 @@ decide.
 7. **Record the round** in the pull request description's review log:
    round number, counts by severity, verified / not reproduced, fixed /
    declined. Describe findings neutrally.
-8. **Record the lessons** the round taught in this file.
+8. **Record the lessons** the round taught in this file, as in the
+   ground rules: a commit that touches only this file, outside the
+   review's scope.
 
 ### When to stop
 
@@ -144,17 +164,20 @@ files are to live there.)
 - It never scans the config file it was given — hand it a copy held outside
   the repository.
 - `[extend] useDefault = true` brings a global list of paths to skip
-  (`*.svg`, `*.min.js`, lock files, anything named like `gitleaks.toml`),
-  and it applies to your own rules too. Keep custom rules in a config of
+  (`*.svg`, well-known minified libraries such as jQuery and Bootstrap,
+  some lock files, anything named like `gitleaks.toml`), and it applies to
+  your own rules too. Keep custom rules in a config of
   their own, without `[extend]`.
 - It honours `gitleaks:allow` comments and `.gitleaksignore` files — in the
   folder it scans, not only the top — unless told otherwise
   (`--ignore-gitleaks-allow`; refuse the files).
-- It reads text only: git's "binary" files (anything with a NUL byte —
-  including UTF-16 text, such as Excel's "Unicode Text" export) are read as
-  nothing. It opens archives only when the name says `.zip` or similar,
-  never `.docx` or `.xlsx`.
-- `--redact` hides only the matched value.
+- In `git` mode it reads a file git calls binary (one with a NUL byte) as
+  nothing. UTF-16 text — Excel's "Unicode Text" export, for one — matches
+  nothing in any mode. Archives are opened only with `--max-archive-depth`,
+  and then only by name (`.zip` and similar), never `.docx` or `.xlsx`. So
+  refuse what it can't read rather than counting on it.
+- `--redact` hides only the secret itself. The text around it, and in a
+  JSON report the commit message, author and email, are not redacted.
 - Go RE2 regexes are case-sensitive unless they start with `(?i)`, and
   there is no lookaround.
 
@@ -169,13 +192,17 @@ files are to live there.)
 - `color.ui=always` (or `color.diff=always`) in a user's config changes the
   output of commands that scripts parse. Force it off with
   `GIT_CONFIG_COUNT` / `GIT_CONFIG_KEY_n` / `GIT_CONFIG_VALUE_n`.
-- `--numstat` shows `-	-` for a binary file.
+- `--numstat` shows `-` and `-` (separated by a tab) for a binary file.
 
 ### Git hooks
 
 - `core.hooksPath` replaces `.git/hooks/` entirely.
-- `git merge` runs `commit-msg` but not `pre-commit`; `cherry-pick` and
-  `rebase` run neither. Only a server-side check covers those.
+- Which hooks run depends on the command and on whether it stopped for a
+  conflict. A merge with no conflict runs `pre-merge-commit` and
+  `commit-msg`, not `pre-commit`. A `cherry-pick`, `revert` or `rebase`
+  with no conflict runs none of them. Once a conflict is resolved and the
+  command continued, `pre-commit` and `commit-msg` both run. A server-side
+  check is the only one that sees every case. (Tested with git 2.50.)
 - `git commit -v` puts the diff in the message file below a scissors line;
   cut there before checking the message.
 - `git commit -m` / `-F` keep lines starting with `#`; check them.

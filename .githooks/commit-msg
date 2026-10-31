@@ -4,8 +4,9 @@
 # checks what is committed; this checks what is said about it. Same rules.
 #
 # Turned on by the same `git config core.hooksPath .githooks`. Git passes
-# the path of the message file as $1. This hook also runs for `git merge`,
-# where pre-commit doesn't, so it checks for itself that it can run.
+# the path of the message file as $1. This hook also runs for a merge with
+# no conflict, where pre-commit doesn't, so it checks for itself that it can
+# run.
 
 PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
