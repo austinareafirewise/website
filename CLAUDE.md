@@ -58,16 +58,12 @@ stops. Neither lowers the other.
     it) and the message yourself, accurate for the change as merged and
     neutral, outside the checkout. Before merging, check exactly what will be
     recorded — the final subject line with its number, a blank line, the
-    message — with both rule files as they are in that commit. The check must
-    fail closed: it passes only if the message really was read; the commit's
-    SHA is the non-empty one that was checked (with an empty SHA, `git show
-    :path` quietly reads the staged copy instead); both rule files were read
-    from that commit and each holds rules (an empty one finds nothing, so it
-    "passes"); `gitleaks:allow` was ignored (`--ignore-gitleaks-allow`) and no
-    `.gitleaksignore` was in play (`gitleaks stdin` reads one from the current
-    directory); and gitleaks found nothing. Anything else, including any step
-    that couldn't run, means don't merge. Test its exit status, not its
-    output.
+    message — against both rule files as they are in that commit. The check
+    must fail closed: it passes only by having read all of that and found
+    nothing, uses none of gitleaks' ways of silencing a finding, and is shown
+    to catch samples it must catch. Anything else means don't merge. A script
+    that does this, with tests, is a follow-up; until it exists, Claude does
+    the check by hand to the same standard.
   - Then merge, pinned to the commit that was checked:
     `gh pr merge <n> --squash --delete-branch --match-head-commit <sha>
     --subject "<subject> (#<n>)" --body-file <message-file>`.
