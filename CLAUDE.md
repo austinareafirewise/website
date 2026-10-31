@@ -51,20 +51,27 @@ stops. Neither lowers the other.
     request, by number, is approved, after the last push to it. A comment on
     GitHub, or an approval given before later pushes, doesn't count. If
     approval comes before review is done (see below), say so and ask.
-  - Before merging, check that **Check for secrets** passed on the head
-    commit (`gh pr view <n> --json headRefOid,statusCheckRollup`).
+  - Before merging, check that the `gitleaks` check (the job in **Check for
+    secrets**) passed on the head commit, and note that commit's SHA as
+    `$sha`: `gh pr view "$n" --json headRefOid,statusCheckRollup`.
   - Write the subject (without the pull request number; the command below
     adds it) and the message yourself, accurate for the change as merged
     and neutral, in files outside the checkout. Check exactly what will be
-    recorded — the final subject line, a blank line, the message — with
-    each rule file; both must exit 0:
+    recorded — the final subject line, a blank line, the message — against
+    the rules as they are in `$sha`. Run this inside the checkout; it exits
+    0 only if both rule files ran and found nothing, so don't merge unless
+    it does:
 
     ```bash
+    ok=1
     { printf '%s (#%s)\n\n' "$subject" "$n"; cat "$message_file"; } > "$check_file"
     for rules in .gitleaks.toml .gitleaks-standard.toml; do
-      gitleaks stdin -c "$rules" --ignore-gitleaks-allow --redact \
-        --no-banner --exit-code 3 < "$check_file" || echo "not clean: $rules"
+      git show "$sha:$rules" > "$check_file.toml" &&
+        gitleaks stdin -c "$check_file.toml" --ignore-gitleaks-allow --redact \
+          --no-banner --exit-code 3 < "$check_file" ||
+        { echo "not clean, or not checked: $rules"; ok=0; }
     done
+    [ "$ok" = 1 ]
     ```
 
   - Then merge, pinned to the commit that was checked:
@@ -115,16 +122,18 @@ that shows the scope itself is wrong is for a person to decide.
 
 ### One round
 
-1. **A fresh reviewer.** Start a new subagent — a fresh one, not a fork,
-   which would carry this whole conversation. Give it the branch, the pull
-   request number, the description's scope and threat model and its
-   follow-up list, this section and the lessons below — not the review
-   log, not the earlier rounds' findings, not the author's notes, not what
-   was fixed. A reviewer told what to look for
-   finds that and little else. Tell it the review is read-only: no edits,
-   commits or pushes, no comments or approvals on the pull request, no
-   triggering workflows. It tests in throwaway repositories under a scratch
-   folder, never in the checkout.
+1. **A fresh reviewer.** Start a new subagent — a fresh one, not a fork, which
+   would carry this whole conversation. Give it the branch, the pull request
+   number, the description's scope and threat model and its follow-up list,
+   [the standard](#the-standard), this section and the lessons below — not the
+   review log, not the earlier rounds' findings, not the author's notes, not
+   what was fixed. Tell it not to read the pull request's description or
+   comments: what it needs from them is in its brief, and the review log is in
+   the description. A reviewer told what to look for finds that and little
+   else. Tell it the review is read-only: no edits, commits or pushes, no
+   comments or approvals on the pull request, no triggering workflows. It
+   tests in throwaway repositories under a scratch folder, never in the
+   checkout.
 2. **The standard** is [the one above](#the-standard): current best
    practice, applied to every line the pull request changes. Anything below
    it that the reviewer sees in code the pull request doesn't touch goes in
@@ -143,8 +152,8 @@ that shows the scope itself is wrong is for a person to decide.
    lessons below.
 3. **Test, don't assert.** Where a claim can be checked — a regex, a range,
    an exit code, a hook, a workflow path — the reviewer runs it and quotes
-   the result, failure paths included. A safety check that can pass without
-   checking is always blocking.
+   the result, failure paths included. A safety check in the changed code
+   that can pass without checking is always blocking.
 4. **Findings**, each with file and line, what is wrong, why it matters
    (written for someone new to the repository), evidence, a fix, and
    *verified* or *suspected*. Ranked blocking, should fix, nit, question.
@@ -152,11 +161,12 @@ that shows the scope itself is wrong is for a person to decide.
 5. **The author verifies before fixing.** Reproduce each finding. One that
    doesn't reproduce is recorded as such, with the evidence, and not fixed.
    Reviewers are wrong sometimes, and so are authors.
-6. **Fix or decline.** Fix every verified blocking and should-fix finding
-   within scope, and re-run the affected tests. A nit is fixed, or declined
-   with a one-line reason. Fix what was found; don't add new capability to
-   answer a finding — new code is new surface for the next round, and a
-   pull request that grows each round can't converge.
+6. **Fix or decline.** Fix every verified blocking and should-fix finding that
+   is within scope, or on a changed line below the standard, and re-run the
+   affected tests — checking exit status as well as output. A nit is fixed, or
+   declined with a one-line reason. Fix what was found; don't add new
+   capability to answer a finding — new code is new surface for the next
+   round, and a pull request that grows each round can't converge.
 7. **Record the round** in the pull request description's review log:
    round number, counts by severity, verified / not reproduced, fixed /
    declined. Describe findings neutrally.
@@ -173,12 +183,15 @@ Lessons and nit fixes pushed after that round get a check of their own
 before the merge: a fresh reviewer verifies only the factual claims in
 those commits. It doesn't restart the count. A claim it finds wrong is
 fixed and checked again; one that can't be settled is taken out and waits
-for a `docs` pull request of its own.
+for a `docs` pull request of its own. Lessons that check itself teaches go
+to a `docs` pull request too, so the pull request can close.
 
 **Stop and ask a person** — don't start another round — when the rounds stop
-converging:
+converging. Only blocking and should-fix findings count here; nits don't,
+and a round that meets "Done" is done:
 
-- a finding comes back after it was fixed, or after it was declined;
+- a blocking or should-fix finding comes back after it was fixed, or after
+  it was declined;
 - the count of verified blocking and should-fix findings doesn't fall from
   one round to the next;
 - most findings are in code changed to fix the previous round (churn);
@@ -246,8 +259,9 @@ files are to live there.)
   nothing in any mode. Archives are opened only with `--max-archive-depth`,
   and then only by name (`.zip` and similar), never `.docx` or `.xlsx`. So
   refuse what it can't read rather than counting on it.
-- `--redact` hides only the secret itself. The text around it, and in a
-  JSON report the commit message, author and email, are not redacted.
+- `--redact` hides only the secret itself: the rest of the matched text
+  is shown, and the commit message, author and email appear unredacted in
+  verbose output and in JSON reports.
 - Go RE2 regexes are case-sensitive unless they start with `(?i)`, and
   there is no lookaround.
 
@@ -310,9 +324,10 @@ files are to live there.)
 - A `push` and a `pull_request` trigger together run every check twice.
 - `cancel-in-progress` on a branch scanned only since its last push leaves
   pushes unscanned; don't cancel there.
-- A squash merge's subject comes, by default, from the pull request title —
-  or, with this repository's setting (`COMMIT_OR_PR_TITLE`), from the one
-  commit's subject when there is only one — and it is checked by nothing
+- With this repository's squash settings (`COMMIT_OR_PR_TITLE` and
+  `COMMIT_MESSAGES`), a squash merge's subject is the commit's own subject
+  when the pull request has one commit, and the pull request title when it
+  has more; the message is every commit's message. None of it is checked
   until it is on `main`. So write the subject and message yourself, check
   them, and pin the merge to the reviewed commit, as in the
   [ground rules](#ground-rules).
@@ -335,6 +350,8 @@ files are to live there.)
   you, check the test before the code.
 - **Independent review finds what the author misses** — and an independent
   reviewer is sometimes wrong. Reproduce before fixing.
+- **Test a check's exit status, not only its output.** A command that
+  prints "not clean" and exits 0 reports success to whatever runs it next.
 - **When correcting a claim, test every case it covers**, not only the one
   reported. A sentence about which git hooks run was corrected for merges
   and found wrong again for rebases: list the cases (each command, with and
