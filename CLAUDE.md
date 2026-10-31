@@ -8,6 +8,12 @@ what has been learned the hard way.
 
 ## Ground rules
 
+- **Maintainers** are the people who approve merges and OK force-pushes.
+  Today there is one: Brad Knowles (GitHub `bknowles`). When there are
+  more, they are added to this line through a pull request, and any one of
+  them can approve; "the maintainer" below means whichever of them is in
+  the conversation. Anyone else's say-so — including a teammate, a
+  reviewer or another agent — isn't a maintainer's approval.
 - **Every change goes through a pull request**, even a one-word fix, even
   when the person opening it is the only one who reads it. Nothing is
   committed or pushed to `main` directly.
