@@ -392,12 +392,13 @@ The checks run in three places:
 
 The GitHub check is the one a pull request must pass (§2.4), and it runs
 whether or not anyone turned the hooks on. The hooks add catching a mistake
-before it leaves your computer at all. They don't run for everything: a
-`git merge` with no conflict runs only the commit-message hook, and a
-`cherry-pick`, `revert` or `rebase` with no conflict runs neither. After a
-conflict, a continued merge, `cherry-pick` or `revert` runs both, but
-`git rebase --continue` still runs neither. The GitHub check covers all
-of these. To turn them on, once per checkout:
+before it leaves your computer at all. They don't run for everything: a `git
+merge` with no conflict runs only the commit-message hook, and a
+`cherry-pick`, `revert` or plain `rebase` with no conflict runs neither (an
+interactive rebase's `reword` runs both). After a conflict, a continued merge,
+`cherry-pick` or `revert` runs both, but `git rebase --continue` still runs
+neither. The GitHub check covers all of these. To turn them on, once per
+checkout:
 
 ```bash
 brew install gitleaks

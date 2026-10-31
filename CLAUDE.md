@@ -52,31 +52,22 @@ stops. Neither lowers the other.
     GitHub, or an approval given before later pushes, doesn't count. If
     approval comes before review is done (see below), say so and ask.
   - Before merging, check that the `gitleaks` check (the job in **Check for
-    secrets**) passed on the head commit, and note that commit's SHA as
-    `$sha`: `gh pr view "$n" --json headRefOid,statusCheckRollup`.
-  - Write the subject (without the pull request number; the command below
+    secrets**) passed on the head commit, and note that commit's SHA:
+    `gh pr view <n> --json headRefOid,statusCheckRollup`.
+  - Write the subject (without the pull request number; the merge command
     adds it) and the message yourself, accurate for the change as merged
-    and neutral, in files outside the checkout. Check exactly what will be
-    recorded — the final subject line, a blank line, the message — against
-    the rules as they are in `$sha`. Run this inside the checkout; it exits
-    0 only if both rule files ran and found nothing, so don't merge unless
-    it does:
-
-    ```bash
-    ok=1
-    { printf '%s (#%s)\n\n' "$subject" "$n"; cat "$message_file"; } > "$check_file"
-    for rules in .gitleaks.toml .gitleaks-standard.toml; do
-      git show "$sha:$rules" > "$check_file.toml" &&
-        gitleaks stdin -c "$check_file.toml" --ignore-gitleaks-allow --redact \
-          --no-banner --exit-code 3 < "$check_file" ||
-        { echo "not clean, or not checked: $rules"; ok=0; }
-    done
-    [ "$ok" = 1 ]
-    ```
-
+    and neutral, outside the checkout. Before merging, check exactly what
+    will be recorded — the final subject line with its number, a blank
+    line, the message — with both rule files as they are in that commit.
+    The check must fail closed: it passes only if the message really was
+    read, both rule files were read from that commit, no `.gitleaksignore`
+    was in play
+    (`gitleaks stdin` reads one from the current directory), and gitleaks
+    found nothing. Anything else, including any step that couldn't run,
+    means don't merge. Test its exit status, not its output.
   - Then merge, pinned to the commit that was checked:
-    `gh pr merge "$n" --squash --delete-branch --match-head-commit "$sha"
-    --subject "$subject (#$n)" --body-file "$message_file"`.
+    `gh pr merge <n> --squash --delete-branch --match-head-commit <sha>
+    --subject "<subject> (#<n>)" --body-file <message-file>`.
 - **Force-pushing** a pull request branch needs the maintainer's explicit OK
   each time, and uses `--force-with-lease=<branch>:<expected-sha>`. Claude
   never force-pushes `main`; rewriting its history, if that is ever needed,
@@ -176,8 +167,9 @@ that shows the scope itself is wrong is for a person to decide.
 
 ### When to stop
 
-**Done** when a fresh round reports no verified blocking or should-fix
-finding. Only then is the pull request ready to merge.
+**Done** when a fresh round reports no blocking or should-fix finding that the
+author, in step 5, can reproduce. Only then is the pull request ready to
+merge.
 
 Lessons and nit fixes pushed after that round get a check of their own
 before the merge: a fresh reviewer verifies only the factual claims in
@@ -231,6 +223,11 @@ files are to live there.)
 - **Log the finding, not the data.** Print rule, file, line and commit hash
   — not the matched text, its surroundings, or a commit subject. Actions
   logs are as public as the repository and outlive any later clean-up.
+- **A check is code: keep it in a script, not in a document.** Shell meant
+  to be copied out of Markdown can't be linted or tested where it lives,
+  and a check written that way drew new findings in three review rounds
+  running. Put it in a script with tests, and have the document say when
+  to run it and what a pass means.
 - **A branch runs its own copy of the checks** that judge it. Read any
   change to a check's rules or scripts line by line.
 
@@ -260,8 +257,8 @@ files are to live there.)
   and then only by name (`.zip` and similar), never `.docx` or `.xlsx`. So
   refuse what it can't read rather than counting on it.
 - `--redact` hides only the secret itself: the rest of the matched text
-  is shown, and the commit message, author and email appear unredacted in
-  verbose output and in JSON reports.
+  is shown, the author and email appear unredacted in verbose output, and
+  JSON reports also carry the commit message.
 - Go RE2 regexes are case-sensitive unless they start with `(?i)`, and
   there is no lookaround.
 
