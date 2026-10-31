@@ -1,0 +1,11 @@
+# gitleaks' own rules for keys and tokens -- AWS, OpenAI, Twilio and a few
+# hundred others -- with gitleaks' own list of paths they skip (images,
+# minified libraries, lock files and the like).
+#
+# Kept apart from .gitleaks.toml on purpose. That skip list applies to every
+# rule in a config that extends this one, so with the two in one file an
+# address in an .svg or a jquery-*.min.js -- or in .gitleaks.toml itself --
+# was never looked at. Every check runs both files, one after the other.
+
+[extend]
+useDefault = true

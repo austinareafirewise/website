@@ -1,0 +1,38 @@
+#!/bin/sh
+# Refuse a commit message that carries a secret or personal data -- an error
+# message pasted in with someone's address in it, say. The pre-commit hook
+# checks what is committed; this checks what is said about it. Same rules.
+#
+# Turned on by the same `git config core.hooksPath .githooks`. Git passes
+# the path of the message file as $1. This hook also runs for `git merge`,
+# where pre-commit doesn't, so it checks for itself that it can run.
+
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+    echo "commit-msg: gitleaks is not installed, so this message was not checked." >&2
+    exit 1
+fi
+for config in .gitleaks.toml .gitleaks-standard.toml; do
+    if [ ! -f "$config" ]; then
+        echo "commit-msg: $config is missing, so this message was not checked." >&2
+        exit 1
+    fi
+done
+
+# Everything above the scissors line ("# ---- >8 ----"). Below it,
+# `git commit -v` puts the diff, and a commit that *removes* an address
+# would be refused for the address it removes. Lines starting with # are
+# checked too: whether git keeps them depends on how the commit was made
+# (`-m` and `-F` keep them), and checking git's own instructions as well
+# costs nothing.
+message=$(sed '/^. -\{24\} >8 -\{24\}$/,$d' "$1")
+
+for config in .gitleaks.toml .gitleaks-standard.toml; do
+    if ! printf '%s\n' "$message" \
+            | gitleaks stdin -c "$config" --ignore-gitleaks-allow --redact --no-banner --verbose; then
+        echo "commit-msg: the message above names something it shouldn't." >&2
+        echo "Your message is saved in $1; edit it and commit again." >&2
+        exit 1
+    fi
+done
