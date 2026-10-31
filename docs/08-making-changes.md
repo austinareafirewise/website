@@ -177,6 +177,13 @@ On the pull request, wait for **Check for secrets** to pass and read the
 **Files changed** tab. GitHub doesn't let you approve your own pull request;
 merging after reading it is the approval.
 
+Before it is merged, the pull request adds a short entry to
+[`CHANGELOG.md`](../CHANGELOG.md) at the repository root (Dependabot's
+dependency updates are the exception), and updates
+[`TODO.md`](../TODO.md), the list of everything still to do, if it
+finishes an item or turns up a new one. `CLAUDE.md` says how
+both are kept.
+
 Merge with **Squash and merge**: the branch's commits become one commit on
 `main`, so `main` reads as one line per change. Check the subject and
 message GitHub proposes before confirming — depending on the repository's
