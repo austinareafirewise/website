@@ -31,6 +31,11 @@ Access is separate (see Needs).
 GitHub, the *maintainer* (a decision, or something only they can check), or
 the *previous maintainer*; a short note in brackets says what for.
 
+**Depends on** — items that must be done first. An item that blocks a more
+important one takes on that importance, and says so in its text ("High:
+T33 and T34 depend on it"), so the order below reflects what is really
+holding work up.
+
 **From** — where the item came from: a pull request's review, the site
 check of 2026-10-31, a website principle in CLAUDE.md that the site doesn't
 yet meet (P1–P11), `infra/README.md`'s list of things only a person can do,
@@ -41,47 +46,49 @@ are the most worth doing for the least work. IDs are never reused.
 
 ## Open
 
-| ID | Item | From | Importance | Difficulty | Needs |
-| --- | --- | --- | --- | --- | --- |
-| T3 | Apply the GitHub settings in `docs/08-making-changes.md` §2.4: the branch ruleset, squash-only merges, deleting merged branches. Decide how pull requests from forks are checked. | Maintainer (PR #3) | High | Easy | Org owner |
-| T4 | Hand over AWS account access to the maintainer, including moving the account's root email to an organization address (`docs/05-runbook.md`). | Handover | High | Easy | Previous maintainer |
-| T5 | Make the repository private. The rules in CLAUDE.md that treat it as public stay as they are. | Maintainer | High | Easy | Org owner |
-| T33 | Email sign-ups: SES production access is requested and pending; follow it up until granted. | `infra/README.md` | High | Easy | AWS access |
-| T1 | Serve the fonts from our own site instead of Google Fonts (every page, the font files and their licence). | P5, P8; site check | High | Medium | — |
-| T2 | Stop sending the site's address to other domains with each request: a referrer policy in every page, or as a response header. | P6, P11; maintainer | High | Medium | AWS access (for a header) |
-| T6 | A full accessibility check: keyboard use and focus, screen readers, dark mode, small screens. | P1 | High | Medium | — |
-| T34 | Text alerts: carrier verification of the toll-free number (submitted), then lifting the SMS sandbox and the monthly spend limit (support cases); or Twilio with 10DLC registration instead. Then point the stack at the working provider (`infra/README.md`) and turn off the "coming soon" note for texts in `src/js/config.js`. | `infra/README.md` | High | Medium | AWS access |
-| T12 | Say on the privacy page that pages load fonts from Google, until T1 is done. | PR #5 review | Medium | Easy | — |
-| T13 | Check the site with each blocker on its own, in a clean browser profile: AdGuard, the DuckDuckGo extension, Firefox's Enhanced Tracking Protection, and NoScript (whether it stops the API requests). | P3, P7, P10, P11 | Medium | Easy | Maintainer |
-| T35 | Review and merge Dependabot's PR #2 (configure-aws-credentials 6.2.4 → 6.3.0), then confirm a deploy works. | Open pull request | Medium | Easy | Maintainer (approval, deploy) |
-| T39 | `docs/05-runbook.md`'s everyday-editing and roll-back steps push straight to `main`; they should go through a pull request (`docs/08` §2). | PR #6 review | Medium | Easy | — |
-| T7 | Run the full set of security scanners in GitHub Actions (see notes). | Maintainer | Medium | Medium | — |
-| T8 | Footer headings skip levels (`h4` after an `h2`, or after the `h1`) on most pages. | P1; site check | Medium | Medium | — |
-| T9 | Give each text-size button its own accessible name (all three are "A"), on every page. | P1; PR #5 review | Medium | Medium | — |
-| T10 | Put the "opens in a new tab" note for screen readers in the markup of every external link, so it is there without JavaScript. | P1, P2, P11; PR #5 review | Medium | Medium | — |
-| T11 | Say plainly what went wrong when the API can't be reached: the sign-up and manage forms show the browser's own error, and the board page stays on its "on its way" text. | P11; PR #5 review | Medium | Medium | — |
-| T14 | A tested script that checks the squash merge's subject and message Claude writes (see notes). | PR #4 review | Medium | Medium | — |
-| T15 | Automate the independent pull request review in GitHub Actions. | Maintainer | Medium | Medium | Maintainer (API key) |
-| T17 | Commit the accessibility checks used for CLAUDE.md's table as a tested script. | P1; PR #5 review | Medium | Medium | — |
-| T18 | Widen the secrets rules' coverage and harden how they fail (the cases are in PR #3's review). | PR #3 reviews | Medium | Medium | — |
-| T19 | Check pull request titles and descriptions as they are written: a description is public as soon as it is posted, and a title becomes the squash subject of a pull request with several commits merged on GitHub. (T14 covers the message Claude writes when it merges.) | PR #3 review | Medium | Medium | — |
-| T36 | A real mailbox on our own domain (there is no MX record), replacing the interim personal Reply-To on Alliance email, and then the contact address on the site; then remove the interim address from the docs and its exception in `.gitleaks.toml`. | `infra/README.md`; maintainer | Medium | Medium | AWS access; maintainer |
-| T38 | Docs describe the members system as not yet built, though it is live and stores sign-ups: `README.md`'s contact and mailing-list section (including an `AAFA_SIGNUP_ENDPOINT` setting that no longer exists), `infra/README.md`'s "What does not exist yet", and the status lines of `docs/06` and `docs/07`. | PR #6 reviews | Medium | Medium | — |
-| T16 | Return a real 404 status for a missing page. Amplify answers with two redirects (a trailing slash, then `404.html`) and then 200, and `infra/site-stack.yaml` notes that no rule can change that, so this needs another approach. Also make `404.html`'s asset paths absolute, and update `docs/05-runbook.md` and `infra/README.md`, which describe today's behaviour. | PR #5 review | Medium | Hard | AWS access |
-| T20 | Put the API on our own domain (e.g. `api.austinareafirewise.org`), so blockers and NoScript see it as first-party. | P5, P9, P11 | Medium | Hard | AWS access |
-| T21 | Find out whether Amplify, API Gateway, the sign-in domain and the content bucket's upload address can require TLS 1.3, and set it where they can. | P9 | Medium | Hard | AWS access |
-| T22 | Pages and forms that work without JavaScript, where practical (news, board and resources could be published as HTML). | P2 | Medium | Hard | — |
-| T23 | Mention the burn ban in the home page's note for visitors without JavaScript. | P2; PR #5 review | Low | Easy | — |
-| T24 | Give the training page a skip link and a main landmark. | P1; PR #5 review | Low | Easy | — |
-| T25 | Stop publishing the training material's developer scripts and README with the site. | Site check | Low | Easy | — |
-| T26 | Docs tidy-up: `docs/08` §2.3's merge command to match CLAUDE.md, and "the first commit's subject" (it is the only commit's); the personal home path in `docs/08` §1's introduction; a name listed twice in `.gitignore`. | PR #4, #5 reviews | Low | Easy | — |
-| T27 | Hooks to use `--exit-code 3` like the scan script; the scan script's `for … in $(git rev-list …)` loop. | PR #4 review | Low | Easy | — |
-| T28 | Point volunteers to GitHub's private noreply address for commits; commit author addresses aren't checked. | PR #3 review | Low | Easy | — |
-| T29 | Redirect the bare domain with a permanent (301) redirect, not a temporary one (`infra/site-stack.yaml`). | PR #5 review | Low | Easy | AWS access |
-| T30 | A `pre-merge-commit` hook, so a local merge with no conflict is checked like a commit. | PR #4 review | Low | Medium | — |
-| T31 | Harden the secrets check against changes made on a branch, and decide about tags (the cases are in PR #3's review). Follows T3. | PR #3 review | Low | Medium | Org owner (ruleset) |
-| T32 | The GitHub check and the deploy gate decide "binary" slightly differently (both fail closed). | PR #3 review | Low | Medium | — |
-| T37 | The admin sign-in page loads its styles, a script and an image from AWS's servers, and uploads go to the content bucket's AWS address: find whether either can be served from our own domain. | P5 | Low | Hard | AWS access |
+| ID | Item | From | Importance | Difficulty | Needs | Depends on |
+| --- | --- | --- | --- | --- | --- | --- |
+| T3 | Apply the GitHub settings in `docs/08-making-changes.md` §2.4: the branch ruleset, squash-only merges, deleting merged branches. Decide how pull requests from forks are checked. | Maintainer (PR #3) | High | Easy | Org owner | — |
+| T4 | Hand over AWS account access to the maintainer, including moving the account's root email to an organization address (`docs/05-runbook.md`). *(High: T33 and T34, both High, depend on it, as do seven other items.)* | Handover | High | Easy | Previous maintainer | — |
+| T5 | Make the repository private, while it still holds a person's contact details (see T36). The rules in CLAUDE.md that treat it as public stay as they are. | Maintainer | High | Easy | Org owner | — |
+| T12 | The privacy page says "We collect nothing about you personally", while every page loads fonts from Google: say so there until T1 is done. | PR #5, #6 reviews | High | Easy | — | — (unneeded once T1 is done) |
+| T33 | Email sign-ups: SES production access is requested and pending; follow it up until granted. | `infra/README.md` | High | Easy | AWS access | T4 |
+| T1 | Serve the fonts from our own site instead of Google Fonts (every page, the font files and their licence). | P5, P8; site check | High | Medium | — | — |
+| T2 | Stop sending the site's address to other domains with each request: a referrer policy in every page, or as a response header. | P6, P11; maintainer | High | Medium | AWS access (for a header) | T4 (for a header) |
+| T6 | A full accessibility check: keyboard use and focus, screen readers, dark mode, small screens. | P1 | High | Medium | — | — |
+| T34 | Text alerts: carrier verification of the toll-free number (submitted), then lifting the SMS sandbox and the monthly spend limit (support cases); or Twilio with 10DLC registration instead. Then point the stack at the working provider (`infra/README.md`) and turn off the "coming soon" note for texts in `src/js/config.js`. | `infra/README.md` | High | Medium | AWS access | T4 |
+| T13 | Check the site with each blocker on its own, in a clean browser profile: AdGuard, the DuckDuckGo extension, Firefox's Enhanced Tracking Protection, and NoScript (whether it stops the API requests). | P3, P7, P10, P11 | Medium | Easy | Maintainer | — |
+| T35 | Review and merge Dependabot's PR #2 (configure-aws-credentials 6.2.4 → 6.3.0), then confirm a deploy works. | Open pull request | Medium | Easy | Maintainer (approval, deploy) | — |
+| T39 | `docs/05-runbook.md`'s everyday-editing and roll-back steps push straight to `main`; they should go through a pull request (`docs/08` §2). | PR #6 review | Medium | Easy | — | — |
+| T41 | Confirm the GitHub organization has two owners, as `docs/05-runbook.md` asks, so access doesn't rest on one person. | PR #6 review | Medium | Easy | Org owner | — |
+| T7 | Run the full set of security scanners in GitHub Actions (see notes). | Maintainer | Medium | Medium | — | — |
+| T8 | Footer headings skip levels (`h4` after an `h2`, or after the `h1`) on most pages. | P1; site check | Medium | Medium | — | — |
+| T9 | Give each text-size button its own accessible name (all three are "A"), on every page. | P1; PR #5 review | Medium | Medium | — | — |
+| T10 | Put the "opens in a new tab" note for screen readers in the markup of every external link, so it is there without JavaScript. | P1, P2, P11; PR #5 review | Medium | Medium | — | — |
+| T11 | Say plainly what went wrong when the API can't be reached: the sign-up and manage forms show the browser's own error, and the board page stays on its "on its way" text. | P11; PR #5 review | Medium | Medium | — | — |
+| T14 | A tested script that checks the squash merge's subject and message Claude writes (see notes). | PR #4 review | Medium | Medium | — | — |
+| T17 | Commit the accessibility checks used for CLAUDE.md's table as a tested script. | P1; PR #5 review | Medium | Medium | — | — |
+| T18 | Widen the secrets rules' coverage and harden how they fail (the cases are in PR #3's review). | PR #3 reviews | Medium | Medium | — | — |
+| T19 | Check pull request titles and descriptions as they are written: a description is public as soon as it is posted, and a title becomes the squash subject of a pull request with several commits merged on GitHub. (T14 covers the message Claude writes when it merges.) | PR #3 review | Medium | Medium | — | — |
+| T36 | A real mailbox on our own domain (there is no MX record), replacing the interim personal Reply-To on Alliance email, and then the contact address on the site; then remove the interim address from the docs and its exception in `.gitleaks.toml`. | `infra/README.md`; maintainer | Medium | Medium | AWS access; maintainer | T4 |
+| T38 | Docs describe the content and members systems as not yet built, though both are live and store data: `README.md`'s contact and mailing-list section (including an `AAFA_SIGNUP_ENDPOINT` setting that no longer exists), `infra/README.md`'s "What does not exist yet" and its claim that sign-ups are refused until SES access is granted (they are stored), and `docs/06` and `docs/07` (status lines, and "today it stores nothing"). | PR #6 reviews | Medium | Medium | — | — |
+| T15 | Automate the independent pull request review in GitHub Actions (open questions: keeping the API key safe, pull requests from forks, text in a pull request steering the reviewer). | Maintainer | Medium | Hard | Maintainer (API key) | — |
+| T16 | Return a real 404 status for a missing page. Amplify answers with one or two redirects (sometimes a trailing slash, then `404.html`) and then 200, and `infra/site-stack.yaml` notes that no rule can change that, so this needs another approach. Also make `404.html`'s asset paths absolute, and update `docs/05-runbook.md` and `infra/README.md`, which describe today's behaviour. | PR #5 review | Medium | Hard | AWS access | T4 |
+| T20 | Put the API on our own domain (e.g. `api.austinareafirewise.org`), so blockers and NoScript see it as first-party. | P5, P9, P11 | Medium | Hard | AWS access | T4 |
+| T21 | Find out whether Amplify, API Gateway, the sign-in domain and the content bucket's upload address can require TLS 1.3, and set it where they can. | P9 | Medium | Hard | AWS access | T4; T20 (for the API, probably) |
+| T22 | Pages and forms that work without JavaScript, where practical (news, board and resources could be published as HTML). | P2 | Medium | Hard | — | — |
+| T23 | Mention the burn ban in the home page's note for visitors without JavaScript. | P2; PR #5 review | Low | Easy | — | — |
+| T24 | Give the training page a skip link and a main landmark. | P1; PR #5 review | Low | Easy | — | — |
+| T25 | Stop publishing the training material's developer scripts and README with the site. | Site check | Low | Easy | — | — |
+| T26 | Docs tidy-up: `docs/08` §2.3's merge command to match CLAUDE.md, and "the first commit's subject" (it is the only commit's); the personal home path in `docs/08` §1's introduction; a name listed twice in `.gitignore`. | PR #4, #5 reviews | Low | Easy | — | — |
+| T27 | Hooks to use `--exit-code 3` like the scan script; the scan script's `for … in $(git rev-list …)` loop. | PR #4 review | Low | Easy | — | — |
+| T28 | Point volunteers to GitHub's private noreply address for commits; commit author addresses aren't checked. | PR #3 review | Low | Easy | — | — |
+| T29 | Redirect the bare domain with a permanent (301) redirect, not a temporary one (`infra/site-stack.yaml`, and the description in `infra/README.md`). | PR #5 review | Low | Easy | AWS access | T4 |
+| T40 | `docs/05-runbook.md`'s costs table and "Delete everything" cover only the site stack, not the content and members stacks (SES, the toll-free number, DynamoDB, Lambdas); `docs/README.md` says to "put it on the list in 05-runbook.md", where TODO.md is now the list. | PR #6 review | Low | Easy | — | — |
+| T30 | A `pre-merge-commit` hook, so a local merge with no conflict is checked like a commit. | PR #4 review | Low | Medium | — | — |
+| T31 | Harden the secrets check against changes made on a branch, and decide about tags (the cases are in PR #3's review). Follows T3. | PR #3 review | Low | Medium | Org owner (ruleset) | T3 |
+| T32 | The GitHub check and the deploy gate decide "binary" slightly differently (both fail closed). | PR #3 review | Low | Medium | — | — |
+| T37 | The admin page calls the sign-in domain directly, the sign-in page loads its styles, a script and an image from AWS's servers, and uploads go to the content bucket's AWS address: find whether either can be served from our own domain. | P5 | Low | Hard | AWS access | T4 |
 
 ## Notes
 
