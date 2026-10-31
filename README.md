@@ -9,11 +9,13 @@ written.
 
 ## How a change goes live
 
-1. Edit files under `src/`.
-2. Commit and push to `main`.
-3. `.github/workflows/deploy.yml` zips `src/` and pushes it to AWS Amplify.
+1. Edit files under `src/`, on a branch of their own.
+2. Push the branch and open a pull request; merge it once **Check for
+   secrets** passes and you've read the changes.
+3. `.github/workflows/deploy.yml` checks `src/`, zips it and pushes it to AWS
+   Amplify.
 
-That is the whole loop: save to GitHub, the site updates. No local AWS
+That is the whole loop: merge on GitHub, the site updates. No local AWS
 credentials are needed to publish — the workflow gets short-lived credentials
 from GitHub OIDC. To republish without a content change, run the **Deploy to
 Amplify** workflow from the Actions tab.
@@ -95,17 +97,14 @@ Each editing session:
 git pull
 ```
 
-Edit files under `src/`, preview by double-clicking the page, then:
+Edit files under `src/` on a branch, preview by double-clicking the page,
+then commit, push the branch and open a pull request. Every change goes
+through one, even a one-word fix:
+[docs/08-making-changes.md](docs/08-making-changes.md) §2 has the commands.
 
-```bash
-git add -A
-git commit -m "short description of the change"
-git push
-```
-
-**A push to `main` publishes to austinareafirewise.org within about a minute.** There
-is no staging step and no review gate. Preview locally before pushing, and when
-in doubt push to a branch and open a pull request instead.
+**Merging a pull request publishes to austinareafirewise.org within about a
+minute.** There is no staging step: the pull request is the review, so
+preview locally before opening it.
 
 ## Editing rules worth keeping
 

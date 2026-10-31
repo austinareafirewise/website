@@ -1,0 +1,81 @@
+#!/bin/sh
+# Refuse a commit that carries a secret or personal data.
+#
+# Runs gitleaks over what is staged, with this repository's rules
+# (.gitleaks.toml: personal email addresses, passwords typed into commands)
+# and the standard ones (.gitleaks-standard.toml: keys and tokens). Files
+# gitleaks can't read -- documents, archives, anything git treats as binary
+# that isn't a picture, sound or font -- are refused by .githooks/check-documents.
+#
+# Git only runs hooks from this folder once it is told to, per checkout:
+#
+#     git config core.hooksPath .githooks
+#
+# A finding stops the commit and names the file and line. Remove the secret,
+# `git add` again, and commit. If gitleaks is certain and wrong, add an
+# allowlist entry to .gitleaks.toml -- do not skip the hook.
+
+# Git apps on a Mac (GitHub Desktop, an editor's git panel) often run hooks
+# without Homebrew's folders on PATH, which would make gitleaks look missing.
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+# gitleaks reads the output of git diff and git log. A color.ui or
+# color.diff of "always" in someone's git config fills that output with
+# color codes, and gitleaks then finds no changes in it at all -- and
+# reports success. Color is forced off for every git command from here on.
+export GIT_CONFIG_COUNT=2
+export GIT_CONFIG_KEY_0=color.ui GIT_CONFIG_VALUE_0=never
+export GIT_CONFIG_KEY_1=color.diff GIT_CONFIG_VALUE_1=never
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+    echo "pre-commit: gitleaks is not installed, so this commit was not checked." >&2
+    echo "Install it (brew install gitleaks) and commit again." >&2
+    exit 1
+fi
+
+# Named explicitly with -c below: without it, a missing file would quietly
+# mean gitleaks' defaults.
+for config in .gitleaks.toml .gitleaks-standard.toml; do
+    if [ ! -f "$config" ]; then
+        echo "pre-commit: $config is missing, so this commit was not checked." >&2
+        exit 1
+    fi
+done
+
+# Exceptions belong in .gitleaks.toml, where a change is visible and the
+# GitHub check compares it with main's. So two other ways gitleaks offers to
+# silence a finding are switched off: a `gitleaks:allow` comment on the line
+# (--ignore-gitleaks-allow), and a .gitleaksignore file, which is refused --
+# here, staged or not, and anywhere in the repository.
+if [ -e .gitleaksignore ] || git ls-files | grep -qE '(^|/)\.gitleaksignore$'; then
+    echo "pre-commit: remove .gitleaksignore; put exceptions in .gitleaks.toml." >&2
+    exit 1
+fi
+
+copies=$(mktemp -d)
+trap 'rm -rf "$copies"' EXIT
+
+# Judge documents against the list as it will be committed, not as it sits
+# in the working tree.
+git show :.githooks/allowed-documents.txt > "$copies/allowed-documents.txt" 2>/dev/null \
+    || : > "$copies/allowed-documents.txt"
+export ALLOWED_DOCUMENTS="$copies/allowed-documents.txt"
+
+# Every staged file that will exist after the commit: added, copied,
+# modified, renamed (as its new name) or changed in type. --no-renames makes
+# a rename show as an add, so `git mv deck.pptx roster.xlsx` is checked.
+# Documents by name; then anything git counts as binary (shown as "-  -" by
+# --numstat), which gitleaks would read as nothing.
+git -c core.quotePath=false diff --cached --name-only --no-renames --diff-filter=ACMRT \
+    | .githooks/check-documents || exit 1
+git -c core.quotePath=false diff --cached --numstat --no-renames --diff-filter=ACMRT \
+    | awk -F'\t' '$1 == "-" && $2 == "-" { print $3 }' \
+    | .githooks/check-documents --binary || exit 1
+
+# gitleaks never scans the config file it was given, so it gets a copy held
+# outside the repository, and .gitleaks.toml is checked like any other file.
+for config in .gitleaks.toml .gitleaks-standard.toml; do
+    cp "$config" "$copies/$config"
+    gitleaks git --pre-commit --staged -c "$copies/$config" --ignore-gitleaks-allow \
+        --redact --no-banner --verbose . || exit 1
+done

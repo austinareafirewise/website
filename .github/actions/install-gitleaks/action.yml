@@ -1,0 +1,27 @@
+name: Install gitleaks
+description: Install the pinned gitleaks release, checked against its published SHA-256.
+
+# One place for the version, so the secrets check and the deploy gate always
+# run the same gitleaks. Dependabot can't move these two values --
+# docs/08-making-changes.md section 4.2 says how to.
+#
+# Pinned by version and checksum, for the same reason actions are pinned by
+# SHA: this decides what code runs in the workflow.
+
+runs:
+  using: composite
+  steps:
+    - name: Download and verify gitleaks
+      shell: bash
+      env:
+        GITLEAKS_VERSION: 8.30.1
+        GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+      run: |
+        set -euo pipefail
+        cd "$RUNNER_TEMP"
+        f="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+        curl -sSfLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${f}"
+        echo "${GITLEAKS_SHA256}  ${f}" | sha256sum -c -
+        tar -xzf "$f" gitleaks
+        sudo install gitleaks /usr/local/bin/
+        gitleaks version

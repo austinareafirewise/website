@@ -72,10 +72,10 @@ does not yet, a personal address works to start — AWS root email can be change
 later — but put it on the list in [05-runbook.md](05-runbook.md) rather than
 discovering it at a bad moment.
 
-**Who can publish.** By default, a push to `main` goes live immediately with no
-review. That is fine for one or two careful people. For a larger group, or for
-a site carrying information people rely on, turn on required pull requests —
-[03-connect-github.md](03-connect-github.md) §3.6.
+**Who can publish.** Every change reaches `main` through a pull request, even
+when one person makes and merges it, and merging is what publishes. GitHub
+enforces that with a branch ruleset —
+[08-making-changes.md](08-making-changes.md) §2.4.
 
 ## If you get stuck
 
