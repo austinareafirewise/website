@@ -30,6 +30,49 @@ changes must meet it. The scope says *what problem* the pull request takes
 on — which cases a safety check must handle, say — and so where its review
 stops. Neither lowers the other.
 
+## How the website is run
+
+These are the principles the site is held to. Where it falls short of one
+today, the principle still stands: the gap is work to do, not an exception.
+Every change moves toward them, none moves away, and each gap is closed in a
+pull request of its own.
+
+1. **Accessible.** WCAG best practice, as far as it can be followed.
+2. **JavaScript only where it earns its place** — where a page can't work
+   without it, or where it makes a large difference to how well the page
+   works. Pages that need it say so to visitors who have it switched off.
+3. **No ads.** None of our own, and no links to ad sources, so an ad blocker
+   (AdGuard and the like) finds nothing to block.
+4. **No trackers** of our own.
+5. **Nothing loaded from anyone else's servers.** Fonts and everything else
+   the pages need come from our own site. Privacy Badger should find nothing
+   to block.
+6. **No tracking headers**, so Privacy Possum finds nothing to block.
+7. **No tracking requests**, so the DuckDuckGo extension finds nothing to
+   block.
+8. **Nothing from `googleapis.com` or `gstatic.com`.** uBlock Origin should
+   have nothing to unblock, apart from our own API.
+9. **TLS 1.3 only, with AES-GCM ciphers.**
+10. **Nothing that Firefox's Enhanced Tracking Protection would act on.**
+
+### Where the site stands
+
+Checked against the live site and `src/` on 2026-10-31. Update this table
+when a gap closes, and re-check it when a change could affect it.
+
+| # | Status | As found |
+| --- | --- | --- |
+| 1 | Short | Automated checks pass on every public page — language, image text alternatives, form labels, accessible names, landmarks, unique ids, skip link, AA text contrast — except one: the footer's headings skip a level (`h4` after `h2`). Not yet checked: keyboard use and focus, screen readers, dark mode, small screens. |
+| 2 | Short | The information pages work without JavaScript. News, the board, resources, the home page's notices, fire danger and burn ban, and the sign-up and manage forms need it. |
+| 3 | Meets | No ad code and no ad hosts. |
+| 4 | Meets | No analytics or tracking code; no cookies, local storage or session storage set. (The text-size control reads a saved preference.) |
+| 5 | Short | Fonts come from Google Fonts (`fonts.googleapis.com`, `fonts.gstatic.com`) on every page. Everything else is our own site and our own API. |
+| 6 | Believed met | No cookies are set; our responses carry only content and caching headers (including ETags, which caching uses). Not yet checked with the extension. |
+| 7 | Believed met | The only requests to other parties are the Google Fonts ones (5). Not yet checked with the extension. |
+| 8 | Short | Google Fonts, as in 5. The API is at `execute-api.us-east-2.amazonaws.com`. |
+| 9 | Short | TLS 1.0 and 1.1 are refused. TLS 1.2 is still accepted, by the site, the API and the admin sign-in, and TLS 1.3 offers ChaCha20-Poly1305 alongside AES-GCM. Whether each AWS service can be set to require TLS 1.3 is not yet established. |
+| 10 | Not yet checked | Not tested in Firefox. The only requests to other parties are the Google Fonts ones (5). |
+
 ## Ground rules
 
 - **Maintainers** are the people who approve merges and OK force-pushes.
@@ -140,10 +183,11 @@ that shows the scope itself is wrong is for a person to decide.
    accessibility for `src/`; gitleaks rules and Go regex semantics; and
    Markdown, where every statement must be true of the code. Plus the
    lessons below.
-3. **Test, don't assert.** Where a claim can be checked — a regex, a range,
-   an exit code, a hook, a workflow path — the reviewer runs it and quotes
-   the result, failure paths included. A safety check in the changed code
-   that can pass without checking is always blocking.
+3. **Test, don't assert.** Where a claim can be checked — a regex, a range, an
+   exit code, a hook, a workflow path — the reviewer runs it and quotes the
+   result, failure paths included, and for anything that is run, both its exit
+   code and its output. A safety check in the changed code that can pass
+   without checking is always blocking.
 4. **Findings**, each with file and line, what is wrong, why it matters
    (written for someone new to the repository), evidence, a fix, and
    *verified* or *suspected*. Ranked blocking, should fix, nit, question.
@@ -153,9 +197,9 @@ that shows the scope itself is wrong is for a person to decide.
    Reviewers are wrong sometimes, and so are authors.
 6. **Fix or decline.** Fix every verified blocking and should-fix finding that
    is within scope, or on a changed line below the standard, and re-run the
-   affected tests — checking exit status as well as output. A nit is fixed, or
-   declined with a one-line reason. Fix what was found; don't add new
-   capability to answer a finding — new code is new surface for the next
+   affected tests — checking both the exit code and the output of each. A nit
+   is fixed, or declined with a one-line reason. Fix what was found; don't add
+   new capability to answer a finding — new code is new surface for the next
    round, and a pull request that grows each round can't converge.
 7. **Record the round** in the pull request description's review log:
    round number, counts by severity, verified / not reproduced, fixed /
@@ -306,6 +350,9 @@ files are to live there.)
   result. Feed it from a file instead when it must be able to stop the
   script.
 - `set -e` doesn't catch a failure inside `for x in $(cmd)`.
+- After `cmd | tail`, `$?` is `tail`'s exit status, not `cmd`'s. Read
+  `${PIPESTATUS[0]}`, or capture the output first and check the command on
+  its own.
 - `gitleaks dir` scans only one path: given several (a file list through
   `xargs`, say), it scans the current directory instead.
 
@@ -331,8 +378,25 @@ files are to live there.)
   branch cut before a check existed doesn't get that check; merge `main`
   into it (no force-push needed).
 - `gh pr merge --delete-branch` deletes the local branch too.
+- `gh pr merge --subject … --body-file …` was recorded byte for byte on a
+  pull request whose commits all had one author; compare the recorded
+  message with what was checked after each merge.
 - Repository visibility, rulesets and merge settings are settings, not
   files: say exactly what to set, and who has to set it.
+
+### Checking the live site
+
+- OpenSSL 3, at its default security level, won't offer TLS 1.0 or 1.1 or
+  weaker ciphers itself, so a "refused" can be the client's doing. Probe
+  with `-cipher 'DEFAULT:@SECLEVEL=0'`, and judge by the cipher actually
+  negotiated: a failed handshake still prints `New,` — with
+  `Cipher is (NONE)`.
+- The browser's list of what a page loaded (`performance` resource
+  entries) isn't complete: here it showed the font files on some page loads
+  and not on others. Confirm against the source.
+- This session's safety check won't run code fetched from a CDN in the
+  browser, so a full automated accessibility audit (axe-core and the like)
+  needs another route, set up and reviewed like any other tool.
 
 ### Writing and reviewing
 
@@ -346,8 +410,11 @@ files are to live there.)
   you, check the test before the code.
 - **Independent review finds what the author misses** — and an independent
   reviewer is sometimes wrong. Reproduce before fixing.
-- **Test a check's exit status, not only its output.** A command that
-  prints "not clean" and exits 0 reports success to whatever runs it next.
+- **Test a check by both its exit code and its output — never one alone.** A
+  command that prints "not clean" and exits 0 reports success to whatever runs
+  it next; one that exits 0 and prints nothing may not have looked at all; and
+  one that exits non-zero may have failed to run rather than found something.
+  Each tells half the story.
 - **When correcting a claim, test every case it covers**, not only the one
   reported. A sentence about which git hooks run was corrected for merges
   and found wrong again for rebases: list the cases (each command, with and
