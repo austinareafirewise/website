@@ -15,6 +15,14 @@
 
 set -euo pipefail
 
+# gitleaks reads the output of git diff and git log. A color.ui or
+# color.diff of "always" in someone's git config fills that output with
+# color codes, and gitleaks then finds no changes in it at all -- and
+# reports success. Color is forced off for every git command from here on.
+export GIT_CONFIG_COUNT=2
+export GIT_CONFIG_KEY_0=color.ui GIT_CONFIG_VALUE_0=never
+export GIT_CONFIG_KEY_1=color.diff GIT_CONFIG_VALUE_1=never
+
 : "${REF:?}" "${AFTER:?}"
 BEFORE="${BEFORE:-}"
 TMP="${RUNNER_TEMP:-$(mktemp -d)}"
@@ -98,6 +106,13 @@ run_gitleaks() {
     fi
     if [ "${QUIET:-0}" != 1 ]; then
         grep -E "scanned|no leaks|leaks found" "$TMP/gitleaks.log" | sed -E 's/^.*(INF|WRN) //' || true
+    fi
+    # Commits to scan, but gitleaks read none of them: whatever the reason,
+    # it didn't look, so this can't count as clean.
+    if [ "$1" = git ] && grep -qE '(^| )0 commits scanned' "$TMP/gitleaks.log"; then
+        echo "::error::gitleaks read none of the ${count} commit(s) it was given; its output:"
+        sed 's/^/  /' "$TMP/gitleaks.log"
+        exit 1
     fi
     [ "$rc" -eq 0 ]
 }

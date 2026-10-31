@@ -39,6 +39,24 @@ keywords = ["password"]
     '''(?i)^your[-_]''',           # YOUR-TEMP-PASSWORD
   ]
 
+# The same in double quotes, spaces and all: a passphrase like
+# "Fire wise 2024!" is one value, not the word before the first space. A
+# value starting with $ is still a variable here.
+[[rules]]
+id = "cli-password-argument-double-quoted"
+description = "A password passed on a command line, in double quotes"
+regex = '''--(?:temporary-)?password[ =]+"([^"$\n][^"\n]{5,})"'''
+secretGroup = 1
+keywords = ["password"]
+
+  [[rules.allowlists]]
+  regexTarget = "secret"
+  regexes = [
+    '''^a-long-temporary-one$''',
+    '''^<[^>]*>$''',
+    '''(?i)^your[-_]''',
+  ]
+
 # The same in single quotes. The shell doesn't expand $ inside single
 # quotes, so '$uperSecret99' is a literal password and does match.
 [[rules]]
@@ -102,11 +120,12 @@ keywords = ["@"]
 # Three or more email addresses close together: a mailing list, a loop of
 # account commands, a pasted spreadsheet row or column, or a list written
 # `"Jane Doe" <jane@...>, "Bob Smith" <bob@...>`. "Close" means each is
-# within 80 characters of the last, with no other address between.
+# within 300 characters of the last, with no other address between -- room
+# for a roster row's name, phone number and street address.
 [[rules]]
 id = "email-address-list"
 description = "A list of email addresses"
-regex = '''(?i)(?:[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}[^@]{1,80}?){2,}[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}'''
+regex = '''(?i)(?:[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}[^@]{1,300}?){2,}[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}'''
 keywords = ["@"]
 
   # A list made only of documentation addresses (example.org and friends) is

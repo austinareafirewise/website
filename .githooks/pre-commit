@@ -19,6 +19,14 @@
 # without Homebrew's folders on PATH, which would make gitleaks look missing.
 PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
+# gitleaks reads the output of git diff and git log. A color.ui or
+# color.diff of "always" in someone's git config fills that output with
+# color codes, and gitleaks then finds no changes in it at all -- and
+# reports success. Color is forced off for every git command from here on.
+export GIT_CONFIG_COUNT=2
+export GIT_CONFIG_KEY_0=color.ui GIT_CONFIG_VALUE_0=never
+export GIT_CONFIG_KEY_1=color.diff GIT_CONFIG_VALUE_1=never
+
 if ! command -v gitleaks >/dev/null 2>&1; then
     echo "pre-commit: gitleaks is not installed, so this commit was not checked." >&2
     echo "Install it (brew install gitleaks) and commit again." >&2
@@ -44,6 +52,15 @@ if [ -e .gitleaksignore ] || git ls-files | grep -qE '(^|/)\.gitleaksignore$'; t
     exit 1
 fi
 
+copies=$(mktemp -d)
+trap 'rm -rf "$copies"' EXIT
+
+# Judge documents against the list as it will be committed, not as it sits
+# in the working tree.
+git show :.githooks/allowed-documents.txt > "$copies/allowed-documents.txt" 2>/dev/null \
+    || : > "$copies/allowed-documents.txt"
+export ALLOWED_DOCUMENTS="$copies/allowed-documents.txt"
+
 # Every staged file that will exist after the commit: added, copied,
 # modified, renamed (as its new name) or changed in type. --no-renames makes
 # a rename show as an add, so `git mv deck.pptx roster.xlsx` is checked.
@@ -57,8 +74,6 @@ git -c core.quotePath=false diff --cached --numstat --no-renames --diff-filter=A
 
 # gitleaks never scans the config file it was given, so it gets a copy held
 # outside the repository, and .gitleaks.toml is checked like any other file.
-copies=$(mktemp -d)
-trap 'rm -rf "$copies"' EXIT
 for config in .gitleaks.toml .gitleaks-standard.toml; do
     cp "$config" "$copies/$config"
     gitleaks git --pre-commit --staged -c "$copies/$config" --ignore-gitleaks-allow \

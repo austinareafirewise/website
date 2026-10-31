@@ -178,9 +178,11 @@ On the pull request, wait for **Check for secrets** to pass and read the
 merging after reading it is the approval.
 
 Merge with **Squash and merge**: the branch's commits become one commit on
-`main`, so `main` reads as one line per change. Check the subject GitHub
-proposes before confirming: depending on the repository's settings it is the
-pull request's title or the first commit's subject. From the command line, or ask the session to do it:
+`main`, so `main` reads as one line per change. Check the subject and
+message GitHub proposes before confirming — depending on the repository's
+settings the subject is the pull request's title or the first commit's
+subject. Neither the title nor anything typed into the merge box is checked
+until it is already on `main`, so make sure they name no one. From the command line, or ask the session to do it:
 
 ```bash
 gh pr merge <number> --squash --delete-branch
@@ -387,9 +389,9 @@ The checks run in three places:
 
 The GitHub check is the one a pull request must pass (§2.4), and it runs
 whether or not anyone turned the hooks on. The hooks add catching a mistake
-before it leaves your computer at all. For `git merge`, `cherry-pick` and
-`rebase` only the commit-message hook runs, not the one that checks files;
-the GitHub check covers those. To turn
+before it leaves your computer at all. `git merge` runs only the
+commit-message hook, and `cherry-pick` and `rebase` run neither; the GitHub
+check covers all three. To turn
 them on, once per checkout:
 
 ```bash

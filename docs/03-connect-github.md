@@ -139,7 +139,9 @@ content change, go to **Actions** → **Deploy to Amplify** → **Run workflow**
 ## 3.6 Decide who can publish
 
 Until a rule says otherwise, anyone who can push to `main` changes the live
-site within a minute, with no review and no checks.
+site within a minute, with no review. (The deploy still checks `src/` for
+secrets and personal data before publishing; nothing else stands in the
+way.)
 
 The Alliance's rule is that every change goes through a pull request, even a
 lone maintainer's, so the secrets check gets its say before anything is

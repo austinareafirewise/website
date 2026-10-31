@@ -20,7 +20,9 @@
 # backslash in it -- and then its real ending can't be seen. Such a name is
 # refused whatever its type: rename the file.
 
-allowed=".githooks/allowed-documents.txt"
+# The pre-commit hook points ALLOWED_DOCUMENTS at the staged copy of the
+# list, so an edit to it that isn't being committed doesn't count.
+allowed="${ALLOWED_DOCUMENTS:-.githooks/allowed-documents.txt}"
 documents='\.(xls|xlsx|xlsm|xlsb|xltx|csv|tsv|ods|numbers|doc|docx|docm|odt|rtf|pages|pdf|ppt|pptx|pptm|odp|key|msg|eml|zip|7z|rar|tar|gz|tgz|xz|bz2)$'
 media='\.(png|jpe?g|gif|webp|avif|ico|mp3|m4a|wav|ogg|mp4|webm|woff2?|ttf|otf)$'
 
@@ -53,6 +55,6 @@ done)
 if [ -n "$refused" ]; then
     echo "These files are $what:" >&2
     echo "$refused" | sed 's/^/    /' >&2
-    echo "If one belongs in the repository, add its path to $allowed." >&2
+    echo "If one belongs in the repository, add its path to .githooks/allowed-documents.txt." >&2
     exit 1
 fi

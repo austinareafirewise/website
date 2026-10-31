@@ -65,11 +65,10 @@ jobs:
       # The secrets check (secrets-scan.yml) runs alongside this workflow,
       # not ahead of it, so on its own it couldn't stop a deploy. This scans
       # src/ itself -- exactly the files that go to the public site, as they
-      # are now, whether this run came from a push or by hand. Document
-      # types gitleaks can't read are refused outright: it opens an archive
-      # only when the name says .zip or similar, never a .docx or .xlsx,
-      # though both are zip files inside. It runs before the AWS step, so a
-      # failure here means this job never holds AWS credentials at all.
+      # are now, whether this run came from a push or by hand. Files gitleaks
+      # can't read -- documents, archives, other binary files -- are refused
+      # outright rather than passed unread. It runs before the AWS step, so
+      # a failure here means this job never holds AWS credentials at all.
       - name: Install gitleaks
         uses: ./.github/actions/install-gitleaks
 
@@ -101,7 +100,7 @@ jobs:
           # from gitleaks itself failing, which also exits 1.
           for config in .gitleaks.toml .gitleaks-standard.toml; do
             rc=0
-            gitleaks dir src -c "$config" --max-archive-depth 2 --ignore-gitleaks-allow \
+            gitleaks dir src -c "$config" --ignore-gitleaks-allow \
               --exit-code 3 --redact --no-banner --no-color \
               --report-format json --report-path "$RUNNER_TEMP/site.json" || rc=$?
             if [ "$rc" -eq 3 ]; then

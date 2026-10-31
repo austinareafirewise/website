@@ -20,16 +20,13 @@ for config in .gitleaks.toml .gitleaks-standard.toml; do
     fi
 done
 
-# Only the message git will record. `git commit -v` puts the diff in the
-# file below a scissors line ("# ---- >8 ----"); without cutting it off, a
-# commit that *removes* an address would be refused for the address it
-# removes. Comment lines are dropped too -- unless commit.cleanup keeps
-# them, in which case they are part of the message and are checked.
-case "$(git config commit.cleanup || true)" in
-    verbatim|whitespace) strip="" ;;
-    *)                   strip="--strip-comments" ;;
-esac
-message=$(sed '/^. -\{24\} >8 -\{24\}$/,$d' "$1" | git stripspace $strip)
+# Everything above the scissors line ("# ---- >8 ----"). Below it,
+# `git commit -v` puts the diff, and a commit that *removes* an address
+# would be refused for the address it removes. Lines starting with # are
+# checked too: whether git keeps them depends on how the commit was made
+# (`-m` and `-F` keep them), and checking git's own instructions as well
+# costs nothing.
+message=$(sed '/^. -\{24\} >8 -\{24\}$/,$d' "$1")
 
 for config in .gitleaks.toml .gitleaks-standard.toml; do
     if ! printf '%s\n' "$message" \
