@@ -1,0 +1,116 @@
+# This repository's own secret scanning rules: personal data and passwords
+# that don't look like anything in particular, which gitleaks' standard
+# rules can't recognise -- a list of people's email addresses, or a password
+# typed into a command.
+#
+# The standard rules for keys and tokens are in .gitleaks-standard.toml, a
+# separate file on purpose: it brings gitleaks' list of paths to skip, and
+# these rules must not skip anything. Every check -- the hooks in .githooks/,
+# the GitHub check and the deploy gate -- runs both files, naming each with
+# -c, so a missing file is an error rather than a quiet fall-back.
+#
+# gitleaks reads text only. Files it can't read are refused instead, by
+# .githooks/check-documents.
+#
+# Email patterns start with (?i) because addresses are often capitalized
+# (Jane.Roe@Example.ORG), and these patterns are case-sensitive without it.
+#
+# gitleaks never scans the config file it was given, so every check hands it
+# a copy held outside the repository: an address typed into this file is
+# checked like one typed anywhere else.
+
+# A password typed on a command line: `--password x` or
+# `--temporary-password "x"`, as the Cognito admin commands take them.
+# Unquoted or in double quotes, a value starting with $ is a shell variable
+# ($P, "${PASSWORD}"), not a password, and doesn't match -- the way the
+# runbook should keep writing them.
+[[rules]]
+id = "cli-password-argument"
+description = "A password passed on a command line"
+regex = '''--(?:temporary-)?password[ =]+"?([^\s'"$][^\s'"]{5,})'''
+secretGroup = 1
+keywords = ["password"]
+
+  [[rules.allowlists]]
+  regexTarget = "secret"
+  regexes = [
+    '''^a-long-temporary-one$''',  # the runbook's example
+    '''^<[^>]*>$''',               # <NEW_PASSWORD>
+    '''(?i)^your[-_]''',           # YOUR-TEMP-PASSWORD
+  ]
+
+# The same in single quotes. The shell doesn't expand $ inside single
+# quotes, so '$uperSecret99' is a literal password and does match.
+[[rules]]
+id = "cli-password-argument-single-quoted"
+description = "A password passed on a command line, in single quotes"
+regex = '''--(?:temporary-)?password[ =]+'([^'\n]{6,})''''
+secretGroup = 1
+keywords = ["password"]
+
+  [[rules.allowlists]]
+  regexTarget = "secret"
+  regexes = [
+    '''^a-long-temporary-one$''',
+    '''^<[^>]*>$''',
+    '''(?i)^your[-_]''',
+  ]
+
+# A home email address: a consumer mailbox, or a local internet provider's.
+# The site's own addresses are on its own domain, and example.org stands in
+# for a person everywhere in the docs, so an address like these in a commit
+# is nearly always a real person's.
+#
+# Any ending is accepted after the provider's name (gmail.com,
+# hotmail.co.uk, pm.me), and one level of subdomain before it, for
+# providers that put the city in the address (austin.rr.com).
+[[rules]]
+id = "personal-email-address"
+description = "A personal (consumer mailbox) email address"
+regex = '''(?i)\b[a-z0-9._%+-]+@(?:[a-z0-9-]+\.)?(?:gmail|googlemail|yahoo|ymail|hotmail|outlook|live|msn|aol|icloud|me|mac|proton|protonmail|pm|fastmail|usa|sbcglobal|swbell|att|rr|grandecom|cox|comcast|verizon)\.[a-z]{2,3}(?:\.[a-z]{2})?\b'''
+keywords = ["@"]
+
+# Addresses on domains board members actually use that aren't consumer
+# mailboxes: their own vanity domains, austinfirewisealliance.org (not the
+# site's domain -- note the missing "area"), and the site's own
+# austinareafirewise.org, where board members' mailboxes are meant to end up.
+# Add a domain here when a board member's address is on one this file
+# doesn't already cover.
+[[rules]]
+id = "board-member-email-domain"
+description = "An email address on a board member's own domain"
+regex = '''(?i)\b[a-z0-9._%+-]+@(?:vickilandon\.com|shub-internet\.org|austinfirewisealliance\.org|austinareafirewise\.org)\b'''
+keywords = ["@"]
+
+  # The Alliance's role addresses, which are meant to be public: the address
+  # the site sends from, and the stand-in the docs use for "any address on
+  # our domain". A person's own address on the domain is still caught. Add a
+  # role address (info@, board@, ...) here when one is created.
+  [[rules.allowlists]]
+  regexTarget = "match"
+  regexes = ['''(?i)^(?:updates|anything)@austinareafirewise\.org$''']
+
+  # The one address published on purpose: the interim Reply-To on Alliance
+  # email, in the two documents that say so. Only that address, and only
+  # in those files.
+  [[rules.allowlists]]
+  condition = "AND"
+  paths = ['''^infra/README\.md$''', '''^docs/01-prerequisites\.md$''']
+  regexTarget = "match"
+  regexes = ['''(?i)^vicki@vickilandon\.com$''']
+
+# Three or more email addresses close together: a mailing list, a loop of
+# account commands, a pasted spreadsheet row or column, or a list written
+# `"Jane Doe" <jane@...>, "Bob Smith" <bob@...>`. "Close" means each is
+# within 80 characters of the last, with no other address between.
+[[rules]]
+id = "email-address-list"
+description = "A list of email addresses"
+regex = '''(?i)(?:[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}[^@]{1,80}?){2,}[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}'''
+keywords = ["@"]
+
+  # A list made only of documentation addresses (example.org and friends) is
+  # an example. One example address does not excuse the real ones beside it.
+  [[rules.allowlists]]
+  regexTarget = "match"
+  regexes = ['''(?i)^[^@]*(?:@example\.(?:org|com|net)\b[^@]*)+$''']

@@ -13,7 +13,6 @@ on:
   workflow_dispatch: {}
 
 permissions:
-  id-token: write
   contents: read
 
 env:
@@ -24,6 +23,20 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # The upload and the wait below take a few minutes at most; anything
+    # longer is stuck.
+    timeout-minutes: 15
+    # One deploy at a time. Two merges a minute apart would otherwise start
+    # two Amplify deployments racing to publish. A second run waits instead.
+    # If a third arrives while one is waiting, the waiting one is dropped
+    # and the newest goes next: it carries the newest site.
+    concurrency:
+      group: deploy-amplify
+      cancel-in-progress: false
+    # Granted to this job alone rather than the whole workflow.
+    permissions:
+      id-token: write   # ask GitHub for the OIDC token the AWS role trusts
+      contents: read    # check out the site
     steps:
       # ACTIONS ARE PINNED BY COMMIT SHA, NOT BY TAG.
       #
@@ -39,8 +52,67 @@ jobs:
       #
       # .github/dependabot.yml is the other half: a pin nobody moves is a
       # dependency frozen at whatever it had the day it was pinned.
+      #
+      # Nothing after this step talks to GitHub, so the checkout's token is
+      # not left behind in .git/config for later steps to find.
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Check what is about to be published before anything is.
+      #
+      # The secrets check (secrets-scan.yml) runs alongside this workflow,
+      # not ahead of it, so on its own it couldn't stop a deploy. This scans
+      # src/ itself -- exactly the files that go to the public site, as they
+      # are now, whether this run came from a push or by hand. Document
+      # types gitleaks can't read are refused outright: it opens an archive
+      # only when the name says .zip or similar, never a .docx or .xlsx,
+      # though both are zip files inside. It runs before the AWS step, so a
+      # failure here means this job never holds AWS credentials at all.
+      - name: Install gitleaks
+        uses: ./.github/actions/install-gitleaks
+
+      - name: Check the site for secrets and personal data
+        run: |
+          set -euo pipefail
+          # Files gitleaks can't read: documents by name, then anything git
+          # stores as binary ("i/-text") that isn't a picture, sound or font.
+          git -c core.quotePath=false ls-files src | .githooks/check-documents
+          git -c core.quotePath=false ls-files --eol src \
+            | awk -F'\t' '$1 ~ /^i\/-text/ { print $2 }' \
+            | .githooks/check-documents --binary
+          # zip follows a symbolic link and publishes what it points at,
+          # which gitleaks, scanning src/, would never read.
+          links=$(git ls-files -s src | awk '$1 == "120000" { print $4 }')
+          if [ -n "$links" ]; then
+            echo "::error::Not deploying: symbolic links under src/: ${links//$'\n'/, }"
+            exit 1
+          fi
+          # Exceptions only in .gitleaks.toml: no gitleaks:allow comments,
+          # and no .gitleaksignore anywhere -- gitleaks reads one from the
+          # folder it scans, not only from the top.
+          if git ls-files | grep -qE '(^|/)\.gitleaksignore$' || [ -e .gitleaksignore ]; then
+            echo "::error::Not deploying: remove .gitleaksignore; exceptions go in .gitleaks.toml."
+            exit 1
+          fi
+          # This repository's rules, then the standard ones (.gitleaks-standard.toml
+          # says why they are separate). --exit-code 3 tells a finding apart
+          # from gitleaks itself failing, which also exits 1.
+          for config in .gitleaks.toml .gitleaks-standard.toml; do
+            rc=0
+            gitleaks dir src -c "$config" --max-archive-depth 2 --ignore-gitleaks-allow \
+              --exit-code 3 --redact --no-banner --no-color \
+              --report-format json --report-path "$RUNNER_TEMP/site.json" || rc=$?
+            if [ "$rc" -eq 3 ]; then
+              echo "::error::Not deploying: secrets or personal data under src/ ($config):"
+              jq -r '.[] | "  \(.RuleID)  \(.File):\(.StartLine)"' "$RUNNER_TEMP/site.json"
+              exit 1
+            elif [ "$rc" -ne 0 ]; then
+              echo "::error::Not deploying: gitleaks failed to run with $config (exit $rc)."
+              exit 1
+            fi
+          done
 
       # Short-lived credentials via GitHub OIDC. No access keys in this repo.
       # The role trusts exactly repo:austinareafirewise/website:ref:refs/heads/main and
@@ -68,22 +140,32 @@ jobs:
           echo "job_id=$JOB_ID" >> "$GITHUB_OUTPUT"
           echo "upload_url=$UPLOAD_URL" >> "$GITHUB_OUTPUT"
 
+      # Step outputs reach the shell as environment variables, never pasted
+      # into the script with ${{ }}. Pasted text becomes part of the script
+      # itself, so a value carrying a quote or $( ) would run as a command.
+      # These values come from AWS and are trusted today; this keeps it so
+      # if that ever changes.
       - name: Upload site archive
+        env:
+          UPLOAD_URL: ${{ steps.create.outputs.upload_url }}
         run: |
-          curl -sS -X PUT "${{ steps.create.outputs.upload_url }}" \
+          curl -sS -X PUT "$UPLOAD_URL" \
             --upload-file site.zip
 
       - name: Start deployment
+        env:
+          JOB_ID: ${{ steps.create.outputs.job_id }}
         run: |
           aws amplify start-deployment \
             --app-id "$AMPLIFY_APP_ID" \
             --branch-name "$AMPLIFY_BRANCH" \
-            --job-id "${{ steps.create.outputs.job_id }}"
+            --job-id "$JOB_ID"
 
       - name: Wait for deployment to finish
+        env:
+          JOB_ID: ${{ steps.create.outputs.job_id }}
         run: |
-          JOB_ID="${{ steps.create.outputs.job_id }}"
-          for i in $(seq 1 30); do
+          for _ in $(seq 1 30); do
             STATUS=$(aws amplify get-job \
               --app-id "$AMPLIFY_APP_ID" \
               --branch-name "$AMPLIFY_BRANCH" \

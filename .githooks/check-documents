@@ -1,0 +1,58 @@
+#!/bin/sh
+# Refuse files the secrets check can't read, unless they are listed by name
+# in .githooks/allowed-documents.txt.
+#
+# gitleaks reads text. A roster saved as a spreadsheet, a PDF, or even a .txt
+# that Excel wrote as UTF-16 (which git treats as binary) passes it unread --
+# and that is the usual shape of exactly the data these checks are for. So
+# every file is either read by gitleaks or refused here.
+#
+# Reads the paths to check, one per line, on standard input:
+#
+#     check-documents            any path ending like a document or archive
+#     check-documents --binary   paths git has classified as binary; refused
+#                                unless they end like a picture, sound,
+#                                video or font, which a website is made of
+#
+# Callers list paths with `git -c core.quotePath=false`, so accented letters,
+# dashes and curly quotes come through as typed. Git still wraps a name in
+# double quotes when it has a control character, a double quote or a
+# backslash in it -- and then its real ending can't be seen. Such a name is
+# refused whatever its type: rename the file.
+
+allowed=".githooks/allowed-documents.txt"
+documents='\.(xls|xlsx|xlsm|xlsb|xltx|csv|tsv|ods|numbers|doc|docx|docm|odt|rtf|pages|pdf|ppt|pptx|pptm|odp|key|msg|eml|zip|7z|rar|tar|gz|tgz|xz|bz2)$'
+media='\.(png|jpe?g|gif|webp|avif|ico|mp3|m4a|wav|ogg|mp4|webm|woff2?|ttf|otf)$'
+
+paths=$(cat)
+
+odd=$(printf '%s\n' "$paths" | grep -E '^"' || true)
+if [ -n "$odd" ]; then
+    echo "These file names have characters the checks can't read safely:" >&2
+    echo "$odd" | sed 's/^/    /' >&2
+    echo "Rename them without quotes, backslashes or control characters." >&2
+    exit 1
+fi
+
+if [ "${1:-}" = "--binary" ]; then
+    candidates=$(printf '%s\n' "$paths" | grep -v '^$' | grep -viE "$media" || true)
+    what="binary files (git can't show them as text), so the secrets check can't read them"
+else
+    candidates=$(printf '%s\n' "$paths" | grep -iE "$documents" || true)
+    what="documents or archives, which the secrets check can't read"
+fi
+
+refused=$(printf '%s\n' "$candidates" | while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    if [ -f "$allowed" ] && grep -vE '^[[:space:]]*(#|$)' "$allowed" | grep -qxF -- "$path"; then
+        continue
+    fi
+    echo "$path"
+done)
+
+if [ -n "$refused" ]; then
+    echo "These files are $what:" >&2
+    echo "$refused" | sed 's/^/    /' >&2
+    echo "If one belongs in the repository, add its path to $allowed." >&2
+    exit 1
+fi

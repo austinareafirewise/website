@@ -138,19 +138,13 @@ content change, go to **Actions** → **Deploy to Amplify** → **Run workflow**
 
 ## 3.6 Decide who can publish
 
-Right now, anyone who can push to `main` changes the live site within a minute,
-with no review.
+Until a rule says otherwise, anyone who can push to `main` changes the live
+site within a minute, with no review and no checks.
 
-For one or two careful people that is fine, and it keeps things simple. If more
-people will have access, or if the site carries information people rely on,
-require review:
-
-Repository **Settings** → **Branches** → **Add branch ruleset** → target
-`main` → enable **Require a pull request before merging**.
-
-Changes then arrive as pull requests that someone approves, and merging
-publishes. Slower by a few minutes, and it means no single mistake goes live
-unseen.
+The Alliance's rule is that every change goes through a pull request, even a
+lone maintainer's, so the secrets check gets its say before anything is
+live. Set up the branch ruleset that enforces it as described in
+[08-making-changes.md](08-making-changes.md) §2.4.
 
 ---
 
@@ -160,6 +154,7 @@ unseen.
 - [ ] `TemporaryUrl` shows the site
 - [ ] Custom domain shows the site, and `http://` and the bare domain both end
       up at `https://www.`
-- [ ] A small edit to a file in `src/`, pushed, appears live within two minutes
+- [ ] A small edit to a file in `src/`, merged through a pull request, appears
+      live within two minutes
 
 Next: [05-runbook.md](05-runbook.md) — the things you will need later.

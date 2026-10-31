@@ -1,4 +1,4 @@
-# Moves the pinned actions in deploy.yml deliberately rather than by accident.
+# Moves the pinned actions in the workflows deliberately rather than by accident.
 #
 # Pinning to a commit removes the risk that a tag is MOVED under us. But a pin
 # with nobody watching it is a dependency frozen at whatever it had the day it
@@ -17,6 +17,11 @@ updates:
     directory: "/"
     schedule:
       interval: monthly
+    # Don't offer a release until it has been out for a week. A hijacked
+    # action is usually found and pulled within days; this keeps us from
+    # being among the first to run it.
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns: ["*"]
