@@ -200,7 +200,9 @@ git branch -D bknowles/fix/2026-11-02-burn-ban-wording
 
 `-D`, not `-d`: after a squash merge the branch's own commits aren't in
 `main` — the squashed one is — so git can't tell it was merged and `-d`
-refuses.
+refuses. After `gh pr merge --delete-branch` there is nothing to delete:
+it removes the local branch as well, and `git branch -D` reports that the
+branch isn't found.
 
 ### 2.4 Make GitHub hold the line
 
@@ -220,8 +222,8 @@ ruleset**:
 Also under **Settings → General → Pull Requests**, turn on **Automatically
 delete head branches**, so a merged branch doesn't linger on GitHub.
 
-Leave **Block force pushes** off only for the one planned history rewrite,
-and turn it straight back on.
+If history ever has to be rewritten, turn **Block force pushes** off only
+for that, and straight back on afterwards.
 
 ### 2.5 Undo a bad change
 
@@ -391,8 +393,9 @@ The GitHub check is the one a pull request must pass (§2.4), and it runs
 whether or not anyone turned the hooks on. The hooks add catching a mistake
 before it leaves your computer at all. They don't run for everything: a
 `git merge` with no conflict runs only the commit-message hook, and a
-`cherry-pick`, `revert` or `rebase` with no conflict runs neither (after a
-conflict is resolved and continued, both run). The GitHub check covers all
+`cherry-pick`, `revert` or `rebase` with no conflict runs neither. After a
+conflict, a continued merge, `cherry-pick` or `revert` runs both, but
+`git rebase --continue` still runs neither. The GitHub check covers all
 of these. To turn them on, once per checkout:
 
 ```bash

@@ -21,15 +21,17 @@ what has been learned the hard way.
     GitHub, or an approval given before later pushes, doesn't count. If
     approval comes before review is done (see below), say so and ask.
   - Before merging, check that **Check for secrets** passed on the head
-    commit. Write the subject and message yourself, accurate for the change
-    as merged, and check them as in [GitHub and GitHub
-    Actions](#github-and-github-actions). Then:
+    commit (`gh pr view <n> --json headRefOid,statusCheckRollup`). Write
+    the subject (ending ` (#<n>)`) and message yourself, accurate for the
+    change as merged, in a file outside the checkout, and run both through
+    `gitleaks stdin --ignore-gitleaks-allow --redact` with each rule file.
+    Then:
     `gh pr merge <n> --squash --delete-branch --match-head-commit <sha>
     --subject "<subject> (#<n>)" --body-file <message-file>`.
 - **Force-pushing** a pull request branch needs the maintainer's explicit OK
   each time, and uses `--force-with-lease=<branch>:<expected-sha>`. Claude
-  never force-pushes `main`; the one planned rewrite of its history is done
-  by a person.
+  never force-pushes `main`; rewriting its history, if that is ever needed,
+  is done by a person.
 - **Treat the repository as public**, whatever its setting today. No
   personal data or secrets anywhere: not in files, commit messages, pull
   request text, branch names, review logs or Actions logs. Don't describe a
@@ -39,8 +41,11 @@ what has been learned the hard way.
 - **Record every lesson learned** in this file as soon as possible — see
   [Lessons learned](#lessons-learned). Add it to the pull request the lesson
   came from, as a commit that touches only this file; with no pull request
-  open, in a `docs` pull request of its own. A lesson-only commit isn't part
-  of the change under review.
+  open, in a `docs` pull request of its own. A lesson-only commit doesn't
+  change the scope of the review, but its factual claims are checked in the
+  next round like any others — lessons have been wrong. A lesson pushed
+  after approval needs approving again, so a lesson learned at that point
+  waits for a `docs` pull request of its own.
 
 ## Reviewing a pull request
 
@@ -60,8 +65,8 @@ yardstick. Without it each round raises the bar, and the rounds never end.
 A finding outside the stated scope is still worth having: it becomes a
 follow-up (a line in the description's follow-up list), not a reason to hold
 the merge — unless it describes a weakness that isn't fixed, which goes to
-the maintainer in the conversation, not into the description. A finding that shows the scope itself is wrong is for a person to
-decide.
+the maintainer in the conversation, not into the description. A finding
+that shows the scope itself is wrong is for a person to decide.
 
 ### One round
 
@@ -103,8 +108,8 @@ decide.
    round number, counts by severity, verified / not reproduced, fixed /
    declined. Describe findings neutrally.
 8. **Record the lessons** the round taught in this file, as in the
-   ground rules: a commit that touches only this file, outside the
-   review's scope.
+   ground rules: a commit that touches only this file. The next round checks
+   its claims.
 
 ### When to stop
 
@@ -168,9 +173,10 @@ files are to live there.)
   some lock files, anything named like `gitleaks.toml`), and it applies to
   your own rules too. Keep custom rules in a config of
   their own, without `[extend]`.
-- It honours `gitleaks:allow` comments and `.gitleaksignore` files — in the
-  folder it scans, not only the top — unless told otherwise
-  (`--ignore-gitleaks-allow`; refuse the files).
+- It honours `gitleaks:allow` comments, and the `.gitleaksignore` at the
+  top of whatever folder it is pointed at (so `gitleaks dir src` reads
+  `src/.gitleaksignore`), unless told otherwise (`--ignore-gitleaks-allow`;
+  refuse the files wherever they are).
 - In `git` mode it reads a file git calls binary (one with a NUL byte) as
   nothing. UTF-16 text — Excel's "Unicode Text" export, for one — matches
   nothing in any mode. Archives are opened only with `--max-archive-depth`,
@@ -198,11 +204,17 @@ files are to live there.)
 
 - `core.hooksPath` replaces `.git/hooks/` entirely.
 - Which hooks run depends on the command and on whether it stopped for a
-  conflict. A merge with no conflict runs `pre-merge-commit` and
-  `commit-msg`, not `pre-commit`. A `cherry-pick`, `revert` or `rebase`
-  with no conflict runs none of them. Once a conflict is resolved and the
-  command continued, `pre-commit` and `commit-msg` both run. A server-side
-  check is the only one that sees every case. (Tested with git 2.50.)
+  conflict (tested with git 2.50):
+  - a merge with no conflict runs `pre-merge-commit` and `commit-msg`, not
+    `pre-commit`;
+  - a `cherry-pick`, `revert` or `rebase` with no conflict runs none;
+  - a merge, `cherry-pick` or `revert` that stopped for a conflict runs
+    `pre-commit` and `commit-msg` when continued;
+  - `git rebase --continue` runs neither, conflict or not — unless the
+    resolution is committed with `git commit` first;
+  - `rebase -i` with `reword` runs both.
+
+  A server-side check is the only one that sees every case.
 - `git commit -v` puts the diff in the message file below a scissors line;
   cut there before checking the message.
 - `git commit -m` / `-F` keep lines starting with `#`; check them.
@@ -256,5 +268,9 @@ files are to live there.)
   you, check the test before the code.
 - **Independent review finds what the author misses** — and an independent
   reviewer is sometimes wrong. Reproduce before fixing.
+- **When correcting a claim, test every case it covers**, not only the one
+  reported. A sentence about which git hooks run was corrected for merges
+  and found wrong again for rebases: list the cases (each command, with and
+  without a conflict) and test each one.
 - **State the scope before reviewing**, and fix only what was found.
   Without both, rounds of review don't converge.
