@@ -181,7 +181,8 @@ Before it is merged, the pull request also updates two files at the
 repository root: [`TODO.md`](../TODO.md), the list of everything still to
 do (remove what the change finishes, add anything new it turned up), and
 [`CHANGELOG.md`](../CHANGELOG.md), with a short entry for the change.
-`CLAUDE.md` says how both are kept.
+Dependabot's dependency updates are the exception. `CLAUDE.md` says how
+both are kept.
 
 Merge with **Squash and merge**: the branch's commits become one commit on
 `main`, so `main` reads as one line per change. Check the subject and
