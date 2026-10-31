@@ -54,17 +54,20 @@ stops. Neither lowers the other.
   - Before merging, check that the `gitleaks` check (the job in **Check for
     secrets**) passed on the head commit, and note that commit's SHA:
     `gh pr view <n> --json headRefOid,statusCheckRollup`.
-  - Write the subject (without the pull request number; the merge command
-    adds it) and the message yourself, accurate for the change as merged
-    and neutral, outside the checkout. Before merging, check exactly what
-    will be recorded — the final subject line with its number, a blank
-    line, the message — with both rule files as they are in that commit.
-    The check must fail closed: it passes only if the message really was
-    read, both rule files were read from that commit, no `.gitleaksignore`
-    was in play
-    (`gitleaks stdin` reads one from the current directory), and gitleaks
-    found nothing. Anything else, including any step that couldn't run,
-    means don't merge. Test its exit status, not its output.
+  - Write the subject (without the pull request number; the merge command adds
+    it) and the message yourself, accurate for the change as merged and
+    neutral, outside the checkout. Before merging, check exactly what will be
+    recorded — the final subject line with its number, a blank line, the
+    message — with both rule files as they are in that commit. The check must
+    fail closed: it passes only if the message really was read; the commit's
+    SHA is the non-empty one that was checked (with an empty SHA, `git show
+    :path` quietly reads the staged copy instead); both rule files were read
+    from that commit and each holds rules (an empty one finds nothing, so it
+    "passes"); `gitleaks:allow` was ignored (`--ignore-gitleaks-allow`) and no
+    `.gitleaksignore` was in play (`gitleaks stdin` reads one from the current
+    directory); and gitleaks found nothing. Anything else, including any step
+    that couldn't run, means don't merge. Test its exit status, not its
+    output.
   - Then merge, pinned to the commit that was checked:
     `gh pr merge <n> --squash --delete-branch --match-head-commit <sha>
     --subject "<subject> (#<n>)" --body-file <message-file>`.
@@ -223,11 +226,11 @@ files are to live there.)
 - **Log the finding, not the data.** Print rule, file, line and commit hash
   — not the matched text, its surroundings, or a commit subject. Actions
   logs are as public as the repository and outlive any later clean-up.
-- **A check is code: keep it in a script, not in a document.** Shell meant
-  to be copied out of Markdown can't be linted or tested where it lives,
-  and a check written that way drew new findings in three review rounds
-  running. Put it in a script with tests, and have the document say when
-  to run it and what a pass means.
+- **A check is code: keep it in a script, not in a document.** Shell meant to
+  be copied out of Markdown can't be linted or tested where it lives, and a
+  check written that way drew new findings round after round, each fix
+  exposing another way it could pass without looking. Put it in a script with
+  tests, and have the document say when to run it and what a pass means.
 - **A branch runs its own copy of the checks** that judge it. Read any
   change to a check's rules or scripts line by line.
 
