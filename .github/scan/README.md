@@ -47,7 +47,8 @@ Choose a release at least seven days old. Dependabot doesn't move these.
 - **Release files** (`tools.env`): set the version and its SHA-256, and check
   the checksum against both GitHub's record of the file
   (`gh api repos/<owner>/<repo>/releases/tags/<tag>`, its `digest`) and the
-  project's own published checksums.
+  project's own published checksums. exiftool isn't released on GitHub:
+  check it against CPAN's `CHECKSUMS` file and a download of your own.
 - **Python tools** (`requirements/`): change the version in `<tool>.in`, then
   regenerate `<tool>.txt` with every package's hashes, using a date seven days
   back:
