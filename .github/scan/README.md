@@ -42,7 +42,8 @@ own config files) is refused.
 
 ## Moving a pin
 
-Choose a release at least seven days old. Dependabot doesn't move these.
+Choose a release at least seven days old. Dependabot isn't set up to move
+these (TODO.md, T50).
 
 - **Release files** (`tools.env`): set the version and its SHA-256, and check
   the checksum against both GitHub's record of the file

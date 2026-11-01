@@ -45,16 +45,17 @@ export GIT_CONFIG_KEY_1=color.diff GIT_CONFIG_VALUE_1=never
 
 fail() { echo "::error title=$tool::$*"; exit 1; }
 
-# Tracked files matching the given pathspecs, NUL-separated, names unquoted.
-tracked() { git -c core.quotePath=false ls-files -z -- "$@"; }
+# Every tracked file, NUL-separated, names unquoted.
+tracked() { git -c core.quotePath=false ls-files -z; }
 
-# Fail if any tracked file matching the pathspecs contains the pattern.
-refuse() {  # description, extended regex, pathspec...
+# Fail if any of the given files contains the pattern.
+refuse() {  # description, extended regex, file...
     local what="$1" re="$2"; shift 2
     local hits rc=0
-    hits=$(git -c core.quotePath=false grep -l -I -E -e "$re" -- "$@") || rc=$?
-    # git grep: 0 found, 1 not found, anything else an error.
-    [ "$rc" -le 1 ] || fail "couldn't search for $what (git grep exit $rc)"
+    [ "$#" -gt 0 ] || return 0
+    hits=$(grep -l -E -e "$re" -- "$@") || rc=$?
+    # grep: 0 found, 1 not found, anything else an error.
+    [ "$rc" -le 1 ] || fail "couldn't search for $what (grep exit $rc)"
     [ -z "$hits" ] || fail "$what found (not allowed; exceptions go in .github/scan/): $(tr '\n' ' ' <<<"$hits")"
 }
 
@@ -67,8 +68,35 @@ refuse_file() {  # path...: config files the tool would pick up by itself
 # first or after other directives on the line, such as a source= one.
 shellcheck_disable='#[[:space:]]*shellcheck[[:space:]]([^#]*[[:space:]])?disable='
 
-# A file whose first line runs a shell.
-is_shell() { head -n1 -- "$1" | grep -qE '^#!.*[/ ](ba|da|k)?sh( |$)'; }
+# A file whose first line runs a shell, or Python (a CRLF line ending too).
+is_shell()  { head -n1 -- "$1" | tr -d '\r' | grep -qE '^#!.*[/ ](ba|da|k)?sh( |$)'; }
+is_python() { head -n1 -- "$1" | tr -d '\r' | grep -qE '^#!.*[/ ]python[0-9.]*( |$)'; }
+
+# Every tracked file, and which of them are text. Decided by content (a NUL
+# byte means binary, as git's own test), never by .gitattributes, which
+# could otherwise mark a script "binary" and take it out of every scan.
+mapfile -d '' all_files < <(tracked)
+declare -A is_text=()
+for f in "${all_files[@]}"; do
+    [ -f "$f" ] || continue
+    [ "$(LC_ALL=C tr -dc '\000' < "$f" | head -c1 | wc -c)" -eq 0 ] && is_text[$f]=1
+done
+
+# Tracked files whose names match the regex (any case), or that pass the
+# optional test. Each must be text: a script or template that isn't can't
+# be read, so it is refused rather than skipped.
+pick() {  # regex [test-function]
+    local re="$1" test="${2:-}" f hit
+    picked=()
+    for f in "${all_files[@]}"; do
+        hit=0
+        shopt -s nocasematch; [[ "$f" =~ $re ]] && hit=1; shopt -u nocasematch
+        if [ "$hit" -eq 0 ] && [ -n "$test" ] && [ -n "${is_text[$f]:-}" ] && "$test" "$f"; then hit=1; fi
+        [ "$hit" -eq 1 ] || continue
+        [ -n "${is_text[$f]:-}" ] || fail "$f isn't text, so $tool can't read it"
+        picked+=("$f")
+    done
+}
 
 need() { [ "$#" -gt 0 ] || fail "nothing to scan: no files of the kind this tool reads"; }
 
@@ -133,17 +161,24 @@ trufflehog_scan() {  # git repository
     # SHA-256 hashes near it as tokens. A Sentry result in one of those files
     # is dropped only if, in that commit, its line is a hash line and holds
     # what was matched. The matched text is compared here, never printed.
-    local detector file line commit raw text
+    local detector file line commit raw text kept=0 dropped=0
+    jq -e -s 'all(.[]; type == "object")' "$work/out" > /dev/null 2>&1 \
+        || fail "trufflehog's output isn't the JSON results it should be"
+    jq -r '[.DetectorName, .SourceMetadata.Data.Git.file, (.SourceMetadata.Data.Git.line|tostring),
+            .SourceMetadata.Data.Git.commit, .Raw] | @tsv' "$work/out" > "$work/results.tsv" \
+        || fail "couldn't read trufflehog's results"
     while IFS=$'\t' read -r detector file line commit raw; do
         if [ "$detector" = SentryToken ] && [[ "$file" =~ ^\.github/scan/requirements/[a-z-]+\.txt$ ]]; then
             text=$(git -C "$1" show "$commit:$file" 2>/dev/null | sed -n "${line}p")
             if [[ "$text" =~ ^\ {4}--hash=sha256:[0-9a-f]{64}(\ \\)?$ ]] && [[ "$text" == *"$raw"* ]]; then
-                continue
+                dropped=$((dropped + 1)); continue
             fi
         fi
         printf '%s\t%s:%s in %s\n' "$detector" "$file" "$line" "${commit:0:12}" >> "$findings"
-    done < <(jq -r '[.DetectorName, .SourceMetadata.Data.Git.file, (.SourceMetadata.Data.Git.line|tostring),
-                     .SourceMetadata.Data.Git.commit, .Raw] | @tsv' "$work/out")
+        kept=$((kept + 1))
+    done < "$work/results.tsv"
+    # "Found something" must come with something found.
+    [ "$rc" -ne 183 ] || [ $((kept + dropped)) -gt 0 ] || fail "trufflehog reported findings, but none could be read"
 }
 
 cfn_lint_scan() {  # templates...
@@ -183,11 +218,19 @@ bandit_scan() {  # python files...
     # Medium and High severity only. Low findings (importing subprocess, a
     # fixed command run by name) aren't faults in the local helper scripts
     # here; report them by dropping --severity-level when reviewing by hand.
-    bandit --format json --quiet --ignore-nosec --severity-level medium \
+    # -x '': none of Bandit's default excludes (.tox, __pycache__ and so on),
+    # which it applies even to files it is given by name.
+    bandit --format json --quiet --ignore-nosec --severity-level medium -x '' \
         -- "$@" > "$work/out" 2> "$work/err" || true
     jq -e . "$work/out" > /dev/null 2>&1 || fail "bandit failed (no JSON report): $(cat "$work/err")"
     jq -e '(.errors | length) == 0 and .metrics._totals.loc > 0' "$work/out" > /dev/null \
         || fail "bandit read nothing, or couldn't read a file: $(jq -c '.errors' "$work/out")"
+    # Every file it was given must have been read.
+    # (Bandit writes a relative path with ./ in front.)
+    jq -r '.metrics | keys[] | select(. != "_totals") | sub("^\\./"; "")' "$work/out" | sort > "$work/read"
+    printf '%s\n' "$@" | sort > "$work/wanted"
+    [ -z "$(comm -23 "$work/wanted" "$work/read")" ] \
+        || fail "bandit skipped $(comm -23 "$work/wanted" "$work/read" | wc -l | tr -d ' ') file(s) it was given"
     jq -r '.results[] | [.test_id, (.filename + ":" + (.line_number|tostring))] | @tsv' \
         "$work/out" >> "$findings"
 }
@@ -204,8 +247,10 @@ zizmor_scan() {  # workflow and action files...
         || fail "zizmor failed (exit $rc): $(tail -5 "$work/err")"
     jq -e 'type == "array"' "$work/out" > /dev/null 2>&1 || fail "zizmor gave no JSON report"
     jq -r '.[] | . as $f | .locations[0] |
-           [$f.ident, (.symbolic.key.Local.given_path + ":" + ((.concrete.location.start_point.row + 1)|tostring))] | @tsv' \
+           [$f.ident, ((.symbolic.key.Local.verbatim_path // .symbolic.key.Local.given_path // "")
+                       + ":" + ((.concrete.location.start_point.row + 1)|tostring))] | @tsv' \
         "$work/out" >> "$findings"
+    ! grep -q $'\t:' "$findings" || fail "zizmor reported a finding without a file name"
 }
 
 semgrep_scan() {  # files...
@@ -230,7 +275,8 @@ semgrep_scan() {  # files...
 
 # Media and documents exiftool reads: the media .githooks/check-documents
 # lets through (fonts aside: they carry no photo or document metadata), the
-# documents it allows by name, and SVG.
+# documents it allows by name, SVG, and other picture, sound and video types
+# a phone or camera writes.
 media_re='\.(png|jpe?g|gif|webp|avif|ico|heic|heif|tiff?|bmp|svg|mp3|m4a|aac|wav|ogg|flac|mp4|m4v|mov|webm|pdf|docx|xlsx|pptx|odt|ods|odp)$'
 
 declare -A label=()                # extracted copy -> "path (blob <id>)"
@@ -241,10 +287,12 @@ exiftool_scan() {  # files...
     # QuickTime's (phone video). ExifTool:Error is asked for explicitly,
     # because a tag list otherwise leaves it out and a file it can't read
     # would look clean.
-    local tags=(-ExifTool:Error -GPS* -Artist -Author -XMP-dc:Creator
+    local tags=(-ExifTool:Error -GPS* -Artist -Author -XPAuthor -XMP-dc:Creator
                 -By-line -LastModifiedBy -OwnerName -CameraOwnerName
                 -SerialNumber -BodySerialNumber -LensSerialNumber
-                -InternalSerialNumber -Company -Manager)
+                -InternalSerialNumber -Company -Manager -Copyright -Rights
+                -RegionName -PersonInImage -City -Sub-location -State
+                -Country -Location* -*Email*)
     exiftool -json -G1 -a -q -q "${tags[@]}" -- "$@" > "$work/out" 2> "$work/err" || true
     jq -e 'type == "array"' "$work/out" > /dev/null 2>&1 || fail "exiftool gave no JSON report: $(cat "$work/err")"
     # One entry per file, and none it couldn't read.
@@ -279,8 +327,8 @@ mkdir -p "$sample"
 case "$tool" in
   actionlint)
     refuse_file .github/actionlint.yaml .github/actionlint.yml
-    refuse "a shellcheck disable directive" "$shellcheck_disable" '.github/workflows/*'
-    mapfile -d '' targets < <(tracked '.github/workflows/*.yml' '.github/workflows/*.yaml')
+    pick '^\.github/workflows/[^/]+\.ya?ml$'; targets=("${picked[@]}")
+    refuse "a shellcheck disable directive" "$shellcheck_disable" "${targets[@]}"
     need "${targets[@]}"
     cat > "$sample/t.yml" <<'EOF'
 on: push
@@ -298,14 +346,9 @@ EOF
     actionlint_scan "${targets[@]}" ;;
 
   shellcheck)
-    refuse "a shellcheck disable directive" "$shellcheck_disable" ':(attr:!binary)'
-    targets=()
-    while IFS= read -r -d '' f; do
-        case "$f" in
-          *.sh|*.bash) targets+=("$f") ;;
-          *) is_shell "$f" && targets+=("$f") || true ;;
-        esac
-    done < <(tracked ':(attr:!binary)')
+    pick '\.(sh|bash)$' is_shell; targets=("${picked[@]}")
+    texts=(); for f in "${all_files[@]}"; do [ -z "${is_text[$f]:-}" ] || texts+=("$f"); done
+    refuse "a shellcheck disable directive" "$shellcheck_disable" "${texts[@]}"
     need "${targets[@]}"
     cat > "$sample/t.sh" <<'EOF'
 #!/bin/sh
@@ -327,7 +370,7 @@ EOF
 
   cfn-lint|checkov)
     refuse_file .cfnlintrc .cfnlintrc.yaml .cfnlintrc.yml .checkov.yaml .checkov.yml
-    mapfile -d '' templates < <(tracked '*.yaml' '*.yml' '*.json' '*.template')
+    pick '\.(ya?ml|json|template)$'; templates=("${picked[@]}")
     targets=()
     # AWSTemplateFormatVersion is optional, so also any file with a top-level
     # Resources section of AWS:: types.
@@ -350,7 +393,7 @@ EOF
     fi ;;
 
   bandit)
-    mapfile -d '' targets < <(tracked '*.py')
+    pick '\.py$' is_python; targets=("${picked[@]}")
     need "${targets[@]}"
     printf 'import subprocess\nimport sys\nsubprocess.call(sys.argv[1], shell=True)\n' > "$sample/t.py"
     expect_caught "a shell command built from input" bandit_scan "$sample/t.py"
@@ -358,9 +401,9 @@ EOF
 
   zizmor)
     refuse_file zizmor.yml .github/zizmor.yml
-    refuse "a zizmor ignore comment" '#[[:space:]]*zizmor:[[:space:]]*ignore\[' '.github/*'
-    mapfile -d '' targets < <(tracked '.github/workflows/*.yml' '.github/workflows/*.yaml' \
-        '.github/actions/*/action.yml' '.github/actions/*/action.yaml' '.github/dependabot.yml')
+    pick '^\.github/(workflows/[^/]+|actions/[^/]+/action|dependabot)\.ya?ml$'; targets=("${picked[@]}")
+    texts=(); for f in "${all_files[@]}"; do [[ "$f" != .github/* ]] || [ -z "${is_text[$f]:-}" ] || texts+=("$f"); done
+    refuse "a zizmor ignore comment" '#[[:space:]]*zizmor:[[:space:]]*ignore\[' "${texts[@]}"
     need "${targets[@]}"
     mkdir -p "$sample/.github/workflows"
     cat > "$sample/.github/workflows/t.yml" <<'EOF'
@@ -373,18 +416,30 @@ jobs:
       - run: echo "${{ github.event.issue.title }}"
 EOF
     expect_caught "an issue title pasted into a shell command" zizmor_scan "$sample/.github/workflows/t.yml"
+    # A pin whose comment names the wrong release: only the online audits see
+    # it, so this proves they ran (actions/checkout's v7.0.1, called v6.0.0).
+    cat > "$sample/.github/workflows/u.yml" <<'EOF'
+on: push
+permissions: {}
+jobs:
+  u:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6.0.0
+        with:
+          persist-credentials: false
+EOF
+    zizmor_scan "$sample/.github/workflows/u.yml"
+    grep -q $'^ref-version-mismatch\t' "$findings" || fail "zizmor's online audits didn't run on their known sample"
+    echo "ok   catches its known sample for the online audits (a pin labelled with the wrong release)"
+    : > "$findings"
     zizmor_scan "${targets[@]}" ;;
 
   semgrep)
     : "${SEMGREP_RULES:?set SEMGREP_RULES to the pinned semgrep-rules checkout}"
     export SEMGREP_SEND_METRICS=off
-    targets=()
-    while IFS= read -r -d '' f; do
-        case "$f" in
-          *.js|*.mjs|*.cjs|*.py|*.sh|*.bash|*.html|*.htm|*.yml|*.yaml) targets+=("$f") ;;
-          *) is_shell "$f" && targets+=("$f") || true ;;
-        esac
-    done < <(tracked ':(attr:!binary)')
+    is_script() { is_shell "$1" || is_python "$1"; }
+    pick '\.(js|mjs|cjs|py|sh|bash|html?|ya?ml)$' is_script; targets=("${picked[@]}")
     need "${targets[@]}"
     printf 'const input = location.hash;\neval(input);\n' > "$sample/t.js"
     expect_caught "eval() of text from the address bar" semgrep_scan "$sample/t.js"
