@@ -17,7 +17,7 @@ Work from before this file started is in the git history.
   refuses the ways it offers to silence a finding, and must first catch a
   known-bad sample. CLAUDE.md gains "Keeping state on local disk": plans and
   progress are written to local files before each step, by Claude and by
-  every agent. Closes T7; adds T46–T50.
+  every agent. Closes T7; adds T46–T51.
 - **Close T35, and track the deploy upload's error check**
   ([#7](https://github.com/austinareafirewise/website/pull/7)). Removes
   T35: Dependabot's #2, which moved `aws-actions/configure-aws-credentials`

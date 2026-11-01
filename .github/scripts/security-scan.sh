@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Run one security scanner over the repository, failing closed.
 #
 #     .github/scripts/security-scan.sh <tool> <gate|report>
@@ -23,6 +23,10 @@
 # Expects the tool on PATH (install-scanner.sh) and, for Semgrep, the pinned
 # rules checked out at $SEMGREP_RULES.
 set -euo pipefail
+# mapfile -d needs bash 4.4 (macOS's own bash is 3.2).
+if [ "${BASH_VERSINFO[0]}" -lt 4 ] || { [ "${BASH_VERSINFO[0]}" -eq 4 ] && [ "${BASH_VERSINFO[1]}" -lt 4 ]; }; then
+    echo "security-scan.sh needs bash 4.4 or later (this is $BASH_VERSION)" >&2; exit 2
+fi
 
 tool="${1:?usage: security-scan.sh <tool> <gate|report>}"
 mode="${2:?usage: security-scan.sh <tool> <gate|report>}"
@@ -31,6 +35,7 @@ case "$mode" in gate|report) ;; *) echo "mode must be gate or report" >&2; exit 
 cd "$(git rev-parse --show-toplevel)"
 root="$PWD"
 work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT          # the tools' raw output can hold what they matched
 findings="$work/findings.tsv"      # rule <TAB> file:line, one per finding
 
 # Scripts parse git's output: force color off whatever the user's config says.
@@ -46,8 +51,10 @@ tracked() { git -c core.quotePath=false ls-files -z -- "$@"; }
 # Fail if any tracked file matching the pathspecs contains the pattern.
 refuse() {  # description, extended regex, pathspec...
     local what="$1" re="$2"; shift 2
-    local hits
-    hits=$(git -c core.quotePath=false grep -l -I -E -e "$re" -- "$@" || true)
+    local hits rc=0
+    hits=$(git -c core.quotePath=false grep -l -I -E -e "$re" -- "$@") || rc=$?
+    # git grep: 0 found, 1 not found, anything else an error.
+    [ "$rc" -le 1 ] || fail "couldn't search for $what (git grep exit $rc)"
     [ -z "$hits" ] || fail "$what found (not allowed; exceptions go in .github/scan/): $(tr '\n' ' ' <<<"$hits")"
 }
 
@@ -55,6 +62,13 @@ refuse_file() {  # path...: config files the tool would pick up by itself
     local f
     for f in "$@"; do [ ! -e "$f" ] || fail "$f found: the tool would read it on its own"; done
 }
+
+# A shellcheck directive line that disables a check, whether disable= comes
+# first or after other directives on the line, such as a source= one.
+shellcheck_disable='#[[:space:]]*shellcheck[[:space:]]([^#]*[[:space:]])?disable='
+
+# A file whose first line runs a shell.
+is_shell() { head -n1 -- "$1" | grep -qE '^#!.*[/ ](ba|da|k)?sh( |$)'; }
 
 need() { [ "$#" -gt 0 ] || fail "nothing to scan: no files of the kind this tool reads"; }
 
@@ -109,14 +123,27 @@ trufflehog_scan() {  # git repository
     local rc=0 bytes
     trufflehog git "file://$1" --json --no-verification --no-update \
         --no-ignore-tag --fail --fail-on-scan-errors \
-        --exclude-paths "$work/trufflehog-exclude" \
         > "$work/out" 2> "$work/err" || rc=$?
     # 0 clean, 183 findings (--fail); anything else is trufflehog failing.
     [ "$rc" -eq 0 ] || [ "$rc" -eq 183 ] || fail "trufflehog failed (exit $rc): $(tail -5 "$work/err")"
     bytes=$(grep -oE '"bytes": ?[0-9]+' "$work/err" | grep -oE '[0-9]+$' | tail -1 || true)
     [ "${bytes:-0}" -gt 0 ] || fail "trufflehog read nothing (no bytes scanned reported)"
-    jq -r '[.DetectorName, (.SourceMetadata.Data.Git.file + ":" + (.SourceMetadata.Data.Git.line|tostring) + " in " + .SourceMetadata.Data.Git.commit[0:12])] | @tsv' \
-        "$work/out" >> "$findings"
+    # The one exception: the hash-locked requirements name a package
+    # "policy-sentry", and TruffleHog's Sentry detector then reads the
+    # SHA-256 hashes near it as tokens. A Sentry result in one of those files
+    # is dropped only if, in that commit, its line is a hash line and holds
+    # what was matched. The matched text is compared here, never printed.
+    local detector file line commit raw text
+    while IFS=$'\t' read -r detector file line commit raw; do
+        if [ "$detector" = SentryToken ] && [[ "$file" =~ ^\.github/scan/requirements/[a-z-]+\.txt$ ]]; then
+            text=$(git -C "$1" show "$commit:$file" 2>/dev/null | sed -n "${line}p")
+            if [[ "$text" =~ ^\ {4}--hash=sha256:[0-9a-f]{64}(\ \\)?$ ]] && [[ "$text" == *"$raw"* ]]; then
+                continue
+            fi
+        fi
+        printf '%s\t%s:%s in %s\n' "$detector" "$file" "$line" "${commit:0:12}" >> "$findings"
+    done < <(jq -r '[.DetectorName, .SourceMetadata.Data.Git.file, (.SourceMetadata.Data.Git.line|tostring),
+                     .SourceMetadata.Data.Git.commit, .Raw] | @tsv' "$work/out")
 }
 
 cfn_lint_scan() {  # templates...
@@ -144,6 +171,9 @@ checkov_scan() {  # templates...
     jq -e '[if type == "array" then .[] else . end | .summary]
            | (map(.parsing_errors) | add) == 0 and (map(.passed + .failed) | add) > 0' \
         "$work/out" > /dev/null || fail "checkov parsed nothing, or failed to parse a template"
+    # A skipped check means a suppression somewhere, whatever form it took.
+    jq -e '[if type == "array" then .[] else . end | .summary.skipped] | add == 0' \
+        "$work/out" > /dev/null || fail "checkov skipped checks: a suppression is in a template"
     jq -r 'if type == "array" then .[] else . end | .results.failed_checks[]
            | [.check_id, (.file_path + ":" + (.file_line_range[0]|tostring))] | @tsv' \
         "$work/out" >> "$findings"
@@ -164,7 +194,10 @@ bandit_scan() {  # python files...
 
 zizmor_scan() {  # workflow and action files...
     local rc=0
-    zizmor --offline --config "$root/.github/scan/zizmor.yml" --format json \
+    # Online, so the audits that check each pinned SHA against its repository
+    # run too (a SHA from a fork, a SHA that doesn't match its # vX comment).
+    [ -n "${GH_TOKEN:-}" ] || fail "GH_TOKEN isn't set: zizmor's online audits need it"
+    zizmor --config "$root/.github/scan/zizmor.yml" --format json \
         -- "$@" > "$work/out" 2> "$work/err" || rc=$?
     # 0 clean; 10-14 findings, by highest severity; anything else is failing.
     [ "$rc" -eq 0 ] || { [ "$rc" -ge 10 ] && [ "$rc" -le 14 ]; } \
@@ -192,11 +225,23 @@ semgrep_scan() {  # files...
     fi
     jq -r '.results[] | [(.check_id | split(".") | last), (.path + ":" + (.start.line|tostring))] | @tsv' \
         "$work/out" >> "$findings"
-    semgrep_unparsed=$(jq '[.errors[] | select(.path != null)] | length' "$work/out")
+    semgrep_unparsed=$(jq '[.errors[] | .path // empty] | unique | length' "$work/out")
 }
 
+# Media and documents exiftool reads: the media .githooks/check-documents
+# lets through (fonts aside: they carry no photo or document metadata), the
+# documents it allows by name, and SVG.
+media_re='\.(png|jpe?g|gif|webp|avif|ico|heic|heif|tiff?|bmp|svg|mp3|m4a|aac|wav|ogg|flac|mp4|m4v|mov|webm|pdf|docx|xlsx|pptx|odt|ods|odp)$'
+
+declare -A label=()                # extracted copy -> "path (blob <id>)"
+declare -A origin=()               # extracted copy -> path in the repository
+
 exiftool_scan() {  # files...
-    local tags=(-GPS:all -XMP-exif:GPS* -Artist -Author -XMP-dc:Creator
+    # -GPS* is every tag whose name starts GPS, in any group: EXIF, XMP and
+    # QuickTime's (phone video). ExifTool:Error is asked for explicitly,
+    # because a tag list otherwise leaves it out and a file it can't read
+    # would look clean.
+    local tags=(-ExifTool:Error -GPS* -Artist -Author -XMP-dc:Creator
                 -By-line -LastModifiedBy -OwnerName -CameraOwnerName
                 -SerialNumber -BodySerialNumber -LensSerialNumber
                 -InternalSerialNumber -Company -Manager)
@@ -204,20 +249,24 @@ exiftool_scan() {  # files...
     jq -e 'type == "array"' "$work/out" > /dev/null 2>&1 || fail "exiftool gave no JSON report: $(cat "$work/err")"
     # One entry per file, and none it couldn't read.
     [ "$(jq length "$work/out")" -eq "$#" ] || fail "exiftool read $(jq length "$work/out") of $# files"
-    jq -e 'all(.[]; has("ExifTool:Error") | not)' "$work/out" > /dev/null \
-        || fail "exiftool couldn't read: $(jq -r '[.[] | select(has("ExifTool:Error")) | .SourceFile] | join(" ")' "$work/out")"
+    if ! jq -e 'all(.[]; has("ExifTool:Error") | not)' "$work/out" > /dev/null; then
+        local bad f
+        bad=$(jq -r '.[] | select(has("ExifTool:Error")) | .SourceFile' "$work/out" |
+              while IFS= read -r f; do printf '%s; ' "${label[$f]:-$f}"; done)
+        fail "exiftool couldn't read: $bad"
+    fi
     # Each non-empty tag is a finding, unless allowed by path, tag and the
     # SHA-256 of its value (so the allowed list holds no one's name).
-    jq -r '.[] | .SourceFile as $f | to_entries[]
-           | select(.key != "SourceFile" and (.value | tostring | length) > 0)
-           | [$f, .key, (.value | tostring)] | @tsv' "$work/out" |
+    local file tag value hash
     while IFS=$'\t' read -r file tag value; do
         hash=$(printf '%s' "$value" | sha256sum | cut -d' ' -f1)
-        if ! grep -qxF "$(printf '%s\t%s\t%s' "$file" "$tag" "$hash")" \
+        if ! grep -qxF "$(printf '%s\t%s\t%s' "${origin[$file]:-$file}" "$tag" "$hash")" \
                 <(grep -v '^#' "$root/.github/scan/exiftool-allowed.txt" | cut -f1-3); then
-            printf '%s\t%s\n' "$tag" "$file" >> "$findings"
+            printf '%s\t%s\n' "$tag" "${label[$file]:-$file}" >> "$findings"
         fi
-    done
+    done < <(jq -r '.[] | .SourceFile as $f | to_entries[]
+                    | select(.key != "SourceFile" and (.value | tostring | length) > 0)
+                    | [$f, .key, (.value | tostring)] | @tsv' "$work/out")
 }
 
 #--------------------------------------------------------------------------
@@ -230,7 +279,7 @@ mkdir -p "$sample"
 case "$tool" in
   actionlint)
     refuse_file .github/actionlint.yaml .github/actionlint.yml
-    refuse "a shellcheck disable directive" '#[[:space:]]*shellcheck[[:space:]]+disable=' '.github/workflows/*'
+    refuse "a shellcheck disable directive" "$shellcheck_disable" '.github/workflows/*'
     mapfile -d '' targets < <(tracked '.github/workflows/*.yml' '.github/workflows/*.yaml')
     need "${targets[@]}"
     cat > "$sample/t.yml" <<'EOF'
@@ -249,12 +298,12 @@ EOF
     actionlint_scan "${targets[@]}" ;;
 
   shellcheck)
-    refuse "a shellcheck disable directive" '#[[:space:]]*shellcheck[[:space:]]+disable=' ':(attr:!binary)'
+    refuse "a shellcheck disable directive" "$shellcheck_disable" ':(attr:!binary)'
     targets=()
     while IFS= read -r -d '' f; do
         case "$f" in
           *.sh|*.bash) targets+=("$f") ;;
-          *) head -n1 -- "$f" | grep -qE '^#!.*[/ ](ba|da|k)?sh( |$)' && targets+=("$f") || true ;;
+          *) is_shell "$f" && targets+=("$f") || true ;;
         esac
     done < <(tracked ':(attr:!binary)')
     need "${targets[@]}"
@@ -266,7 +315,6 @@ EOF
     shellcheck_scan "${targets[@]}" ;;
 
   trufflehog)
-    : > "$work/trufflehog-exclude"
     [ "$(git rev-parse --is-shallow-repository)" = false ] || fail "the checkout is shallow: fetch the full history"
     git -C "$sample" init -q
     printf 'github_token = "ghp_%s"\naws_access_key_id = AKIA%s\naws_secret_access_key = %s\n' \
@@ -274,21 +322,6 @@ EOF
     git -C "$sample" add config
     git -C "$sample" -c user.name=sample -c user.email=sample@example.invalid commit -q -m sample
     expect_caught "a GitHub token and an AWS key, made up just now" trufflehog_scan "$sample"
-    # The hash-locked requirements hold only package pins and their SHA-256
-    # hashes, some of which TruffleHog's Sentry detector reads as tokens. They
-    # are left out of its scan once every line is shown to be one of those;
-    # gitleaks still reads them.
-    bs=$'\\\\'       # a regex for one backslash
-    pin="[A-Za-z0-9._-]+==[A-Za-z0-9.+!-]+( ;[ A-Za-z0-9_.<>=!'\"()-]+)? $bs"
-    hash="    --hash=sha256:[0-9a-f]{64}( $bs)?"
-    via='    # via( -r \.github/scan/requirements/[a-z-]+\.in| [A-Za-z0-9._-]+)?|    #   [A-Za-z0-9._ (),-]+'
-    mapfile -d '' locks < <(tracked '.github/scan/requirements/*.txt')
-    need "${locks[@]}"
-    for f in "${locks[@]}"; do
-        ! grep -qvxE "$pin|$hash|$via" -- "$f" \
-            || fail "$f has a line that isn't a pin, a hash or a comment (line $(grep -nvxE "$pin|$hash|$via" -- "$f" | head -1 | cut -d: -f1))"
-    done
-    printf '%s\n' '^\.github/scan/requirements/[a-z-]+\.txt$' > "$work/trufflehog-exclude"
     targets=("the full git history")
     trufflehog_scan "$root" ;;
 
@@ -296,9 +329,16 @@ EOF
     refuse_file .cfnlintrc .cfnlintrc.yaml .cfnlintrc.yml .checkov.yaml .checkov.yml
     mapfile -d '' templates < <(tracked '*.yaml' '*.yml' '*.json' '*.template')
     targets=()
-    for f in "${templates[@]}"; do grep -q AWSTemplateFormatVersion -- "$f" && targets+=("$f"); done
+    # AWSTemplateFormatVersion is optional, so also any file with a top-level
+    # Resources section of AWS:: types.
+    for f in "${templates[@]}"; do
+        if grep -q AWSTemplateFormatVersion -- "$f" \
+            || { grep -qE '^"?Resources"?[[:space:]]*:|"Resources"[[:space:]]*:' -- "$f" && grep -q 'AWS::' -- "$f"; }; then
+            targets+=("$f")
+        fi
+    done
     need "${targets[@]}"
-    refuse "a cfn-lint or checkov setting inside a template" 'cfn-lint|checkov' "${targets[@]}"
+    refuse "a cfn-lint or Checkov setting inside a template" 'cfn-lint|checkov|bridgecrew|cortex' "${targets[@]}"
     printf 'AWSTemplateFormatVersion: "2010-09-09"\nResources:\n  Bucket:\n    Type: AWS::S3::Bucket\n    Properties:\n      NoSuchProperty: 1\n' > "$sample/t.yaml"
     if [ "$tool" = cfn-lint ]; then
         expect_caught "a property S3 doesn't have" cfn_lint_scan "$sample/t.yaml"
@@ -342,6 +382,7 @@ EOF
     while IFS= read -r -d '' f; do
         case "$f" in
           *.js|*.mjs|*.cjs|*.py|*.sh|*.bash|*.html|*.htm|*.yml|*.yaml) targets+=("$f") ;;
+          *) is_shell "$f" && targets+=("$f") || true ;;
         esac
     done < <(tracked ':(attr:!binary)')
     need "${targets[@]}"
@@ -350,16 +391,29 @@ EOF
     semgrep_scan "${targets[@]}" ;;
 
   exiftool)
+    # Every version of every such file in the history, not just today's: the
+    # history is as public as the tree, and a picture replaced by a cleaned
+    # copy is still in it. Each distinct file once, by its blob id.
+    [ "$(git rev-parse --is-shallow-repository)" = false ] || fail "the checkout is shallow: fetch the full history"
+    mapfile -t commits < <(git rev-list HEAD)
+    need "${commits[@]}"
+    declare -A seen=()
     targets=()
-    while IFS= read -r -d '' f; do
-        shopt -s nocasematch
-        case "$f" in
-          *.png|*.jpg|*.jpeg|*.gif|*.webp|*.heic|*.heif|*.tif|*.tiff|*.bmp|*.svg|\
-          *.mp3|*.m4a|*.aac|*.wav|*.ogg|*.flac|*.mp4|*.m4v|*.mov|*.webm|\
-          *.pdf|*.docx|*.xlsx|*.pptx|*.odt|*.ods|*.odp) targets+=("$f") ;;
-        esac
-        shopt -u nocasematch
-    done < <(tracked)
+    for c in "${commits[@]}"; do
+        while IFS= read -r -d '' entry; do
+            meta=${entry%%$'\t'*} path=${entry#*$'\t'}
+            read -r _ type oid <<<"$meta"
+            [ "$type" = blob ] && [ -z "${seen[$oid]:-}" ] || continue
+            shopt -s nocasematch; [[ "$path" =~ $media_re ]] && m=1 || m=0; shopt -u nocasematch
+            [ "$m" -eq 1 ] || continue
+            seen[$oid]=1
+            mkdir -p "$work/blobs/$oid"
+            copy="$work/blobs/$oid/${path##*/}"
+            git cat-file blob "$oid" > "$copy"
+            label[$copy]="$path (blob ${oid:0:12})" origin[$copy]="$path"
+            targets+=("$copy")
+        done < <(git -c core.quotePath=false ls-tree -r -z --full-tree "$c")
+    done
     need "${targets[@]}"
     # The smallest valid PNG, then a location and a name written into it.
     python3 - "$sample/t.png" <<'PY'
@@ -381,7 +435,11 @@ esac
 
 n=$(count)
 echo "$tool read ${#targets[@]} target(s); $n finding(s)"
-[ "$tool" != semgrep ] || [ "$semgrep_unparsed" -eq 0 ] || echo "::warning title=$tool::$semgrep_unparsed file(s) couldn't be parsed"
+if [ "$tool" = semgrep ] && [ "$semgrep_unparsed" -gt 0 ]; then
+    # A file it couldn't parse is a file it didn't read.
+    [ "$mode" = report ] || fail "$semgrep_unparsed file(s) couldn't be parsed"
+    echo "::warning title=$tool::$semgrep_unparsed file(s) couldn't be parsed"
+fi
 
 if [ "$mode" = gate ]; then
     [ "$n" -eq 0 ] || { sort -u "$findings"; fail "$n finding(s)"; }

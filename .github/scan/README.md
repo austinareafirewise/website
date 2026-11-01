@@ -10,8 +10,8 @@ through `.github/scripts/security-scan.sh`:
 | TruffleHog | every commit in the history | gate |
 | cfn-lint | CloudFormation templates | gate |
 | Bandit | Python | gate |
-| zizmor | workflows, actions, Dependabot's config | gate |
-| exiftool | names and locations in pictures, sound, video and documents | gate |
+| zizmor | workflows, actions, Dependabot's config (online, read-only token) | gate |
+| exiftool | names and locations in pictures, sound, video and documents, every version in the history | gate |
 | Checkov | CloudFormation templates | report |
 | Semgrep | JavaScript, Python, shell, HTML, YAML | report |
 
@@ -28,9 +28,10 @@ All in one place, each with its reason:
 
 - `security-scan.sh`: cfn-lint's W3002 (the templates are meant for
   `aws cloudformation package`); Bandit reports Medium and High only;
-  TruffleHog skips the hash-locked requirements, whose hashes its Sentry
-  detector misreads, after checking every line is a pin, a hash or a comment
-  (gitleaks still reads them).
+  TruffleHog drops a Sentry result in the hash-locked requirements only where
+  that line, in that commit, is a hash line holding what was matched (its
+  Sentry detector misreads hashes listed under a package named
+  `policy-sentry`).
 - `zizmor.yml`: the `self-repository` audit, until actionlint accepts the
   syntax it asks for.
 - `exiftool-allowed.txt`: metadata allowed by file, tag and the SHA-256 of

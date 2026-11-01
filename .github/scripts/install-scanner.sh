@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Install one pinned scanner, checked against its pinned SHA-256 or hashes.
 #
 #     .github/scripts/install-scanner.sh <tool>

@@ -26,8 +26,8 @@ jobs:
     name: ${{ matrix.tool }} (${{ matrix.mode }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Every run reads the whole tree (TruffleHog the whole history), so a
-    # newer push's run covers an older one's.
+    # Every run reads the whole tree (TruffleHog and exiftool the whole
+    # history), so a newer push's run covers an older one's.
     concurrency:
       group: security-scan-${{ github.ref }}-${{ matrix.tool }}
       cancel-in-progress: true
@@ -48,8 +48,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # TruffleHog reads every commit; the others only the tree.
-          fetch-depth: ${{ matrix.tool == 'trufflehog' && '0' || '1' }}
+          # TruffleHog and exiftool read every commit; the others the tree.
+          fetch-depth: ${{ contains(fromJSON('["trufflehog", "exiftool"]'), matrix.tool) && '0' || '1' }}
           persist-credentials: false
 
       # Semgrep's rules, pinned to a commit. Fetched, not copied into this
@@ -84,4 +84,7 @@ jobs:
           TOOL: ${{ matrix.tool }}
           MODE: ${{ matrix.mode }}
           SEMGREP_RULES: ${{ github.workspace }}/.scan/semgrep-rules
+          # For zizmor alone: its audits that look a pinned SHA up on GitHub.
+          # This job's token can only read.
+          GH_TOKEN: ${{ matrix.tool == 'zizmor' && github.token || '' }}
         run: .github/scripts/security-scan.sh "$TOOL" "$MODE"
