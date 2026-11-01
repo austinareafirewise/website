@@ -61,11 +61,12 @@ are the most worth doing for the least work. IDs are never reused.
 | T6 | A full accessibility check, including the admin pages: keyboard use and focus, screen readers, dark mode, small screens. | P1 | High | Medium | — | — |
 | T34 | Text alerts: carrier verification of the toll-free number (submitted), then lifting the SMS sandbox and the monthly spend limit (support cases); or Twilio with 10DLC registration instead. Then confirm the stack's provider setting (see T38) and turn off the "coming soon" note for texts in `src/js/config.js`. | `infra/README.md` | High | Medium | AWS access | T4 |
 | T36 | A real mailbox on our own domain (there is no MX record), replacing the interim personal Reply-To on Alliance email, and then the contact address on the site; then remove the interim address from the docs, its exception in `.gitleaks.toml`, and the GitHub organization's contact email. *(High in its own right; T42 also depends on it.)* | `infra/README.md`; maintainer | High | Medium | AWS access; maintainer | T4 |
+| T46 | Triage the Checkov findings the security scan reports in `infra/` with the maintainer: fix what needs fixing, each in a pull request of its own; write down the rest with a reason; then move Checkov from report to gate. | PR #8 | High | Medium | Maintainer (triage); AWS access (to deploy fixes) | T4 (to deploy fixes) |
+| T47 | Triage the Semgrep findings the security scan reports, and the one file it can't parse, with the maintainer: fix what needs fixing, each in a pull request of its own; write down the rest with a reason; then move Semgrep from report to gate. | PR #8 | High | Medium | Maintainer (triage) | — |
 | T44 | Have the Alliance itself pay for the services the site runs on: the AWS account after its first year, which is covered for now on the organization's behalf, and any paid GitHub plan (T43). | Maintainer | High | Hard | Board | — |
 | T13 | Check the site with each blocker on its own, in a clean browser profile: AdGuard, the DuckDuckGo extension, Firefox's Enhanced Tracking Protection, and NoScript (whether it stops the API requests). | P3, P7, P10, P11 | Medium | Easy | Maintainer | — |
 | T39 | `docs/05-runbook.md`'s everyday-editing and roll-back steps push straight to `main`; they should go through a pull request (`docs/08` §2). | PR #6 review | Medium | Easy | — | — |
 | T41 | Confirm the GitHub organization has two owners, as `docs/05-runbook.md` asks, so access doesn't rest on one person. | PR #6 review | Medium | Easy | Org owner | — |
-| T7 | Run the full set of security scanners in GitHub Actions (see notes). | Maintainer | Medium | Medium | — | — |
 | T8 | Footer headings skip levels (`h4` after an `h2`, or after the `h1`) on most pages. | P1; site check | Medium | Medium | — | — |
 | T9 | Give each text-size button its own accessible name (all three are "A"), on every page. | P1; PR #5 review | Medium | Medium | — | — |
 | T10 | Put the "opens in a new tab" note for screen readers in the markup of every external link, so it is there without JavaScript. | P1, P2, P11; PR #5 review | Medium | Medium | — | — |
@@ -75,6 +76,7 @@ are the most worth doing for the least work. IDs are never reused.
 | T18 | Widen the secrets rules' coverage and harden how they fail (the cases are in PR #3's description, under "Follow-ups"). | PR #3 reviews | Medium | Medium | — | — |
 | T19 | Check pull request titles and descriptions as they are written: a description is public as soon as it is posted, and a title becomes the squash subject of a pull request with several commits merged on GitHub. (T14 covers the message Claude writes when it merges.) | PR #3 review | Medium | Medium | — | — |
 | T38 | Docs describe the content and members systems as not yet built, though both are live and store data: `README.md`'s contact and mailing-list section (including an `AAFA_SIGNUP_ENDPOINT` setting that no longer exists), `infra/README.md`'s "What does not exist yet" and its claim that sign-ups are refused until SES access is granted (they are stored), `docs/06` and `docs/07` (status lines, and "today it stores nothing"); and `infra/README.md`'s parameter table says texting is `off`, while the live API reports it switched on; and `infra/README.md` doesn't describe the link-check and fire-danger Lambdas. | PR #6 reviews | Medium | Medium | — | — |
+| T50 | Keep the scanners' pins current (`.github/scan/`): Dependabot can't move them, so they stay at the versions of 2026-11-01 until someone does. A scheduled reminder, or a check that says when a pin is far behind. | PR #8 | Medium | Medium | — | — |
 | T15 | Automate the independent pull request review in GitHub Actions (open questions: keeping the API key safe, pull requests from forks, text in a pull request steering the reviewer). | Maintainer | Medium | Hard | Maintainer (API key) | T3 (how forks are checked) |
 | T16 | Return a real 404 status for a missing page. Amplify answers with one or two redirects (sometimes a trailing slash, then `404.html`) and then 200, and `infra/site-stack.yaml` notes that no rule can change that, so this needs another approach. Also make `404.html`'s asset paths absolute, and update `docs/05-runbook.md` and `infra/README.md`, which describe today's behaviour. | PR #5 review | Medium | Hard | AWS access | T4 |
 | T20 | Put the API on our own domain (e.g. `api.austinareafirewise.org`), so blockers and NoScript see it as first-party. | P5, P9, P11 | Medium | Hard | AWS access | T4 |
@@ -89,19 +91,14 @@ are the most worth doing for the least work. IDs are never reused.
 | T29 | Redirect the bare domain with a permanent (301) redirect, not a temporary one (`infra/site-stack.yaml`, and the description in `infra/README.md`). | PR #5 review | Low | Easy | AWS access | T4 |
 | T40 | `docs/05-runbook.md`'s costs table, its "Check what the site is costing" estimate, and "Delete everything" cover only the site stack, not the content and members stacks (SES, the toll-free number, DynamoDB, Lambdas); `docs/README.md` says to "put it on the list in 05-runbook.md", where TODO.md is now the list. | PR #6 review | Low | Easy | — | — |
 | T45 | The deploy's upload step (`.github/workflows/deploy.yml`) runs `curl` without `--fail-with-body`, so an upload the server rejects shows as a passed step, and the deploy fails later, less clearly. | PR #2 review | Low | Easy | — | — |
+| T48 | Switch `uses: ./…` to GitHub's `uses: $/…` form and turn zizmor's `self-repository` audit back on, once actionlint accepts that form (1.7.12 doesn't). | PR #8 | Low | Easy | — | — |
+| T49 | Regenerate `docs/AAFA-website-overview.pptx` without the python-pptx template's author in its metadata, then remove its entry in `.github/scan/exiftool-allowed.txt`. | PR #8 | Low | Easy | — | — |
 | T30 | A `pre-merge-commit` hook, so a local merge with no conflict is checked like a commit. | PR #4 review | Low | Medium | — | — |
 | T31 | Harden the secrets check against changes made on a branch, and decide about tags (the cases are in PR #3's description, under "Follow-ups"). Follows T3. | PR #3 review | Low | Medium | Org owner (ruleset) | T3 |
 | T32 | The GitHub check and the deploy gate decide "binary" slightly differently (both fail closed). | PR #3 review | Low | Medium | — | — |
 | T37 | The admin page calls the sign-in domain directly, the sign-in page loads its styles, a script and an image from AWS's servers, and uploads go to the content bucket's AWS address: find whether either can be served from our own domain. | P5 | Low | Hard | AWS access | T4 |
 
 ## Notes
-
-**T7 — security scanners.** Semgrep (JavaScript, Python, workflows),
-Checkov and cfn-lint (CloudFormation), zizmor and actionlint (workflows),
-Bandit (Python), shellcheck (shell), TruffleHog (a second secrets engine)
-and exiftool (metadata in added images and media), each pinned by version
-and checksum, failing on new findings, with accepted existing findings
-written down with a reason.
 
 **T14 — squash-message check.** It must fail closed, use none of gitleaks'
 ways of silencing a finding, and be shown to catch samples it must catch.

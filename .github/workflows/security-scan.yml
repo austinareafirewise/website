@@ -1,0 +1,87 @@
+name: Security scan
+
+# Static checks on every push, one job per scanner, so no one needs these
+# tools on their own computer. What each reads, the known-bad sample it must
+# catch, and how it fails closed are in .github/scripts/security-scan.sh;
+# the pinned versions are in .github/scan/.
+#
+# mode: gate fails the job on any finding. mode: report prints only how many
+# there are, never what or where, because Actions logs are as public as the
+# repository and some existing findings are still being triaged. Each tool
+# in report mode moves to gate in a pull request of its own (TODO.md).
+#
+# Push only, no pull_request trigger, as in secrets-scan.yml: every change
+# arrives as a branch here, and both would run every check twice.
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    name: ${{ matrix.tool }} (${{ matrix.mode }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Every run reads the whole tree (TruffleHog the whole history), so a
+    # newer push's run covers an older one's.
+    concurrency:
+      group: security-scan-${{ github.ref }}-${{ matrix.tool }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { tool: actionlint, mode: gate }
+          - { tool: shellcheck, mode: gate }
+          - { tool: trufflehog, mode: gate }
+          - { tool: cfn-lint, mode: gate }
+          - { tool: bandit, mode: gate }
+          - { tool: zizmor, mode: gate }
+          - { tool: exiftool, mode: gate }
+          - { tool: checkov, mode: report }
+          - { tool: semgrep, mode: report }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # TruffleHog reads every commit; the others only the tree.
+          fetch-depth: ${{ matrix.tool == 'trufflehog' && '0' || '1' }}
+          persist-credentials: false
+
+      # Semgrep's rules, pinned to a commit. Fetched, not copied into this
+      # repository: their licence allows using them, not redistributing them.
+      - name: Check out Semgrep's rules
+        if: matrix.tool == 'semgrep'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: semgrep/semgrep-rules
+          ref: 16b9e6d45f10649f6a531ec4838ed9924372c3bc
+          path: .scan/semgrep-rules
+          persist-credentials: false
+
+      - name: Set up Python
+        if: contains(fromJSON('["semgrep", "checkov", "cfn-lint", "bandit", "zizmor"]'), matrix.tool)
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Install ${{ matrix.tool }}
+        env:
+          TOOL: ${{ matrix.tool }}
+        run: |
+          set -euo pipefail
+          .github/scripts/install-scanner.sh "$TOOL"
+          # actionlint runs shellcheck on each run: block.
+          if [ "$TOOL" = actionlint ]; then .github/scripts/install-scanner.sh shellcheck; fi
+          echo "$RUNNER_TEMP/scanners/bin" >> "$GITHUB_PATH"
+
+      - name: Scan
+        env:
+          TOOL: ${{ matrix.tool }}
+          MODE: ${{ matrix.mode }}
+          SEMGREP_RULES: ${{ github.workspace }}/.scan/semgrep-rules
+        run: .github/scripts/security-scan.sh "$TOOL" "$MODE"
