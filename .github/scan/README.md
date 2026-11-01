@@ -35,7 +35,7 @@ All in one place, each with its reason:
 - `zizmor.yml`: the `self-repository` audit, until actionlint accepts the
   syntax it asks for.
 - `exiftool-allowed.txt`: metadata allowed by file, tag and the SHA-256 of
-  its value.
+  its value; the file's header says how to compute the hash.
 
 Every other way the tools offer to silence a finding (inline comments, their
 own config files) is refused.

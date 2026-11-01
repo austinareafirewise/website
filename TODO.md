@@ -94,6 +94,7 @@ are the most worth doing for the least work. IDs are never reused.
 | T48 | Switch `uses: ./…` to GitHub's `uses: $/…` form and turn zizmor's `self-repository` audit back on, once actionlint accepts that form (1.7.12 doesn't). | PR #8 | Low | Easy | — | — |
 | T49 | Regenerate `docs/AAFA-website-overview.pptx` without the python-pptx template's author in its metadata, then remove its entry in `.github/scan/exiftool-allowed.txt`. | PR #8 | Low | Easy | — | — |
 | T51 | `scripts/clean-hoa-export.ps1` is read by no code scanner (none of them reads PowerShell; the secrets scanners do read it): add a PowerShell check such as PSScriptAnalyzer, or say in `.github/scan/README.md` that it goes unscanned. | PR #8 review | Low | Easy | — | — |
+| T52 | The shell in the composite action's `run:` steps (`.github/actions/install-gitleaks/action.yml`) is read by no scanner: actionlint lints workflows only. Lint it (shellcheck on the extracted steps, or move them into a script). | PR #8 review | Low | Easy | — | — |
 | T30 | A `pre-merge-commit` hook, so a local merge with no conflict is checked like a commit. | PR #4 review | Low | Medium | — | — |
 | T31 | Harden the secrets check against changes made on a branch, and decide about tags (the cases are in PR #3's description, under "Follow-ups"). Follows T3. | PR #3 review | Low | Medium | Org owner (ruleset) | T3 |
 | T32 | The GitHub check and the deploy gate decide "binary" slightly differently (both fail closed). | PR #3 review | Low | Medium | — | — |

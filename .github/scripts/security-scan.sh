@@ -147,6 +147,36 @@ shellcheck_scan() {  # shell scripts...
     [ "$rc" -eq 0 ] || [ -s "$findings" ] || fail "shellcheck exited 1 but reported nothing it could parse"
 }
 
+# TruffleHog's git mode reads each commit's diff, so text that exists only in
+# how a merge's conflict was resolved is never shown to it. Reading the files
+# themselves as they stand in HEAD covers that.
+trufflehog_files_scan() {  # directory holding HEAD's files
+    local rc=0 bytes detector file line raw text
+    trufflehog filesystem "$1" --json --no-verification --no-update \
+        --no-ignore-tag --fail --fail-on-scan-errors \
+        > "$work/out" 2> "$work/err" || rc=$?
+    [ "$rc" -eq 0 ] || [ "$rc" -eq 183 ] || fail "trufflehog failed on the files (exit $rc): $(tail -5 "$work/err")"
+    bytes=$(grep -oE '"bytes": ?[0-9]+' "$work/err" | grep -oE '[0-9]+$' | tail -1 || true)
+    [ "${bytes:-0}" -gt 0 ] || fail "trufflehog read none of the files (no bytes scanned reported)"
+    jq -e -s 'all(.[]; type == "object")' "$work/out" > /dev/null 2>&1 \
+        || fail "trufflehog's output isn't the JSON results it should be"
+    jq -r '[.DetectorName, .SourceMetadata.Data.Filesystem.file, (.SourceMetadata.Data.Filesystem.line|tostring), .Raw]
+           | @tsv' "$work/out" > "$work/results.tsv" || fail "couldn't read trufflehog's results"
+    local kept=0 dropped=0
+    while IFS=$'\t' read -r detector file line raw; do
+        file=${file#"$1"/}
+        if [ "$detector" = SentryToken ] && [[ "$file" =~ ^\.github/scan/requirements/[a-z-]+\.txt$ ]]; then
+            text=$(sed -n "${line}p" "$1/$file")
+            if [[ "$text" =~ ^\ {4}--hash=sha256:[0-9a-f]{64}(\ \\)?$ ]] && [[ "$text" == *"$raw"* ]]; then
+                dropped=$((dropped + 1)); continue
+            fi
+        fi
+        printf '%s\t%s:%s in HEAD\n' "$detector" "$file" "$line" >> "$findings"
+        kept=$((kept + 1))
+    done < "$work/results.tsv"
+    [ "$rc" -ne 183 ] || [ $((kept + dropped)) -gt 0 ] || fail "trufflehog reported findings, but none could be read"
+}
+
 trufflehog_scan() {  # git repository
     local rc=0 bytes
     trufflehog git "file://$1" --json --no-verification --no-update \
@@ -240,7 +270,9 @@ zizmor_scan() {  # workflow and action files...
     # Online, so the audits that check each pinned SHA against its repository
     # run too (a SHA from a fork, a SHA that doesn't match its # vX comment).
     [ -n "${GH_TOKEN:-}" ] || fail "GH_TOKEN isn't set: zizmor's online audits need it"
-    zizmor --config "$root/.github/scan/zizmor.yml" --format json \
+    # --strict-collection: a file it can't parse is an error, not a warning
+    # it would otherwise skip the file with.
+    zizmor --strict-collection --config "$root/.github/scan/zizmor.yml" --format json \
         -- "$@" > "$work/out" 2> "$work/err" || rc=$?
     # 0 clean; 10-14 findings, by highest severity; anything else is failing.
     [ "$rc" -eq 0 ] || { [ "$rc" -ge 10 ] && [ "$rc" -le 14 ]; } \
@@ -273,18 +305,25 @@ semgrep_scan() {  # files...
     semgrep_unparsed=$(jq '[.errors[] | .path // empty] | unique | length' "$work/out")
 }
 
-# Media and documents exiftool reads: the media .githooks/check-documents
-# lets through (fonts aside: they carry no photo or document metadata), the
-# documents it allows by name, SVG, and other picture, sound and video types
-# a phone or camera writes.
-media_re='\.(png|jpe?g|gif|webp|avif|ico|heic|heif|tiff?|bmp|svg|mp3|m4a|aac|wav|ogg|flac|mp4|m4v|mov|webm|pdf|docx|xlsx|pptx|odt|ods|odp)$'
+# What exiftool reads: every document and media type .githooks/check-documents
+# knows ($documents and $media, from the one list both use), SVG, and other
+# picture, sound and video types a phone or camera writes. Not fonts, which
+# carry no names or places of the kind looked for here, nor CSV, TSV or
+# email, which are text that the secrets checks read. An archive is refused:
+# exiftool can't see inside it.
+# shellcheck source=.githooks/file-types
+. "$root/.githooks/file-types"
+extra_re='\.(svg|heic|heif|tiff?|bmp|mov|m4v|aac|flac)$'
+skip_re='\.(woff2?|ttf|otf|csv|tsv|eml)$'
+archive_re='\.(zip|7z|rar|tar|gz|tgz|xz|bz2)$'
 
 declare -A label=()                # extracted copy -> "path (blob <id>)"
 declare -A origin=()               # extracted copy -> path in the repository
 
 exiftool_scan() {  # files...
     # -GPS* is every tag whose name starts GPS, in any group: EXIF, XMP and
-    # QuickTime's (phone video). ExifTool:Error is asked for explicitly,
+    # QuickTime's (phone video). -*AgentTitle is the creator and publisher
+    # names Inkscape writes into an SVG. ExifTool:Error is asked for explicitly,
     # because a tag list otherwise leaves it out and a file it can't read
     # would look clean.
     local tags=(-ExifTool:Error -GPS* -Artist -Author -XPAuthor -XMP-dc:Creator
@@ -292,7 +331,7 @@ exiftool_scan() {  # files...
                 -SerialNumber -BodySerialNumber -LensSerialNumber
                 -InternalSerialNumber -Company -Manager -Copyright -Rights
                 -RegionName -PersonInImage -City -Sub-location -State
-                -Country -Location* -*Email*)
+                -Country -Location* -*Email* -*AgentTitle)
     exiftool -json -G1 -a -q -q "${tags[@]}" -- "$@" > "$work/out" 2> "$work/err" || true
     jq -e 'type == "array"' "$work/out" > /dev/null 2>&1 || fail "exiftool gave no JSON report: $(cat "$work/err")"
     # One entry per file, and none it couldn't read.
@@ -365,8 +404,22 @@ EOF
     git -C "$sample" add config
     git -C "$sample" -c user.name=sample -c user.email=sample@example.invalid commit -q -m sample
     expect_caught "a GitHub token and an AWS key, made up just now" trufflehog_scan "$sample"
-    targets=("the full git history")
-    trufflehog_scan "$root" ;;
+    mkdir -p "$sample/files"
+    cp "$sample/config" "$sample/files/config"
+    expect_caught "the same token and key, as files" trufflehog_files_scan "$sample/files"
+    targets=("the full git history" "the files as they are in HEAD")
+    trufflehog_scan "$root"
+    # HEAD's files, from git itself (git archive would honour export-ignore).
+    head="$work/head"
+    mkdir -p "$head"
+    while IFS= read -r -d '' entry; do
+        meta=${entry%%$'\t'*} path=${entry#*$'\t'}
+        read -r _ type oid <<<"$meta"
+        [ "$type" = blob ] || continue
+        mkdir -p "$head/$(dirname -- "$path")"
+        git cat-file blob "$oid" > "$head/$path"
+    done < <(git -c core.quotePath=false ls-tree -r -z --full-tree HEAD)
+    trufflehog_files_scan "$head" ;;
 
   cfn-lint|checkov)
     refuse_file .cfnlintrc .cfnlintrc.yaml .cfnlintrc.yml .checkov.yaml .checkov.yml
@@ -459,7 +512,12 @@ EOF
             meta=${entry%%$'\t'*} path=${entry#*$'\t'}
             read -r _ type oid <<<"$meta"
             [ "$type" = blob ] && [ -z "${seen[$oid]:-}" ] || continue
-            shopt -s nocasematch; [[ "$path" =~ $media_re ]] && m=1 || m=0; shopt -u nocasematch
+            shopt -s nocasematch
+            m=0
+            { [[ "$path" =~ $documents ]] || [[ "$path" =~ $media ]] || [[ "$path" =~ $extra_re ]]; } && m=1
+            [[ ! "$path" =~ $skip_re ]] || m=0
+            [[ ! "$path" =~ $archive_re ]] || { shopt -u nocasematch; fail "$path (in ${c:0:12}) is an archive, which exiftool can't look inside"; }
+            shopt -u nocasematch
             [ "$m" -eq 1 ] || continue
             seen[$oid]=1
             mkdir -p "$work/blobs/$oid"
@@ -488,6 +546,7 @@ PY
     echo "security-scan.sh: unknown tool '$tool'" >&2; exit 2 ;;
 esac
 
+[ ! -s "$findings" ] || sort -u -o "$findings" "$findings"
 n=$(count)
 echo "$tool read ${#targets[@]} target(s); $n finding(s)"
 if [ "$tool" = semgrep ] && [ "$semgrep_unparsed" -gt 0 ]; then

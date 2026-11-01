@@ -24,10 +24,14 @@ permissions:
 jobs:
   scan:
     name: ${{ matrix.tool }} (${{ matrix.mode }})
-    runs-on: ubuntu-latest
+    # A fixed image, like every other pin here: ubuntu-latest moves.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     # Every run reads the whole tree (TruffleHog and exiftool the whole
-    # history), so a newer push's run covers an older one's.
+    # history), so a newer push's run covers an older one's. The exception is
+    # a commit force-pushed away while its run is cancelled: it is still
+    # reachable on GitHub by its SHA, unscanned. Force-pushes need the
+    # maintainer's OK each time (CLAUDE.md).
     concurrency:
       group: security-scan-${{ github.ref }}-${{ matrix.tool }}
       cancel-in-progress: true

@@ -23,8 +23,9 @@
 # The pre-commit hook points ALLOWED_DOCUMENTS at the staged copy of the
 # list, so an edit to it that isn't being committed doesn't count.
 allowed="${ALLOWED_DOCUMENTS:-.githooks/allowed-documents.txt}"
-documents='\.(xls|xlsx|xlsm|xlsb|xltx|csv|tsv|ods|numbers|doc|docx|docm|odt|rtf|pages|pdf|ppt|pptx|pptm|odp|key|msg|eml|zip|7z|rar|tar|gz|tgz|xz|bz2)$'
-media='\.(png|jpe?g|gif|webp|avif|ico|mp3|m4a|wav|ogg|mp4|webm|woff2?|ttf|otf)$'
+# $documents and $media, shared with the security scan's exiftool check.
+# shellcheck source=.githooks/file-types
+. "${0%/*}/file-types"
 
 paths=$(cat)
 
