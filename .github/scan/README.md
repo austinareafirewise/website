@@ -27,7 +27,10 @@ first.
 All in one place, each with its reason:
 
 - `security-scan.sh`: cfn-lint's W3002 (the templates are meant for
-  `aws cloudformation package`); Bandit reports Medium and High only.
+  `aws cloudformation package`); Bandit reports Medium and High only;
+  TruffleHog skips the hash-locked requirements, whose hashes its Sentry
+  detector misreads, after checking every line is a pin, a hash or a comment
+  (gitleaks still reads them).
 - `zizmor.yml`: the `self-repository` audit, until actionlint accepts the
   syntax it asks for.
 - `exiftool-allowed.txt`: metadata allowed by file, tag and the SHA-256 of

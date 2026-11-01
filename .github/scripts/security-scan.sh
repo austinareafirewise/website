@@ -70,8 +70,14 @@ expect_caught() {  # description, then the scan command and its arguments
     : > "$findings"
 }
 
-# A random string of the given length from the given characters.
-random() { LC_ALL=C tr -dc "$1" < /dev/urandom | head -c "$2"; }
+# A random string of the given length from the given characters. tr reads a
+# fixed amount, so nothing is cut off mid-pipe.
+random() {
+    local s
+    s=$(LC_ALL=C tr -dc "$1" < <(head -c 8192 /dev/urandom))
+    [ "${#s}" -ge "$2" ] || fail "couldn't make a random sample"
+    printf '%s' "${s:0:$2}"
+}
 
 #--------------------------------------------------------------------------
 # One function per tool: scan the given targets, append findings, and fail
@@ -103,6 +109,7 @@ trufflehog_scan() {  # git repository
     local rc=0 bytes
     trufflehog git "file://$1" --json --no-verification --no-update \
         --no-ignore-tag --fail --fail-on-scan-errors \
+        --exclude-paths "$work/trufflehog-exclude" \
         > "$work/out" 2> "$work/err" || rc=$?
     # 0 clean, 183 findings (--fail); anything else is trufflehog failing.
     [ "$rc" -eq 0 ] || [ "$rc" -eq 183 ] || fail "trufflehog failed (exit $rc): $(tail -5 "$work/err")"
@@ -259,6 +266,7 @@ EOF
     shellcheck_scan "${targets[@]}" ;;
 
   trufflehog)
+    : > "$work/trufflehog-exclude"
     [ "$(git rev-parse --is-shallow-repository)" = false ] || fail "the checkout is shallow: fetch the full history"
     git -C "$sample" init -q
     printf 'github_token = "ghp_%s"\naws_access_key_id = AKIA%s\naws_secret_access_key = %s\n' \
@@ -266,6 +274,21 @@ EOF
     git -C "$sample" add config
     git -C "$sample" -c user.name=sample -c user.email=sample@example.invalid commit -q -m sample
     expect_caught "a GitHub token and an AWS key, made up just now" trufflehog_scan "$sample"
+    # The hash-locked requirements hold only package pins and their SHA-256
+    # hashes, some of which TruffleHog's Sentry detector reads as tokens. They
+    # are left out of its scan once every line is shown to be one of those;
+    # gitleaks still reads them.
+    bs=$'\\\\'       # a regex for one backslash
+    pin="[A-Za-z0-9._-]+==[A-Za-z0-9.+!-]+( ;[ A-Za-z0-9_.<>=!'\"()-]+)? $bs"
+    hash="    --hash=sha256:[0-9a-f]{64}( $bs)?"
+    via='    # via( -r \.github/scan/requirements/[a-z-]+\.in| [A-Za-z0-9._-]+)?|    #   [A-Za-z0-9._ (),-]+'
+    mapfile -d '' locks < <(tracked '.github/scan/requirements/*.txt')
+    need "${locks[@]}"
+    for f in "${locks[@]}"; do
+        ! grep -qvxE "$pin|$hash|$via" -- "$f" \
+            || fail "$f has a line that isn't a pin, a hash or a comment (line $(grep -nvxE "$pin|$hash|$via" -- "$f" | head -1 | cut -d: -f1))"
+    done
+    printf '%s\n' '^\.github/scan/requirements/[a-z-]+\.txt$' > "$work/trufflehog-exclude"
     targets=("the full git history")
     trufflehog_scan "$root" ;;
 
