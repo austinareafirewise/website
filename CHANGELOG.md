@@ -6,6 +6,15 @@ history records), naming any [TODO.md](TODO.md) items it closed. How this file
 is kept is in [CLAUDE.md](CLAUDE.md#tracking-work-todomd-and-changelogmd).
 Work from before this file started is in the git history.
 
+## 2026-11-01
+
+- **Close T35, and track the deploy upload's error check**
+  ([#7](https://github.com/austinareafirewise/website/pull/7)). Removes
+  T35: Dependabot's #2, which moved `aws-actions/configure-aws-credentials`
+  in `deploy.yml` from v6.2.4 to v6.3.0, was reviewed in one independent
+  round, merged, and confirmed by a deploy run by hand. Adds T45, found in
+  that review. Closes T35.
+
 ## 2026-10-31
 
 - **Track the work: TODO.md and CHANGELOG.md**
