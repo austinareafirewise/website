@@ -404,6 +404,9 @@ files are to live there.)
   can't read looks clean: ask for `-ExifTool:Error` explicitly. Phone video
   keeps its location under QuickTime tags (`-GPS*` reads every group).
 - TruffleHog's `--exclude-paths` drops those paths from every commit it reads.
+- Bandit applies its default excludes (`.tox`, `__pycache__` and others)
+  even to files named on its command line; `-x ''` turns them off. Its
+  report names a relative path with `./` in front.
 - zizmor `--offline` silently skips the audits that check a pinned SHA
   against its repository; they need a token (`contents: read` is enough).
 
@@ -419,6 +422,9 @@ files are to live there.)
   output of commands that scripts parse. Force it off with
   `GIT_CONFIG_COUNT` / `GIT_CONFIG_KEY_n` / `GIT_CONFIG_VALUE_n`.
 - `--numstat` shows `-` and `-` (separated by a tab) for a binary file.
+- `:(attr:!binary)` and `git grep -I` follow `.gitattributes`: one line
+  marking a script `binary` takes it out of both. Where it matters, decide
+  binary by the file's content (a NUL byte), not by its attributes.
 
 ### Git hooks
 
@@ -452,6 +458,9 @@ files are to live there.)
   result. Feed it from a file instead when it must be able to stop the
   script.
 - `set -e` doesn't catch a failure inside `for x in $(cmd)`.
+- `set -e` is off inside `$(...)`, so a function that checks something
+  carries on past a failed check when called as `x=$(check ...)`. Call it
+  directly and have it set a variable, or test its exit status yourself.
 - After `cmd | tail`, `$?` is `tail`'s exit code without `pipefail`; with
   it, it is the last non-zero status in the pipeline, so a failure shows but
   doesn't say which command failed. Read `${PIPESTATUS[0]}` straight away
@@ -530,5 +539,8 @@ files are to live there.)
   reported. A sentence about which git hooks run was corrected for merges
   and found wrong again for rebases: list the cases (each command, with and
   without a conflict) and test each one.
+- **A negative test passes only if it fails for the reason it tests.**
+  Two tests "passed" because a new check failed on every input, the clean
+  repository included. Check the failure message, and run the clean case.
 - **State the scope before reviewing**, and fix only what was found.
   Without both, rounds of review don't converge.
