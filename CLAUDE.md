@@ -357,6 +357,13 @@ files are to live there.)
 - **Test a new check on the branch as it will be pushed**, files it adds
   included. A scanner tried before its own lock files were committed passed
   locally, then failed on GitHub: it misread hashes in those files as tokens.
+- **Refuse a suppression by the tool's own grammar**, not by the one form
+  you know. shellcheck takes several directives on one line, and Checkov
+  honours three spellings of its skips; a pattern for one form let the
+  others through. Where the tool reports what it skipped, fail on that too.
+- **An exclusion applies to every commit, not only today's tree.** Checking
+  that an excluded file is harmless now says nothing about what it held
+  before. Prefer dropping the specific false result over excluding a path.
 - **A branch runs its own copy of the checks** that judge it. Read any
   change to a check's rules or scripts line by line.
 
