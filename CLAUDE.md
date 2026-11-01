@@ -163,6 +163,14 @@ work is written down locally as it happens.
   starts and its progress as it goes; one started to replace it is told to
   read that file first. A reviewer's file is for a replacement reviewer only:
   the author doesn't read it, so review stays independent.
+- **What the work runs on lives there too**, not only notes about it:
+  scripts the process depends on (a merge check, a test harness, in
+  `.claude/tools/` or the work's own folder), drafts of text that will be
+  published (a pull request description, a squash message), and briefs
+  reused for agents. A temporary folder is only for what can be rebuilt,
+  and `session.md` says how to rebuild it.
+- **Before a compaction, check nothing needed is only in the
+  conversation**: a decision, a reason, a file in a temporary folder.
 - **After a compaction or crash**, read `session.md` and the files it points
   to before doing anything else.
 - State files may hold what can't go in the repository, such as details of a
@@ -326,8 +334,9 @@ our own review — it goes here as soon as it is learned, written as the
 general rule rather than the story, so the same mistake isn't made twice.
 When this file gets too long to read in one go, move each topic below into
 its own file and import it from here with `@path/to/file.md`. (`.claude/`
-is gitignored for local preview settings; narrow that rule first if the
-files are to live there.)
+is gitignored, for local preview settings and the state files in [Keeping
+state on local disk](#keeping-state-on-local-disk); narrow that rule first
+if the files are to live there, and keep `.claude/state/` ignored.)
 
 ### Safety checks
 
@@ -398,7 +407,7 @@ files are to live there.)
 - Go RE2 regexes are case-sensitive unless they start with `(?i)`, and
   there is no lookaround.
 
-### exiftool, TruffleHog and zizmor
+### Other scanners
 
 - exiftool given a list of tags leaves out its own `Error` tag, so a file it
   can't read looks clean: ask for `-ExifTool:Error` explicitly. Phone video
