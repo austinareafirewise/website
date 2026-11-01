@@ -391,6 +391,15 @@ files are to live there.)
 - Go RE2 regexes are case-sensitive unless they start with `(?i)`, and
   there is no lookaround.
 
+### exiftool, TruffleHog and zizmor
+
+- exiftool given a list of tags leaves out its own `Error` tag, so a file it
+  can't read looks clean: ask for `-ExifTool:Error` explicitly. Phone video
+  keeps its location under QuickTime tags (`-GPS*` reads every group).
+- TruffleHog's `--exclude-paths` drops those paths from every commit it reads.
+- zizmor `--offline` silently skips the audits that check a pinned SHA
+  against its repository; they need a token (`contents: read` is enough).
+
 ### git
 
 - `git log -p` and `--name-only` show **nothing** for merge commits; use
