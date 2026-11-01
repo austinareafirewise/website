@@ -142,6 +142,32 @@ either way. *Falls short*: a gap, described in its row.
   approval needs approving again, so a lesson learned at that point waits for
   a `docs` pull request of its own.
 
+## Keeping state on local disk
+
+A Claude Code session's context can be compacted, and a session or an agent
+can crash. Nothing needed to carry on may live only in a conversation, so
+work is written down locally as it happens.
+
+- **Write before each step**: what you are about to do, and then what
+  happened. State files live in `.claude/state/` in the checkout, which is
+  gitignored, so they never reach GitHub — and not in a temporary folder,
+  which doesn't survive a restart.
+- **`.claude/state/session.md` is the index**: the work in progress, the
+  queue the maintainer has set, standing decisions, and a pointer to one file
+  per piece of work (a branch or a pull request).
+- **A work file is enough to resume from on its own**: the goal and scope,
+  each decision and who made it, facts found (pins, versions, test results),
+  the steps with what is done, and what is next.
+- **Agents do the same.** Each agent's brief names its own state file
+  (`.claude/state/agent-<task>.md`). It writes its plan there before it
+  starts and its progress as it goes; one started to replace it is told to
+  read that file first. A reviewer's file is for a replacement reviewer only:
+  the author doesn't read it, so review stays independent.
+- **After a compaction or crash**, read `session.md` and the files it points
+  to before doing anything else.
+- State files may hold what can't go in the repository, such as details of a
+  weakness that isn't fixed, because they stay local. Never secrets.
+
 ## Tracking work: TODO.md and CHANGELOG.md
 
 [TODO.md](TODO.md) is the one list of what still needs doing, kept in the
