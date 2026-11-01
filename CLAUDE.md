@@ -354,6 +354,9 @@ files are to live there.)
   check written that way drew new findings round after round, each fix
   exposing another way it could pass without looking. Put it in a script with
   tests, and have the document say when to run it and what a pass means.
+- **Test a new check on the branch as it will be pushed**, files it adds
+  included. A scanner tried before its own lock files were committed passed
+  locally, then failed on GitHub: it misread hashes in those files as tokens.
 - **A branch runs its own copy of the checks** that judge it. Read any
   change to a check's rules or scripts line by line.
 
