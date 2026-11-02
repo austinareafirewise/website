@@ -189,14 +189,15 @@ message GitHub proposes before confirming. With this repository's settings
 the subject is the commit's own subject when the pull request has one
 commit, and the pull request's title when it has more; the message is every
 commit's message. Neither the title nor anything typed into the merge box is
-checked until it is already on `main`, so make sure they name no one. From
-the command line, or ask the session to do it, pinned to the commit you read
-so nothing pushed since slips in. The commit's SHA is on the pull request's
-own page (not the repository's front page): its **Commits** tab, beside
-**Conversation**, **Checks** and **Files changed**, lists the commits oldest
-first, the opposite of `git log`, so the one you want is the last one listed,
-and its copy button gives the full SHA. `gh pr view <number> --json
-headRefOid` prints it too:
+checked until it is already on `main`, so make sure they name no one.
+
+Pin the merge to the commit you read, so nothing pushed since slips in. Its
+SHA is on the pull request's own page (not the repository's front page): the
+**Commits** tab, beside **Conversation**, **Checks** and **Files changed**,
+lists the commits oldest first, the opposite of `git log`, so the one you
+read is the last one listed, and its copy button gives the full SHA. `gh pr
+view <number> --json headRefOid` prints it too. Then merge from the command
+line, or ask the session to do it:
 
 ```bash
 gh pr merge <number> --squash --delete-branch --match-head-commit <sha>
