@@ -8,6 +8,14 @@ Work from before this file started is in the git history.
 
 ## 2026-11-01
 
+- **Track the GitHub community-profile items**
+  ([#10](https://github.com/austinareafirewise/website/pull/10)). TODO.md
+  gains T64 to T72, at the maintainer's request after reading the
+  repository's community profile: a security policy with private reporting,
+  a code of conduct, a contributing guide, a licence, issue and pull request
+  templates, an accessibility statement and guide, and content reports, each
+  with what it should hold.
+
 - **Keep the documents in sync, and say why practices changed**
   ([#9](https://github.com/austinareafirewise/website/pull/9)). CLAUDE.md
   gains three rules for every document: when one changes, check every other
