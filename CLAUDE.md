@@ -107,8 +107,11 @@ either way. *Falls short*: a gap, described in its row.
     GitHub, or an approval given before later pushes, doesn't count. If
     approval comes before review is done (see below), say so and ask.
   - Before merging, check that the `gitleaks` check (the job in **Check for
-    secrets**) passed on the head commit, and note that commit's SHA:
-    `gh pr view <n> --json headRefOid,statusCheckRollup`.
+    secrets**) and the `(gate)` jobs of **Security scan** passed on the head
+    commit, and note that commit's SHA:
+    `gh pr view <n> --json headRefOid,statusCheckRollup`. The `(report)`
+    jobs pass whatever they count, so their success says nothing about
+    findings.
   - Write the subject (without the pull request number; the merge command adds
     it) and the message yourself, accurate for the change as merged and
     neutral, outside the checkout. Before merging, check exactly what will be
@@ -236,10 +239,14 @@ in `docs/`, the READMEs and comments anywhere else — follows three rules.
 - **No code in documents.** A procedure of more than one command, and
   anything the repository depends on, lives in a script; the document names
   the script, says when to run it and what a pass means, so the two can't
-  drift apart. A single command that only runs one of our scripts, or a
-  standard command a person types once (`git clone <url>`, `gh auth
-  login`), may stay in the text. Documents written before this rule still
-  hold command blocks; moving them into scripts is TODO.md, T55.
+  drift apart. A single command may stay in the text: one that only runs one
+  of our scripts, or one standard command such as `git clone <url>`, `gh
+  auth login` or `gh pr merge <n> --squash`. Two or more commands that must
+  run together are a procedure, and belong in a script. A comment in code
+  describes the code next to it rather than giving steps to follow, so the
+  first two rules apply to it and this one doesn't. Documents written before
+  this rule still hold command blocks; moving them into scripts is TODO.md,
+  T55.
 
 ## Reviewing a pull request
 
