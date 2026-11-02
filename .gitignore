@@ -54,3 +54,6 @@ src/img/_preview-*
 src/content/
 
 users.txt
+
+# The accessibility check's tools, installed by `npm ci` in .github/a11y/.
+.github/a11y/node_modules
