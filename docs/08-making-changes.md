@@ -222,7 +222,8 @@ branch isn't found.
 
 The rule is only a habit until GitHub enforces it. An organization owner sets
 this once, under the repository's **Settings → Rules → Rulesets → New branch
-ruleset**:
+ruleset**. On GitHub's free plan a ruleset works only while the repository
+is public; a private one needs a paid plan (TODO.md, T5 and T43).
 
 - **Target:** the default branch (`main`); enforcement **Active**
 - **Restrict deletions** and **Block force pushes**
@@ -301,7 +302,7 @@ Lambda code and the infrastructure templates are **not** deployed by the push.
 They need the AWS CLI and the `austinareafirewise` profile. Run from the
 repository root.
 
-Board content API, burn ban watch and fire danger — stack `aafa-cms`:
+Board content API, burn ban watch, fire danger and link check — stack `aafa-cms`:
 
 ```bash
 export AWS_PROFILE=austinareafirewise

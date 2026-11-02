@@ -309,8 +309,8 @@ Resources:
 
   # ------------------------------------------------------------------
   # Cost smoke alarm. The static site alone should cost a few dollars a
-  # year, nearly all of it the domain registration; the board-editing and
-  # members stacks add a few dollars a month (docs/05-runbook.md). A bill that climbs
+  # year, nearly all of it the domain registration; the board-editing
+  # and members stacks add a few dollars a month (docs/05-runbook.md). A bill that climbs
   # means something is wrong, and a volunteer organization should hear
   # about it from an email rather than from a card statement.
   # ------------------------------------------------------------------

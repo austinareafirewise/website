@@ -18,7 +18,7 @@ Work from before this file started is in the git history.
   including rollbacks, with the costs and teardown of all three stacks, and
   with the content and members systems being built and live. Closes T38, T39
   and T40, and the docs parts of T26; rewrites T37 (sign-in on our own
-  domain); updates T33, T34 and T47; and adds T55 to T62. T33 and T57
+  domain); updates T33, T34, T47 and T49; and adds T55 to T63. T33 and T57
   record what test sign-ups on the live site showed.
 
 - **Run security scanners on every push**

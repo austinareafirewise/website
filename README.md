@@ -11,7 +11,7 @@ written.
 
 1. Edit files under `src/`, on a branch of their own.
 2. Push the branch and open a pull request; merge it once **Check for
-   secrets** passes and you've read the changes.
+   secrets** and **Security scan** pass and you've read the changes.
 3. `.github/workflows/deploy.yml` checks `src/`, zips it and pushes it to AWS
    Amplify.
 

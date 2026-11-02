@@ -78,9 +78,9 @@ than discovering it at a bad moment. This used to say to put it on a list in
 nothing waiting is spread across several files.
 
 **Who can publish.** Every change reaches `main` through a pull request, even
-when one person makes and merges it, and merging is what publishes. GitHub
-enforces that with a branch ruleset —
-[08-making-changes.md](08-making-changes.md) §2.4.
+when one person makes and merges it, and merging is what publishes. A branch
+ruleset makes GitHub enforce it, once it is set up as in
+[08-making-changes.md](08-making-changes.md) §2.4 (TODO.md, T3).
 
 ## If you get stuck
 

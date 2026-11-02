@@ -126,7 +126,8 @@ that matter:
 
   Declared as NON_PROFIT, public announcements, digital-form opt-in, 1,000
   messages a month. While `SmsProvider` was `off`, numbers were collected and
-  held unconfirmed until texting worked. With it set, a sign-up for texts
+  held unconfirmed, and a held number kept only if its email was confirmed;
+  nothing sends a held number its code once texting works (TODO.md, T63). With it set, a sign-up for texts
   is told its confirmation code has been sent, before the number is
   approved, and the code doesn't arrive (TODO.md, T57).
 
