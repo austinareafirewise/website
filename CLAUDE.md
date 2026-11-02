@@ -288,6 +288,15 @@ is wrong is for a person to decide.
    pushes, no comments or approvals on the pull request, no triggering
    workflows. It tests in throwaway repositories under a scratch folder, never
    in the checkout.
+
+   Two more things go in every brief, because rounds without them don't
+   converge:
+   - **What the maintainer saw for themself is given.** Something a
+     maintainer observed that the reviewer can't repeat — a test sign-up on
+     the live site, say — is stated as fact in the brief, and the reviewer
+     checks the rest against it rather than re-deriving or doubting it.
+   - **How to judge a finding against the scope.** Spell out the bar (step
+     4 below), in the brief's own terms for this pull request.
 2. **The standard** is [the one above](#the-standard): current best practice,
    applied to every line the pull request changes. Anything below it that the
    reviewer sees in code the pull request doesn't touch goes in a separate
@@ -314,6 +323,16 @@ is wrong is for a person to decide.
    (written for someone new to the repository), evidence, a fix, and
    *verified* or *suspected*. Ranked blocking, should fix, nit, question.
    "Nothing material found" is a valid result and must not be padded.
+   Judged against the pull request's stated scope:
+   - **Blocking** or **should fix** needs a realistic problem: an honest
+     mistake a maintainer or volunteer could make, a check that can pass
+     without having looked, a statement that is false or misleading — or
+     missing — where a reader would act on it, or a breach of a rule in this
+     file.
+   - **Nit** or **question**: a case only a deliberate attacker would set
+     up, a widening of what the change claims to cover, and wording,
+     placement or completeness that wouldn't mislead anyone. A widening
+     worth doing becomes a TODO.md item, not a reason to hold the merge.
 5. **The author verifies before fixing.** Reproduce each finding. One that
    doesn't reproduce is recorded as such, with the evidence, and not fixed.
    Reviewers are wrong sometimes, and so are authors.
