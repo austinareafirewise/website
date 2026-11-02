@@ -73,6 +73,9 @@ const SAMPLES = {
   // script gives a name.
   "noscript.html": `${head}</head><body><main><h1>Sample</h1><noscript><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw="></noscript><button id="b"></button><script src="sample.js"></script></main></body></html>`,
   "sample.js": `document.getElementById("b").setAttribute("aria-label", "Named by a script");`,
+  // Main content hidden only on a narrow screen, as a media query that hides
+  // the wrong element would; the header still shows.
+  "hidden.html": `${head}<style>@media (max-width: 400px){main{display:none}}</style></head><body><header><p>Site name</p></header><main><h1>Sample</h1><p>Hidden on a phone.</p></main></body></html>`,
   // A box too wide for a phone.
   "reflow.html": `${head}<style>.w{width:600px}</style></head><body><main><h1>Sample</h1><div class="w">Too wide for a phone.</div></main></body></html>`,
   // A heading that skips a level.
@@ -166,6 +169,19 @@ async function axe(page, path, tags) {
   return r.violations.map(v => `${v.id} (${v.impact}, ${v.nodes.length}) e.g. ${v.nodes[0].target.join(" ")}`);
 }
 
+// axe looks only at what is shown, and a page's own rules (a title, a
+// language) pass however little is, so a page whose content a mistake hides
+// would pass unexamined. Nothing shown, on the page or in its main content,
+// is a finding.
+async function wcag(page, path) {
+  const shown = await page.evaluate(() => {
+    const visibleText = e => e.getClientRects().length > 0 && e.innerText.trim() !== "";
+    const main = document.querySelector("main");
+    return visibleText(document.body) && (!main || visibleText(main));
+  });
+  return [...(shown ? [] : ["nothing shown to check: the page's content is hidden"]), ...await axe(page, path, WCAG)];
+}
+
 async function reflow(page) {
   return page.evaluate(() => {
     const w = document.documentElement.clientWidth;
@@ -184,19 +200,21 @@ async function keyboard(page) {
   // No blinking caret, transitions or animations, so a screenshot shows only
   // what focus itself changes.
   await page.addStyleTag({ content: "*,*::before,*::after{caret-color:transparent!important;transition:none!important;animation:none!important}" });
-  // Every control a keyboard user should reach: a radio group counts once,
+  // Every control a keyboard user should reach: a radio group (its name, in
+  // its form) counts once,
   // and anything taken out of the tab order on purpose (tabindex -1) is left out.
   const total = await page.evaluate(sel => {
     const els = [...document.querySelectorAll(sel)]
       .filter(e => e.tabIndex >= 0 && !e.disabled && e.getClientRects().length && getComputedStyle(e).visibility !== "hidden"
         && !e.closest("[inert]"));
-    const groups = new Set();
+    const radios = [...document.querySelectorAll("input[type=radio]")];
+    const done = new Set();
     let n = 0;
     for (const e of els) {
-      if (e.type === "radio" && e.name) { if (groups.has(e.name)) continue; groups.add(e.name); }
+      const group = e.type === "radio" && e.name ? radios.filter(r => r.name === e.name && r.form === e.form) : null;
+      if (group) { if (done.has(e)) continue; group.forEach(r => done.add(r)); }
       const id = String(++n);
-      if (e.type === "radio" && e.name) document.querySelectorAll(`input[type=radio][name="${CSS.escape(e.name)}"]`).forEach(r => { r.dataset.a11yWant = id; });
-      else e.dataset.a11yWant = id;
+      (group || [e]).forEach(r => { r.dataset.a11yWant = id; });
     }
     return n;
   }, FOCUSABLE);
@@ -253,10 +271,11 @@ async function keyboard(page) {
 }
 
 const CHECKS = [
-  { name: "WCAG A and AA (normal)", kind: gate, mode: "normal", run: (p, path) => axe(p, path, WCAG), sample: "wcag.html" },
-  { name: "WCAG A and AA (dark)", kind: gate, mode: "dark", run: (p, path) => axe(p, path, WCAG), sample: "dark.html", onlyHere: true },
-  { name: "WCAG A and AA (phone)", kind: gate, mode: "phone", run: (p, path) => axe(p, path, WCAG), sample: "phone.html", onlyHere: true },
-  { name: "WCAG A and AA (no JavaScript)", kind: gate, mode: "nojs", run: (p, path) => axe(p, path, WCAG), sample: "noscript.html", onlyHere: true, expect: ["image-alt", "button-name"] },
+  { name: "WCAG A and AA (normal)", kind: gate, mode: "normal", run: wcag, sample: "wcag.html" },
+  { name: "WCAG A and AA (dark)", kind: gate, mode: "dark", run: wcag, sample: "dark.html", onlyHere: true },
+  { name: "WCAG A and AA (phone)", kind: gate, mode: "phone", run: wcag, sample: "phone.html", onlyHere: true },
+  { name: "WCAG A and AA (no JavaScript)", kind: gate, mode: "nojs", run: wcag, sample: "noscript.html", onlyHere: true, expect: ["image-alt", "button-name"] },
+  { name: "WCAG A and AA (phone): content shown", kind: gate, mode: "phone", run: wcag, sample: "hidden.html", onlyHere: true, expect: "nothing shown", noPages: true },
   { name: "keyboard (desktop): traps", kind: gate, mode: "normal", run: p => keyboard(p), sample: "trap.html", expect: "keyboard trap" },
   { name: "keyboard (desktop): visible focus", kind: gate, mode: "normal", run: p => keyboard(p), sample: "focus.html", expect: "no visible focus", noPages: true },
   { name: "keyboard (desktop): focus off screen", kind: gate, mode: "normal", run: p => keyboard(p), sample: "offscreen.html", expect: "off screen", noPages: true },
@@ -280,8 +299,9 @@ try {
     console.log(`ok   ${c.name} catches its known-bad sample (${found.length} finding(s))`);
   }
   needsReview.length = 0;   // only the site's own pages from here on
-  // The keyboard check runs once per width on the site's pages; its sample
-  // entries above exist to prove each half works.
+  // Entries marked noPages exist only to prove one part of a check works on
+  // its sample; the check itself runs on the site's pages under the entry
+  // for its mode (the keyboard check once per width).
   const run = CHECKS.filter(c => !c.noPages);
   for (const path of pages) for (const c of run) {
     for (const f of await withPage(c.mode, path, (p, errors) => c.run(p, path, errors))) c.kind.push(`${c.name.replace(": traps", "")}: ${path}: ${f}`);

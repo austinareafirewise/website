@@ -16,9 +16,10 @@ tab if it does not appear.
 
 This section used to say to commit and push straight to `main`. Every
 change now goes through a pull request instead, because that is where the
-secrets check, the security scan and the accessibility check see it before it can reach the live
-site, and where the record of why it was made is kept. Once the GitHub
-settings in 08 §2.4 are on, GitHub refuses a push to `main` outright.
+secrets check, the security scan and the accessibility check see it before
+it can reach the live site, and where the record of why it was made is
+kept. Once the GitHub settings in 08 §2.4 are on, GitHub refuses a push to
+`main` outright.
 
 ## Publish without changing content
 

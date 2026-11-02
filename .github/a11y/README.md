@@ -17,10 +17,11 @@ page in a real browser.
 Before any page, each check is run on a known-bad sample page made by the
 script, and the job fails if a check misses it. A mode's sample fails only in
 that mode (and the script confirms it passes in normal mode), so a mode that
-isn't applied is caught too. It also fails if git finds
-no pages, a page doesn't load, or axe runs no rules. A check that only
-reports moves to failing the job in the pull request that fixes what it
-finds.
+isn't applied is caught too. It also fails if git finds no pages, a page
+doesn't load, axe runs no rules, or a page shows nothing in an axe mode (axe
+looks only at what is shown, so content hidden by mistake would otherwise
+pass unexamined). A check that only reports moves to failing the job in the
+pull request that fixes what it finds.
 
 What this doesn't check yet: what the pages fetch when they open (news,
 notices, the fire danger sign, the burn ban, resources, the board). That
@@ -42,12 +43,12 @@ It takes about 17 seconds a page, so the job's 15-minute limit allows about
 - The browser comes from Microsoft's Playwright container image, pinned by
   digest in the workflow. Its version must match Playwright's in
   `package-lock.json`, so a pull request that moves one moves the other.
-  Dependabot's monthly update moves only `package-lock.json`: when it moves
-  Playwright, the job fails to start the browser (it fails closed), and the
-  image digest is moved by hand in the same pull request:
-  look up the new image's digest in Microsoft's container registry
-  (`mcr.microsoft.com/playwright`, the `v<version>-noble` tag) and check it
-  against a second request before pinning it.
+  Dependabot's monthly update moves `package.json` and `package-lock.json`
+  but not the image digest: when it moves Playwright, the job fails to start
+  the browser (it fails closed), and the digest is moved by hand in the same
+  pull request: look up the new image's digest in Microsoft's container
+  registry (`mcr.microsoft.com/playwright`, the `v<version>-noble` tag) and
+  check it against a second request before pinning it.
 
 ## Running it on your own computer
 

@@ -17,8 +17,9 @@ Work from before this file started is in the git history.
   trap, focus visible on screen). Reflow on a
   phone and axe's best-practice rules are reported until T73, T74, T8 and T24
   are done. Pinned by an npm lock file and a container image digest, and
-  each check must first catch a known-bad sample. Closes T17; updates T6 and
-  T43; adds T73, T74 and T76.
+  each check must first catch a known-bad sample; a page that shows nothing
+  to check fails too. Closes T17; updates T6 and T43; adds T73, T74, T76,
+  T77 and T78.
 
 - **Track the GitHub community-profile items**
   ([#10](https://github.com/austinareafirewise/website/pull/10)). TODO.md
