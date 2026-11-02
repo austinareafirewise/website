@@ -19,7 +19,8 @@ a developer, and to be reusable for other sites and other organizations.
 - A cost alert, because a volunteer organization should hear about a surprise
   bill from an email rather than a card statement
 
-Under **$25 a year** for the site itself, nearly all of it the domain name.
+Under **$25 a year** for the site itself, nearly all of it the domain
+registration and its hosted zone.
 The optional board-editing and members systems add a few dollars a month
 ([05-runbook.md](05-runbook.md), "What this costs to run").
 

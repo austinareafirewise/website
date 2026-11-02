@@ -191,8 +191,9 @@ commit, and the pull request's title when it has more; the message is every
 commit's message. Neither the title nor anything typed into the merge box is
 checked until it is already on `main`, so make sure they name no one. From
 the command line, or ask the session to do it, pinned to the commit you read
-(its SHA is at the top of the pull request's **Commits** tab, or from `gh pr
-view <number> --json headRefOid`) so nothing pushed since slips in:
+(the last commit listed on the pull request's **Commits** tab, whose copy
+button gives the full SHA, or `gh pr view <number> --json headRefOid`) so
+nothing pushed since slips in:
 
 ```bash
 gh pr merge <number> --squash --delete-branch --match-head-commit <sha>

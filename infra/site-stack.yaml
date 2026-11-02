@@ -309,10 +309,11 @@ Resources:
 
   # ------------------------------------------------------------------
   # Cost smoke alarm. The static site alone should cost about $20 a year,
-  # nearly all of it the domain registration and its hosted zone; the board-editing and members
-  # stacks add a few dollars a month (docs/05-runbook.md). A bill that climbs
-  # means something is wrong, and a volunteer organization should hear
-  # about it from an email rather than from a card statement.
+  # nearly all of it the domain registration and its hosted zone; the
+  # board-editing and members stacks add a few dollars a month
+  # (docs/05-runbook.md). A bill that climbs means something is wrong, and
+  # a volunteer organization should hear about it from an email rather
+  # than from a card statement.
   # ------------------------------------------------------------------
   CostAlert:
     Type: AWS::Budgets::Budget
