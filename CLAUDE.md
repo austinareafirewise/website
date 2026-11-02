@@ -73,7 +73,7 @@ either way. *Falls short*: a gap, described in its row.
 
 | # | Status | As found |
 | --- | --- | --- |
-| 1 | Falls short | Checked on every push since 2026-11-01 (`.github/a11y/`, docs/08 §4.4): axe's WCAG 2.2 A and AA rules pass on all 14 pages in normal and dark mode, on a 320-pixel phone, and with the site's scripts blocked, and Tab reaches every control with focus visible. Short of the principle: four pages (about, evacuation, Firewise communities, prepare your home) scroll sideways on a phone (WCAG 1.4.10); on most pages the footer's headings skip levels; the emergency banner sits outside every landmark; the training page has no main landmark; and the three text-size buttons are each named only "A". Not yet checked: a real screen reader, and the admin pages behind sign-in. |
+| 1 | Falls short | Checked on every push since 2026-11-01 (`.github/a11y/`, docs/08 §4.4): axe's WCAG 2.2 A and AA rules pass on all 14 pages in normal and dark mode, on a 320-pixel phone, and without JavaScript, and Tab reaches every control at desktop and phone widths without a trap, with focus visible; content the pages fetch is checked only in its empty state so far. Short of the principle: four pages (about, evacuation, Firewise communities, prepare your home) scroll sideways on a phone (WCAG 1.4.10); on most pages the footer's headings skip levels; the emergency banner sits outside every landmark; the training page has no main landmark; and the three text-size buttons are each named only "A". Not yet checked: a real screen reader, and the admin pages behind sign-in. |
 | 2 | Falls short | The information pages work without JavaScript, and the pages that need it say so (though the home page's note leaves out the burn ban). News, the board, resources, and the home page's news headlines, notices, fire danger and burn ban need it, though they could be published as HTML; the sign-up and manage forms need it too. |
 | 3 | Believed met | No ad code and no ad hosts in `src/`. AdBlock found nothing to block, with a system-wide ad blocker also running; not yet checked with AdGuard on its own. |
 | 4 | Meets | No analytics or tracking code, and no cookies on the public pages. Local storage holds only the text-size choice, once a visitor makes one, and it never leaves the browser. The admin pages keep their own state in session storage. |
@@ -133,6 +133,12 @@ either way. *Falls short*: a gap, described in its row.
   program's first run, a tool reading Documents, Desktop or Downloads, the
   keychain, `sudo` — say so first, why, and which answer is safe. A server
   bound to 127.0.0.1 works whether or not local-network access is allowed.
+- **Let the maintainer watch anything long.** A local command likely to
+  run for more than a minute or so (a test suite, a full scan, a browser
+  check) runs where the maintainer can see it live — in the app's Terminal
+  panel — piped through `tee` into a log under `.claude/state/logs/`, which
+  is what Claude reads afterwards. Don't cut its output down (`| tail`)
+  before anyone has seen it.
 - **Force-pushing** a pull request branch needs the maintainer's explicit OK
   each time, and uses `--force-with-lease=<branch>:<expected-sha>`. Claude
   never force-pushes `main`; rewriting its history, if that is ever needed,
@@ -535,6 +541,11 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   subshell, and the pipeline's failure looks like an ordinary non-zero
   result. Feed it from a file instead when it must be able to stop the
   script.
+- **Never edit a script while it is running.** bash reads a script a piece
+  at a time as it runs, not all at once, so an edit that moves text shifts
+  everything after it: the running copy resumes mid-line and fails with a
+  syntax error it doesn't have (seen 2026-11-01, editing a test script during
+  its run). Wait for it to finish, or stop it first, or edit a copy.
 - `set -e` doesn't catch a failure inside `for x in $(cmd)`.
 - `set -e` is off inside `$(...)`, so a function that checks something
   carries on past a failed check when called as `x=$(check ...)`. Call it
