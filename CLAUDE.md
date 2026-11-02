@@ -411,7 +411,10 @@ if the files are to live there, and keep `.claude/state/` ignored.)
 
 - exiftool given a list of tags leaves out its own `Error` tag, so a file it
   can't read looks clean: ask for `-ExifTool:Error` explicitly. Phone video
-  keeps its location under QuickTime tags (`-GPS*` reads every group).
+  keeps its location under QuickTime tags (`-GPS*` reads every group). It
+  reads pictures embedded in a file (a photo inside a PDF) only with `-ee`,
+  and with `-G3:1` an embedded picture's tags get keys of their own
+  (`Doc1:IFD0:Artist`) instead of overwriting the outer file's.
 - TruffleHog's `--exclude-paths` drops those paths from every commit it reads.
 - Bandit applies its default excludes (`.tox`, `__pycache__` and others)
   even to files named on its command line; `-x ''` turns them off. Its
