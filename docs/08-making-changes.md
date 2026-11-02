@@ -406,8 +406,9 @@ The checks run in three places:
 | GitHub (**Security scan**) | each push of any branch | nine scanners over the workflows, scripts, templates, code, history and media (§4.3) |
 | The deploy (**Deploy to Amplify**) | before every publish of the site | everything under `src/`, as it is about to go live |
 
-The GitHub check is the one a pull request must pass (§2.4), and it runs
-whether or not anyone turned the hooks on. The hooks add catching a mistake
+The GitHub checks, **Check for secrets** and the `(gate)` jobs of **Security
+scan**, are the ones a pull request must pass (§2.4), and they run whether or
+not anyone turned the hooks on. The hooks add catching a mistake
 before it leaves your computer at all. They don't run for everything: a `git
 merge` with no conflict runs only the commit-message hook, and a
 `cherry-pick`, `revert` or plain `rebase` with no conflict runs neither (an

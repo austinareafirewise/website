@@ -6,7 +6,7 @@ history records), naming any [TODO.md](TODO.md) items it closed. How this file
 is kept is in [CLAUDE.md](CLAUDE.md#tracking-work-todomd-and-changelogmd).
 Work from before this file started is in the git history.
 
-## 2026-11-02
+## 2026-11-01
 
 - **Keep the documents in sync, and say why practices changed**
   ([#9](https://github.com/austinareafirewise/website/pull/9)). CLAUDE.md
@@ -18,9 +18,8 @@ Work from before this file started is in the git history.
   including rollbacks, with the costs and teardown of all three stacks, and
   with the content and members systems being built and live. Closes T38, T39
   and T40, and the docs parts of T26; rewrites T37 (sign-in on our own
-  domain) and adds T55 to T58.
-
-## 2026-11-01
+  domain); updates T33, T34 and T47; and adds T55 to T62. T33 and T57
+  record what test sign-ups on the live site showed.
 
 - **Run security scanners on every push**
   ([#8](https://github.com/austinareafirewise/website/pull/8)). A new

@@ -127,8 +127,8 @@ that matter:
   Declared as NON_PROFIT, public announcements, digital-form opt-in, 1,000
   messages a month. While `SmsProvider` was `off`, numbers were collected and
   held unconfirmed until texting worked. With it set, a sign-up for texts
-  sends its confirmation code straight away, before the number is approved
-  (TODO.md, T57).
+  is told its confirmation code has been sent, before the number is
+  approved, and the code doesn't arrive (TODO.md, T57).
 
 - **Two more SMS gates after that.** The account's SMS tier is SANDBOX
   (texts only reach verified numbers) and the monthly text spend limit is $1,
@@ -180,7 +180,7 @@ safeguard against removing every login by accident.
 
 ## Deploy path
 
-Push to `main` touching `src/**` → GitHub Actions → assume
+A merge into `main` touching `src/**` → GitHub Actions → assume
 `aafa-site-github-deploy` via OIDC → `amplify create-deployment`, upload the
 zip to the presigned URL, `amplify start-deployment`, poll `get-job` until it
 succeeds.

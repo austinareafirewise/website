@@ -209,10 +209,16 @@ uses.
    a bucket that still holds files. Either one left as it is stops the
    stack's deletion. Its content table is deleted with the stack.
 3. **`aafa-site`**, the site stack. That removes the Amplify app, the role,
-   the domain association, and the budget, and the GitHub identity provider
-   if this stack created it (`CreateGitHubOIDCProvider` left at `yes`). If
-   another site uses that provider, update this stack with
-   `CreateGitHubOIDCProvider` set to `no` before deleting it.
+   the domain association, and the budget, and also the GitHub identity
+   provider if this stack created it (`CreateGitHubOIDCProvider` left at
+   `yes`, the default). If another site's deploys use that provider, they
+   stop working when it goes. Recreate it by hand afterwards in IAM →
+   **Identity providers**, with the same address
+   (`https://token.actions.githubusercontent.com`) and audience
+   (`sts.amazonaws.com`), and the other site's role trusts it again.
+   Changing `CreateGitHubOIDCProvider` to `no` first doesn't keep it: an
+   update that turns a resource's condition off deletes the resource
+   (TODO.md, T60, is for making the template keep it).
 
 Things none of them remove, on purpose:
 
@@ -266,14 +272,14 @@ certificate has to be issued and DNS has to propagate.
 
 | | Typical |
 | --- | --- |
-| Domain registration | $13–15 / year |
+| Domain registration | about $15–16 / year (Route 53 → **Registered domains** shows the renewal price) |
 | Route 53 hosted zone | $0.50 / month |
 | Amplify hosting | Free tier, then pennies |
 | Toll-free number for texts | $2 / month ([infra/README.md](../infra/README.md)) |
 | Secrets Manager (the members stack's signing secret) | about $0.40 / month |
 | Email (SES) | about $0.10 per 1,000 messages |
-| Texts | per message, plus carrier fees, once texting is switched on |
-| API Gateway, Lambda, DynamoDB, S3, CloudWatch logs | free tier, then pennies at this size |
+| Texts | per message, plus carrier fees, once texts are delivered |
+| API Gateway, Lambda, DynamoDB, S3, Cognito, SNS, SQS, EventBridge, CloudWatch logs | free tier, then pennies at this size |
 | GitHub organization | Free (see TODO.md, T43) |
 | CloudFormation | Free |
 

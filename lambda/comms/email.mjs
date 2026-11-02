@@ -18,7 +18,8 @@ let ses = null;
  * addresses, and a new domain identity takes time to verify by DNS. Either
  * one means a stranger's confirmation email will fail. The sign-up asks this
  * first: if email can't be sent yet, it still takes the sign-up, holds it
- * unconfirmed, and sends the confirmation once sending works (api.mjs).
+ * unconfirmed, and the tick in events.mjs sends the confirmation once
+ * sending works.
  * It used to say "not open yet" and refuse instead; that turned away people
  * who wanted to be on the list.
  *
