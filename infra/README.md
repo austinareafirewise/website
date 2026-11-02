@@ -30,6 +30,7 @@ the stack over changing things by hand, so the template stays the truth.
 | Sign-in page | `https://austinareafirewise-admin.auth.us-east-2.amazoncognito.com` |
 | API | `https://dpnvwt7kp5.execute-api.us-east-2.amazonaws.com` (HTTP API, JWT authorizer) |
 | Lambda | `aafa-cms`, Node.js 22, no dependencies — source in [`../lambda/cms/`](../lambda/cms/) |
+| Scheduled Lambdas | `aafa-burnban` every 30 minutes (below); `aafa-firedanger` every 3 hours, which reads the Texas A&M Forest Service's daily fire danger ratings for the stations around Travis County and writes the result the home page's sign draws from ([`../lambda/firedanger/`](../lambda/firedanger/)); `aafa-linkcheck` every Sunday, which tries every external link on the Resources page and records what happened ([`../lambda/linkcheck/`](../lambda/linkcheck/)) |
 | DynamoDB | `aafa-content`, on-demand, point-in-time recovery on |
 | Content bucket | `aafa-site-content` — public read on `content.json` and `images/*` only |
 | Artifacts bucket | `aafa-deploy-artifacts-773005956573` — private, holds packaged Lambda zips, 30-day expiry |
@@ -49,8 +50,10 @@ aws cloudformation deploy --region us-east-2 --template-file /tmp/cms-packaged.y
   --stack-name aafa-cms --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset
 ```
 
-Run from the repository root. `package` uploads `lambda/cms/` and `lambda/burnban/`
-and rewrites their `Code:` references; `deploy` applies it. A code-only change
+Run from the repository root. `package` uploads each Lambda's code
+(`lambda/cms/`, `lambda/burnban/`, `lambda/firedanger/`, and the whole of
+`lambda/` for the link check, which shares `lambda/cms/resources.mjs`) and
+rewrites their `Code:` references; `deploy` applies it. A code-only change
 takes about a minute.
 
 #### Burn ban watch
@@ -97,13 +100,18 @@ that matter:
 | --- | --- | --- |
 | `PostalAddress` | P.O. Box 4211-A, Austin, TX 78731 | CAN-SPAM requires it in every email. The sender refuses to broadcast while it is blank. |
 | `ReplyTo` | vicki@vickilandon.com | An interim personal address. While blank, every email tells recipients the mailbox is unmonitored; setting it removes that line. Replace when the organization has its own mailbox. |
-| `SmsProvider` | `off` | Becomes `aws` with `SmsOrigination` set to the toll-free number once carriers approve it. |
+| `SmsProvider` | set | The sending side is configured: the live API reports texting as switched on. Texts still don't arrive until the toll-free number's carrier registration is approved (below; TODO.md, T34), which is why `src/js/config.js` has a switch of its own saying texts aren't going out yet. This row used to say `off`, from before the provider was set. |
 
 #### Things only a person can do
 
-- **SES production access** — requested, `ReviewDetails.Status: PENDING`. Until
-  granted, sign-ups are refused with an explanation; the gate lifts on its own
-  because the check is made at runtime.
+- **SES production access** — requested. The live API now reports email as
+  sendable, which `lambda/comms/email.mjs` reports only when AWS says
+  production access is granted and the domain is verified; confirm it in the
+  SES console (TODO.md, T33). A sign-up made while email can't be sent is
+  stored unconfirmed, and its confirmation goes out once sending works. This
+  used to say sign-ups were refused until access was granted; the code was
+  changed because refusing turned away people who wanted to be on the list
+  (the comment in `lambda/comms/api.mjs` says why).
 - **Toll-free number** — `+1 833 408 8708` requested ($2/month), two-way
   wired to the events topic. Carrier verification
   `registration-4ae3068ea8004f68b2e3ce5d34e78bba` submitted; 1-3 weeks.
@@ -216,36 +224,12 @@ AWS_PROFILE=austinareafirewise aws amplify start-deployment \
   --job-id "$(node -pe "require('./deployment.json').jobId")"
 ```
 
-## What does not exist yet: the mailing list
+## The mailing list
 
-The CMS stack above is the natural home for this when it is built — same
-API, same Lambda pattern, a second table.
-
-The signup form on the home page has no backend. Nothing is stored, and the
-form tells the visitor so. The intended shape when it is built:
-
-```
-POST /signup  ->  API Gateway (HTTP API)
-                    -> Lambda (validate, rate-limit, dedupe)
-                      -> DynamoDB table (partition key: email)
-                      -> SES confirmation mail (double opt-in)
-```
-
-Points worth settling before it handles a real address, because they are far
-harder to retrofit than to build in:
-
-- **Double opt-in.** Store the address as unconfirmed, mail a confirmation
-  link, and only mark it subscribed when the link is followed. This is what
-  keeps a list from filling with addresses their owners never entered.
-- **Unsubscribe.** A one-click link with a signed token in every mail sent.
-  Required in practice by CAN-SPAM and by every mailbox provider's filters.
-- **CORS.** The API must accept `https://www.austinareafirewise.org` only.
-- **Abuse controls.** The form's honeypot field stops naive bots and nothing
-  else; real protection is per-IP rate limiting at the API.
-- **Privacy statement.** A page saying what is collected, why, how long it is
-  kept, and how to have it deleted — and a link to it beside the form.
-- **Retention and export.** Decide up front how an address gets deleted on
-  request, and how the list gets exported if it moves to a mail provider.
-
-When the endpoint exists, uncomment and set `window.AAFA_SIGNUP_ENDPOINT` in
-`src/js/config.js`. Nothing else in the site changes.
+This section used to be "What does not exist yet: the mailing list": the
+sign-up form had no backend, and it set out the shape one should take and
+the points to settle first (double opt-in, unsubscribe, CORS, abuse
+controls, a privacy statement, retention and export). It has since been
+built as the members and communications stack, `aafa-comms`, above. Its
+design, and how it handles each of those points, is
+[`../docs/07-members-and-communications-design.md`](../docs/07-members-and-communications-design.md).

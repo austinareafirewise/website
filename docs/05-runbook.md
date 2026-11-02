@@ -8,22 +8,17 @@ for the setup.
 
 ## Everyday editing
 
-Edit a file under `src/`, then:
+Make the change on a branch, preview it by double-clicking the page (see the
+main README), and open a pull request, as in
+[08-making-changes.md](08-making-changes.md) §2.3. A change under `src/` is
+live about a minute after the pull request is merged; check the **Actions**
+tab if it does not appear.
 
-```bash
-git pull
-```
-
-Make the change, preview it by double-clicking the page (see the main README),
-then:
-
-```bash
-git add -A
-git commit -m "what changed"
-git push
-```
-
-Live in about a minute. Check the **Actions** tab if it does not appear.
+This section used to say to commit and push straight to `main`. Every
+change now goes through a pull request instead, because that is where the
+secrets check and the security scan see it before it can reach the live
+site, and where the record of why it was made is kept. Once the GitHub
+settings in 08 §2.4 are on, GitHub refuses a push to `main` outright.
 
 ## Publish without changing content
 
@@ -32,16 +27,16 @@ something on the AWS side.
 
 ## Roll back a bad change
 
-The previous version is always in Git.
+The previous version is always in Git. Revert the bad commit on a branch and
+merge it through a pull request, as in
+[08-making-changes.md](08-making-changes.md) §2.5. The revert is a new commit
+undoing the old one, and it deploys like any other merge. It does not erase
+history, which is what you want: you can see what happened and why.
 
-```bash
-git log --oneline -10
-git revert <the-commit-id>
-git push
-```
-
-This adds a new commit undoing the old one, and deploys it. It does not erase
-history, which is what you want — you can see what happened and why.
+This used to revert and push straight to `main`. It goes through a pull
+request now for the same reason as every other change (see "Everyday
+editing" above): a rollback is a change to the live site too, and it should
+pass the same checks on its way.
 
 ## Add a domain, or change one, later
 
@@ -176,27 +171,55 @@ account with extra steps. Promote a second person.
 
 ## Check what the site is costing
 
-Console → **Billing and Cost Management** → **Bills**.
+Console → **Billing and Cost Management** → **Bills**, which breaks the
+month down by service.
 
-Expect a few dollars a year, nearly all of it domain registration. Amplify
-hosting for a site this size is usually pennies or free tier.
+Expect a few dollars a month (see "What this costs to run" below): the
+domain, the toll-free number for texts, and the members stack's one secret
+are the fixed part, and the rest grows with the email and texts sent.
+Amplify hosting, the API, the Lambdas and the tables are pennies or free tier
+at this site's size.
 
-If it is materially more than that, something is wrong — an unused resource
-left over from an experiment, or traffic you did not expect. The budget alert
-from the template should have emailed you first.
+If it is materially more than that, something is wrong: an unused resource
+left over from an experiment, traffic you did not expect, or messages being
+sent that shouldn't be. The budget alert from the site stack should have
+emailed you first.
+
+This section used to expect "a few dollars a year, nearly all of it domain
+registration". That was written when the site stack was the only one; the
+content and members stacks, and texting, came later and cost more.
 
 ## Delete everything
 
-If the site is being retired or a practice run needs cleaning up:
+If the site is being retired or a practice run needs cleaning up, delete the
+three stacks in this order, each from CloudFormation → the stack →
+**Delete**. The order matters: `aafa-comms` uses `aafa-cms`'s API, sign-in
+and address, and CloudFormation won't delete a stack another one still
+uses.
 
-CloudFormation → the stack → **Delete**. That removes the Amplify app, the
-role, the domain association, and the budget.
+1. **`aafa-comms`**, the members and communications stack. Its five
+   tables of members, groups, the board, messages and deliveries are kept
+   on purpose when the stack is deleted (`DeletionPolicy: Retain`), because
+   they hold people's names, email addresses and phone numbers. Decide what
+   happens to that data, then delete those tables by hand in DynamoDB.
+2. **`aafa-cms`**, the content stack. Empty its content bucket first: S3
+   won't delete a bucket that still holds files, and the stack's deletion
+   stops there. Its content table is deleted with the stack.
+3. **`aafa-site`**, the site stack. That removes the Amplify app, the role,
+   the domain association, and the budget.
 
-Two things it does **not** remove, on purpose:
+Things none of them remove, on purpose:
 
 - **The Route 53 hosted zone and domain registration** — deleting a hosted zone
   breaks email for that domain too, so AWS makes you do it deliberately
 - **The GitHub identity provider**, if another site is using it
+- **The toll-free number and its registration**, which were set up by hand
+  ([infra/README.md](../infra/README.md)) and are billed monthly until
+  released in AWS End User Messaging
+
+This section used to cover only the site stack, from before the content and
+members stacks existed; deleting it alone would have left the others
+running and billing.
 
 ---
 
@@ -237,10 +260,17 @@ certificate has to be issued and DNS has to propagate.
 | Domain registration | $13–15 / year |
 | Route 53 hosted zone | $0.50 / month |
 | Amplify hosting | Free tier, then pennies |
-| GitHub organization | Free |
+| Toll-free number for texts | $2 / month ([infra/README.md](../infra/README.md)) |
+| Secrets Manager (the members stack's signing secret) | about $0.40 / month |
+| Email (SES) | about $0.10 per 1,000 messages |
+| Texts | per message, plus carrier fees, once texting is switched on |
+| API Gateway, Lambda, DynamoDB, S3, CloudWatch logs | free tier, then pennies at this size |
+| GitHub organization | Free (see TODO.md, T43) |
 | CloudFormation | Free |
 
-Under $25 a year for a site of this size.
+The fixed part is about $4 a month. Email and texts add to it with every
+message sent. This table used to say "under $25 a year", from when the site
+stack was the only one.
 
 ---
 

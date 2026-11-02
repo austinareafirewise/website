@@ -69,8 +69,10 @@ site.
 
 Register the AWS account to an organization email too, if one exists. If it
 does not yet, a personal address works to start — AWS root email can be changed
-later — but put it on the list in [05-runbook.md](05-runbook.md) rather than
-discovering it at a bad moment.
+later — but put it on [TODO.md](../TODO.md) (T42 covers this one) rather
+than discovering it at a bad moment. This used to say to put it on a list in
+05-runbook.md; TODO.md is now the one list of everything still to do, so
+nothing waiting is spread across several files.
 
 **Who can publish.** Every change reaches `main` through a pull request, even
 when one person makes and merges it, and merging is what publishes. GitHub

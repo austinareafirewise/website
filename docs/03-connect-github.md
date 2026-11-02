@@ -65,6 +65,13 @@ git push
 If Git asks you to sign in, a browser window opens — approve it there. That
 happens once.
 
+This first commit is the only one that goes straight to `main`: a new
+repository has no `main` yet for a pull request to merge into. Every change
+after it goes through a pull request
+([08-making-changes.md](08-making-changes.md) §2.2), so that the checks see
+it before it can reach the live site. Turn on the GitHub settings in 08 §2.4
+straight after this, and GitHub will refuse any later push to `main`.
+
 ## 3.4 Watch the first deploy
 
 Go to your repository on GitHub → **Actions** tab. A run named **Deploy to

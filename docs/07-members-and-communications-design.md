@@ -5,7 +5,11 @@ that list, and how the board sends a message to everyone on it — with the
 review, approval and test steps that stop a wrong message going to hundreds
 of phones.
 
-Status: **design, awaiting approval.** Nothing here exists yet.
+Status: **built and live** as the members and communications stack,
+`aafa-comms` ([`../infra/README.md`](../infra/README.md)); texts don't
+arrive yet (TODO.md, T34). This page was written as the design before any of
+it existed, and still reads that way in places; where it and the code
+disagree, the code is right and this page needs correcting.
 
 Read alongside [06-cms-design.md](06-cms-design.md): this reuses its sign-in,
 API and admin page, and adds two new sections to the admin area.
@@ -15,7 +19,8 @@ API and admin page, and adds two new sections to the admin area.
 ## The short version
 
 - The **home page form** gains a phone number and a choice: email, text, or
-  both. Submitting actually stores the person (today it stores nothing).
+  both. Submitting actually stores the person (when this was written, it
+  stored nothing).
 - Nobody is on the list until they **confirm** — a link in an email, a code
   by text. Unconfirmed signups expire after seven days.
 - The admin area gets a **Members** section: full list, search, add, edit,

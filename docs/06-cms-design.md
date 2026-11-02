@@ -3,7 +3,11 @@
 How board members change parts of the site from a browser, without touching
 GitHub, and how that stays safe on a public wildfire-safety site.
 
-Status: **design, revision 2, awaiting approval.** Nothing here exists yet.
+Status: **built and live** as the content stack, `aafa-cms`
+([`../infra/README.md`](../infra/README.md)). This page was written as the
+design, revision 2, before any of it existed, and still reads that way in
+places; where it and the code disagree, the code is right and this page needs
+correcting.
 
 ---
 

@@ -22,8 +22,10 @@ Go to <https://aws.amazon.com/> and choose **Create an AWS Account**.
 
 Use the organization's email address if one exists. If it does not, a personal
 address is fine to start — **an AWS account's root email can be changed later**,
-so this is not a decision you are locked into. Put it on the list in
-[05-runbook.md](05-runbook.md) to revisit.
+so this is not a decision you are locked into. Put it on
+[TODO.md](../TODO.md) to revisit (T42 covers this one). This used to say to
+put it on a list in 05-runbook.md; TODO.md is now the one list of
+everything still to do.
 
 Choose the **Basic (free)** support plan.
 
