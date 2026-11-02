@@ -111,7 +111,8 @@ either way. *Falls short*: a gap, described in its row.
     and note that commit's SHA:
     `gh pr view <n> --json headRefOid,statusCheckRollup`. A `(report)` job
     passes whatever it counts, so its success says nothing about findings;
-    but one that failed means its tool didn't run at all.
+    but one that failed means the check didn't do its job (the tool failed,
+    read nothing, missed its known sample, or found a suppression).
   - Write the subject (without the pull request number; the merge command adds
     it) and the message yourself, accurate for the change as merged and
     neutral, outside the checkout. Before merging, check exactly what will be
