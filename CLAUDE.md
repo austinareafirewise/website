@@ -568,6 +568,11 @@ if the files are to live there, and keep `.claude/state/` ignored.)
 - A push runs the workflows in the pushed commit, not those on `main`. A
   branch cut before a check existed doesn't get that check; merge `main`
   into it (no force-push needed).
+- In a `container:` job, git refuses the checkout ("detected dubious
+  ownership"): the files belong to another user, and `actions/checkout`
+  marks the folder safe only for its own step. Add it with `git config
+  --global --add safe.directory "$GITHUB_WORKSPACE"` before anything runs
+  git.
 - `gh pr merge --delete-branch` deletes the local branch too.
 - `gh pr merge --subject … --body-file …` was recorded byte for byte on a
   pull request whose commits all had one author. With several authors,
