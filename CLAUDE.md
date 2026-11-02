@@ -142,6 +142,40 @@ either way. *Falls short*: a gap, described in its row.
   approval needs approving again, so a lesson learned at that point waits for
   a `docs` pull request of its own.
 
+## Keeping state on local disk
+
+A Claude Code session's context can be compacted, and a session or an agent
+can crash. Nothing needed to carry on may live only in a conversation, so
+work is written down locally as it happens.
+
+- **Write before each step**: what you are about to do, and then what
+  happened. State files live in `.claude/state/` in the checkout, which is
+  gitignored, so they never reach GitHub — and not in a temporary folder,
+  which doesn't survive a restart.
+- **`.claude/state/session.md` is the index**: the work in progress, the
+  queue the maintainer has set, standing decisions, and a pointer to one file
+  per piece of work (a branch or a pull request).
+- **A work file is enough to resume from on its own**: the goal and scope,
+  each decision and who made it, facts found (pins, versions, test results),
+  the steps with what is done, and what is next.
+- **Agents do the same.** Each agent's brief names its own state file
+  (`.claude/state/agent-<task>.md`). It writes its plan there before it
+  starts and its progress as it goes; one started to replace it is told to
+  read that file first. A reviewer's file is for a replacement reviewer only:
+  the author doesn't read it, so review stays independent.
+- **What the work runs on lives there too**, not only notes about it:
+  scripts the process depends on (a merge check, a test harness, in
+  `.claude/tools/` or the work's own folder), drafts of text that will be
+  published (a pull request description, a squash message), and briefs
+  reused for agents. A temporary folder is only for what can be rebuilt,
+  and `session.md` says how to rebuild it.
+- **Before a compaction, check nothing needed is only in the
+  conversation**: a decision, a reason, a file in a temporary folder.
+- **After a compaction or crash**, read `session.md` and the files it points
+  to before doing anything else.
+- State files may hold what can't go in the repository, such as details of a
+  weakness that isn't fixed, because they stay local. Never secrets.
+
 ## Tracking work: TODO.md and CHANGELOG.md
 
 [TODO.md](TODO.md) is the one list of what still needs doing, kept in the
@@ -300,8 +334,9 @@ our own review — it goes here as soon as it is learned, written as the
 general rule rather than the story, so the same mistake isn't made twice.
 When this file gets too long to read in one go, move each topic below into
 its own file and import it from here with `@path/to/file.md`. (`.claude/`
-is gitignored for local preview settings; narrow that rule first if the
-files are to live there.)
+is gitignored, for local preview settings and the state files in [Keeping
+state on local disk](#keeping-state-on-local-disk); narrow that rule first
+if the files are to live there, and keep `.claude/state/` ignored.)
 
 ### Safety checks
 
@@ -328,6 +363,16 @@ files are to live there.)
   check written that way drew new findings round after round, each fix
   exposing another way it could pass without looking. Put it in a script with
   tests, and have the document say when to run it and what a pass means.
+- **Test a new check on the branch as it will be pushed**, files it adds
+  included. A scanner tried before its own lock files were committed passed
+  locally, then failed on GitHub: it misread hashes in those files as tokens.
+- **Refuse a suppression by the tool's own grammar**, not by the one form
+  you know. shellcheck takes several directives on one line, and Checkov
+  honours three spellings of its skips; a pattern for one form let the
+  others through. Where the tool reports what it skipped, fail on that too.
+- **An exclusion applies to every commit, not only today's tree.** Checking
+  that an excluded file is harmless now says nothing about what it held
+  before. Prefer dropping the specific false result over excluding a path.
 - **A branch runs its own copy of the checks** that judge it. Read any
   change to a check's rules or scripts line by line.
 
@@ -362,6 +407,21 @@ files are to live there.)
 - Go RE2 regexes are case-sensitive unless they start with `(?i)`, and
   there is no lookaround.
 
+### Other scanners
+
+- exiftool given a list of tags leaves out its own `Error` tag, so a file it
+  can't read looks clean: ask for `-ExifTool:Error` explicitly. Phone video
+  keeps its location under QuickTime tags (`-GPS*` reads every group). It
+  reads pictures embedded in a file (a photo inside a PDF) only with `-ee`,
+  and with `-G3:1` an embedded picture's tags get keys of their own
+  (`Doc1:IFD0:Artist`) instead of overwriting the outer file's.
+- TruffleHog's `--exclude-paths` drops those paths from every commit it reads.
+- Bandit applies its default excludes (`.tox`, `__pycache__` and others)
+  even to files named on its command line; `-x ''` turns them off. Its
+  report names a relative path with `./` in front.
+- zizmor `--offline` silently skips the audits that check a pinned SHA
+  against its repository; they need a token (`contents: read` is enough).
+
 ### git
 
 - `git log -p` and `--name-only` show **nothing** for merge commits; use
@@ -374,6 +434,9 @@ files are to live there.)
   output of commands that scripts parse. Force it off with
   `GIT_CONFIG_COUNT` / `GIT_CONFIG_KEY_n` / `GIT_CONFIG_VALUE_n`.
 - `--numstat` shows `-` and `-` (separated by a tab) for a binary file.
+- `:(attr:!binary)` and `git grep -I` follow `.gitattributes`: one line
+  marking a script `binary` takes it out of both. Where it matters, decide
+  binary by the file's content (a NUL byte), not by its attributes.
 
 ### Git hooks
 
@@ -407,6 +470,9 @@ files are to live there.)
   result. Feed it from a file instead when it must be able to stop the
   script.
 - `set -e` doesn't catch a failure inside `for x in $(cmd)`.
+- `set -e` is off inside `$(...)`, so a function that checks something
+  carries on past a failed check when called as `x=$(check ...)`. Call it
+  directly and have it set a variable, or test its exit status yourself.
 - After `cmd | tail`, `$?` is `tail`'s exit code without `pipefail`; with
   it, it is the last non-zero status in the pipeline, so a failure shows but
   doesn't say which command failed. Read `${PIPESTATUS[0]}` straight away
@@ -485,5 +551,8 @@ files are to live there.)
   reported. A sentence about which git hooks run was corrected for merges
   and found wrong again for rebases: list the cases (each command, with and
   without a conflict) and test each one.
+- **A negative test passes only if it fails for the reason it tests.**
+  Two tests "passed" because a new check failed on every input, the clean
+  repository included. Check the failure message, and run the clean case.
 - **State the scope before reviewing**, and fix only what was found.
   Without both, rounds of review don't converge.

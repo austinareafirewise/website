@@ -1,0 +1,11 @@
+# File types by name, shared by .githooks/check-documents (which refuses
+# what the secrets check can't read) and .github/scripts/security-scan.sh
+# (whose exiftool check reads the metadata of these same files), so the two
+# always agree on what each type is. Sourced, not run.
+
+# Documents and archives: refused unless listed in allowed-documents.txt.
+documents='\.(xls|xlsx|xlsm|xlsb|xltx|csv|tsv|ods|numbers|doc|docx|docm|odt|rtf|pages|pdf|ppt|pptx|pptm|odp|key|msg|eml|zip|7z|rar|tar|gz|tgz|xz|bz2)$'
+
+# Pictures, sound, video and fonts: what a website is made of, so a binary
+# file of one of these types is allowed.
+media='\.(png|jpe?g|gif|webp|avif|ico|mp3|m4a|wav|ogg|mp4|webm|woff2?|ttf|otf)$'

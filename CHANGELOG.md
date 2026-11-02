@@ -8,6 +8,16 @@ Work from before this file started is in the git history.
 
 ## 2026-11-01
 
+- **Run security scanners on every push**
+  ([#8](https://github.com/austinareafirewise/website/pull/8)). A new
+  workflow runs nine scanners, each in a job of its own: actionlint,
+  shellcheck, TruffleHog, cfn-lint, Bandit, zizmor and exiftool fail on any
+  finding; Checkov and Semgrep report only a count until their existing
+  findings are triaged (T46, T47). Each is pinned by version and checksum,
+  refuses the ways it offers to silence a finding, and must first catch a
+  known-bad sample. CLAUDE.md gains "Keeping state on local disk": plans and
+  progress are written to local files before each step, by Claude and by
+  every agent. Closes T7; adds T46–T54.
 - **Close T35, and track the deploy upload's error check**
   ([#7](https://github.com/austinareafirewise/website/pull/7)). Removes
   T35: Dependabot's #2, which moved `aws-actions/configure-aws-credentials`

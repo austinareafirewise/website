@@ -1,0 +1,8 @@
+# zizmor's configuration for .github/scripts/security-scan.sh, which passes it
+# explicitly (so zizmor reads no other config file).
+rules:
+  # GitHub's newer `uses: $/…` form for actions in this repository is what
+  # this audit asks for, but actionlint 1.7.12 rejects it as invalid. Back on
+  # once actionlint accepts it (TODO.md).
+  self-repository:
+    disable: true
