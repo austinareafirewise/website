@@ -219,6 +219,28 @@ was done.
 - **To choose what to do next**, start at the top of TODO.md: high
   importance, low difficulty first.
 
+## Keeping the documents right
+
+Every document in the repository — the `.md` files at the top, the guides
+in `docs/`, the READMEs and comments anywhere else — follows three rules.
+
+- **Change one, check them all.** When a change touches a document, or
+  changes anything a document describes, search the whole repository for
+  every other place that says the same thing, and update each of them in
+  the same pull request. Documents that disagree with each other are as
+  wrong as documents that disagree with the code.
+- **When a practice is retired, say so, and say why.** Don't just delete the
+  old text. Say what we used to do, what we do now, and above all why it
+  changed: the history shows what changed, but only the documents can say
+  why.
+- **No code in documents.** A procedure of more than one command, and
+  anything the repository depends on, lives in a script; the document names
+  the script, says when to run it and what a pass means, so the two can't
+  drift apart. A single command that only runs one of our scripts, or a
+  standard command a person types once (`git clone <url>`, `gh auth
+  login`), may stay in the text. Documents written before this rule still
+  hold command blocks; moving them into scripts is TODO.md, T55.
+
 ## Reviewing a pull request
 
 Before a pull request is merged, it goes through rounds of independent
@@ -273,7 +295,8 @@ is wrong is for a person to decide.
    Lambdas and the site; CloudFormation and IAM; Python; HTML, CSS and
    accessibility for `src/`, measured against the website's principles;
    gitleaks rules and Go regex semantics; and Markdown, where every statement
-   must be true of the code. Plus the lessons below.
+   must be true of the code and follow [Keeping the documents
+   right](#keeping-the-documents-right). Plus the lessons below.
 3. **Test, don't assert.** Where a claim can be checked — a regex, a range, an
    exit code, a hook, a workflow path — the reviewer runs it and quotes the
    result, failure paths included, and for anything that is run, both its exit
