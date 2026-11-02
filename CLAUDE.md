@@ -495,6 +495,9 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   `visibility:hidden` is skipped, and a page's own rules (a title, a
   language) still pass, so a page whose content a mistake hides passes with
   nothing looked at. Check that there was something shown to examine.
+  Content made invisible by `opacity: 0` or clipped away by `overflow` is a
+  half-way case: axe still checks its structure (alt text, names) but
+  measures no contrast for it, as it isn't painted.
 - zizmor `--offline` silently skips the audits that check a pinned SHA
   against its repository; they need a token (`contents: read` is enough).
 
