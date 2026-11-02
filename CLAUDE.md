@@ -107,11 +107,11 @@ either way. *Falls short*: a gap, described in its row.
     GitHub, or an approval given before later pushes, doesn't count. If
     approval comes before review is done (see below), say so and ask.
   - Before merging, check that the `gitleaks` check (the job in **Check for
-    secrets**) and the `(gate)` jobs of **Security scan** passed on the head
-    commit, and note that commit's SHA:
-    `gh pr view <n> --json headRefOid,statusCheckRollup`. The `(report)`
-    jobs pass whatever they count, so their success says nothing about
-    findings.
+    secrets**) and every job of **Security scan** passed on the head commit,
+    and note that commit's SHA:
+    `gh pr view <n> --json headRefOid,statusCheckRollup`. A `(report)` job
+    passes whatever it counts, so its success says nothing about findings;
+    but one that failed means its tool didn't run at all.
   - Write the subject (without the pull request number; the merge command adds
     it) and the message yourself, accurate for the change as merged and
     neutral, outside the checkout. Before merging, check exactly what will be
@@ -245,7 +245,9 @@ as `docs/field-guide.html`), and comments anywhere — follows three rules.
   drift apart. A single command may stay in the text: one that only runs one
   of our scripts, or one standard command such as `git clone <url>`, `gh
   auth login` or `gh pr merge <n> --squash`. Two or more commands that must
-  run together are a procedure, and belong in a script. A comment in code
+  run together are a procedure, and belong in a script. Data a script reads
+  from a document, such as the `- target:` lines in the board's training
+  lessons, is data rather than code, and may stay. A comment in code
   describes the code next to it rather than giving steps to follow, so the
   first two rules apply to it and this one doesn't. Documents written before
   this rule still hold command blocks; moving them into scripts is TODO.md,
