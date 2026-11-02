@@ -208,7 +208,8 @@ was done.
   item learned after approval waits for a `docs` pull request.
 - **When an item is done**, the pull request that does it removes its row from
   TODO.md. Every pull request adds an entry to CHANGELOG.md before it is
-  approved: under the date it is written (not moved later, which would need
+  approved: under the date it is written, in the maintainer's own time zone
+  as the commits record it (not moved later, which would need
   approving again), its title (the squash subject it will merge with) and
   number, what changed, and the IDs it closed. Dependabot's dependency updates
   are the exception: the git history records them, and a row such a merge
