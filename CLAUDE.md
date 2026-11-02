@@ -225,8 +225,10 @@ was done.
 
 ## Keeping the documents right
 
-Every document in the repository — the `.md` files at the top, the guides
-in `docs/`, the READMEs and comments anywhere else — follows three rules.
+Every document in the repository — every `.md` file wherever it is (the
+ones at the top, the guides in `docs/`, the READMEs, the board's training
+pages in `src/admin/training/`), the other pages written for people (such
+as `docs/field-guide.html`), and comments anywhere — follows three rules.
 
 - **Change one, check them all.** When a change touches a document, or
   changes anything a document describes, search the whole repository for
@@ -318,7 +320,8 @@ is wrong is for a person to decide.
    exit code, a hook, a workflow path — the reviewer runs it and quotes the
    result, failure paths included, and for anything that is run, both its exit
    code and its output. A safety check in the changed code that can pass
-   without checking is always blocking.
+   without checking, on any input within the stated scope, is always
+   blocking.
 4. **Findings**, each with file and line, what is wrong, why it matters
    (written for someone new to the repository), evidence, a fix, and
    *verified* or *suspected*. Ranked blocking, should fix, nit, question.
@@ -330,8 +333,11 @@ is wrong is for a person to decide.
      missing — where a reader would act on it, or a breach of a rule in this
      file.
    - **Nit** or **question**: a case only a deliberate attacker would set
-     up, a widening of what the change claims to cover, and wording,
-     placement or completeness that wouldn't mislead anyone. A widening
+     up, when the stated threat model leaves deliberate attackers out (a
+     pull request whose threat model is abuse, such as a public form's
+     abuse controls, judges those cases as real); a widening of what the
+     change claims to cover; and wording, placement or completeness that
+     wouldn't mislead anyone. A widening
      worth doing becomes a TODO.md item, not a reason to hold the merge.
 5. **The author verifies before fixing.** Reproduce each finding. One that
    doesn't reproduce is recorded as such, with the evidence, and not fixed.
