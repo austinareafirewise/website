@@ -73,7 +73,7 @@ either way. *Falls short*: a gap, described in its row.
 
 | # | Status | As found |
 | --- | --- | --- |
-| 1 | Falls short | Scripted checks (a subset of WCAG 2.2 AA, not a full audit, and not yet in the repository) pass on every public page — language, image text alternatives, form labels, landmarks, unique ids, skip link, text contrast — with two exceptions: on most pages the footer's headings skip levels — an `h4` after an `h2`, or straight after the page's `h1` where no heading comes between — and the three text-size buttons are each named only "A". Not yet checked: keyboard use and focus, screen readers, dark mode, small screens. |
+| 1 | Falls short | Checked on every push since 2026-11-01 (`.github/a11y/`, docs/08 §4.4): axe's WCAG 2.2 A and AA rules pass on all 14 pages in normal and dark mode, on a 320-pixel phone, and with the site's scripts blocked, and Tab reaches every control with focus visible. Short of the principle: four pages (about, evacuation, Firewise communities, prepare your home) scroll sideways on a phone (WCAG 1.4.10); on most pages the footer's headings skip levels; the emergency banner sits outside every landmark; the training page has no main landmark; and the three text-size buttons are each named only "A". Not yet checked: a real screen reader, and the admin pages behind sign-in. |
 | 2 | Falls short | The information pages work without JavaScript, and the pages that need it say so (though the home page's note leaves out the burn ban). News, the board, resources, and the home page's news headlines, notices, fire danger and burn ban need it, though they could be published as HTML; the sign-up and manage forms need it too. |
 | 3 | Believed met | No ad code and no ad hosts in `src/`. AdBlock found nothing to block, with a system-wide ad blocker also running; not yet checked with AdGuard on its own. |
 | 4 | Meets | No analytics or tracking code, and no cookies on the public pages. Local storage holds only the text-size choice, once a visitor makes one, and it never leaves the browser. The admin pages keep their own state in session storage. |
@@ -107,7 +107,8 @@ either way. *Falls short*: a gap, described in its row.
     GitHub, or an approval given before later pushes, doesn't count. If
     approval comes before review is done (see below), say so and ask.
   - Before merging, check that the `gitleaks` check (the job in **Check for
-    secrets**) and every job of **Security scan** passed on the head commit,
+    secrets**), every job of **Security scan** and **Accessibility check**
+    passed on the head commit,
     and note that commit's SHA:
     `gh pr view <n> --json headRefOid,statusCheckRollup`. A `(report)` job
     passes whatever it counts, so its success says nothing about findings;
@@ -126,6 +127,12 @@ either way. *Falls short*: a gap, described in its row.
   - Then merge, pinned to the commit that was checked:
     `gh pr merge <n> --squash --delete-branch --match-head-commit <sha>
     --subject "<subject> (#<n>)" --body-file <message-file>`.
+- **Warn before an OS prompt.** Before running anything likely to make the
+  maintainer's computer ask a question — a local server (macOS asks whether
+  the program may "find devices on your local network"), a newly downloaded
+  program's first run, a tool reading Documents, Desktop or Downloads, the
+  keychain, `sudo` — say so first, why, and which answer is safe. A server
+  bound to 127.0.0.1 works whether or not local-network access is allowed.
 - **Force-pushing** a pull request branch needs the maintainer's explicit OK
   each time, and uses `--force-with-lease=<branch>:<expected-sha>`. Claude
   never force-pushes `main`; rewriting its history, if that is ever needed,
