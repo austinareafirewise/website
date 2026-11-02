@@ -3,12 +3,12 @@
 //
 //     node .github/a11y/check.mjs
 //
-// Run from anywhere in the checkout, with the pinned tools installed
-// (`npm ci` in .github/a11y/) and Playwright's Chromium available (the
-// workflow's container has it). It serves src/ itself, on 127.0.0.1 only,
-// and blocks every request to any other host, so a page is checked as a
-// visitor with every blocker on would see it (principle 11). Content the
-// pages fetch (news, notices, fire danger, the board) isn't in the
+// Run from anywhere: it checks the checkout it is in. It needs the pinned
+// tools installed (`npm ci` in .github/a11y/) and Playwright's Chromium
+// available (the workflow's container has it). It serves src/ itself, on
+// 127.0.0.1 only, and blocks every request to any other host, so a page is
+// checked as a visitor with every blocker on would see it (principle 11).
+// Content the pages fetch (news, notices, fire danger, the board) isn't in the
 // repository, so those parts are checked in their empty or no-content
 // state only (TODO.md, T76).
 //
@@ -42,12 +42,14 @@ import { execFileSync } from "node:child_process";
 import { createServer } from "node:http";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { extname, join, resolve, sep } from "node:path";
+import { dirname, extname, join, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const WCAG = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const fail = msg => { console.log(`::error title=accessibility::${msg}`); process.exitCode = 1; throw new Error(msg); };
 
-const root = execFileSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8" }).trim();
+// The checkout this script is in, wherever it is run from.
+const root = execFileSync("git", ["rev-parse", "--show-toplevel"], { cwd: dirname(fileURLToPath(import.meta.url)), encoding: "utf8" }).trim();
 const site = join(root, "src");
 const pages = execFileSync("git", ["-c", "core.quotePath=false", "ls-files", "-z", "--", "src"], { cwd: root, encoding: "utf8" })
   .split("\0").filter(f => /\.html?$/i.test(f)).map(f => "/" + f.slice("src/".length));
@@ -66,10 +68,11 @@ const SAMPLES = {
   "dark.html": `${head}<style>@media (prefers-color-scheme: dark){body{background:#000}.t{color:#222}}</style></head><body><main><h1>Sample</h1><p class="t">Faint only in the dark.</p></main></body></html>`,
   // Text that is too faint only on a narrow screen.
   "phone.html": `${head}<style>@media (max-width: 400px){.t{color:#ccc;background:#fff}}</style></head><body><main><h1>Sample</h1><p class="t">Faint only on a phone.</p></main></body></html>`,
-  // An image with no text alternative that only a visitor without JavaScript
-  // sees, and a script that would hide it if it ran.
-  "noscript.html": `${head}</head><body><main><h1>Sample</h1><noscript><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw="></noscript><p id="js">Script ran.</p><script src="sample.js"></script></main></body></html>`,
-  "sample.js": `document.getElementById("js").textContent = "JavaScript is on";`,
+  // Both halves of no-JavaScript mode: an image with no text alternative
+  // that only a visitor without JavaScript sees, and a button that only its
+  // script gives a name.
+  "noscript.html": `${head}</head><body><main><h1>Sample</h1><noscript><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw="></noscript><button id="b"></button><script src="sample.js"></script></main></body></html>`,
+  "sample.js": `document.getElementById("b").setAttribute("aria-label", "Named by a script");`,
   // A box too wide for a phone.
   "reflow.html": `${head}<style>.w{width:600px}</style></head><body><main><h1>Sample</h1><div class="w">Too wide for a phone.</div></main></body></html>`,
   // A heading that skips a level.
@@ -253,7 +256,7 @@ const CHECKS = [
   { name: "WCAG A and AA (normal)", kind: gate, mode: "normal", run: (p, path) => axe(p, path, WCAG), sample: "wcag.html" },
   { name: "WCAG A and AA (dark)", kind: gate, mode: "dark", run: (p, path) => axe(p, path, WCAG), sample: "dark.html", onlyHere: true },
   { name: "WCAG A and AA (phone)", kind: gate, mode: "phone", run: (p, path) => axe(p, path, WCAG), sample: "phone.html", onlyHere: true },
-  { name: "WCAG A and AA (no JavaScript)", kind: gate, mode: "nojs", run: (p, path) => axe(p, path, WCAG), sample: "noscript.html", onlyHere: true },
+  { name: "WCAG A and AA (no JavaScript)", kind: gate, mode: "nojs", run: (p, path) => axe(p, path, WCAG), sample: "noscript.html", onlyHere: true, expect: ["image-alt", "button-name"] },
   { name: "keyboard (desktop): traps", kind: gate, mode: "normal", run: p => keyboard(p), sample: "trap.html", expect: "keyboard trap" },
   { name: "keyboard (desktop): visible focus", kind: gate, mode: "normal", run: p => keyboard(p), sample: "focus.html", expect: "no visible focus", noPages: true },
   { name: "keyboard (desktop): focus off screen", kind: gate, mode: "normal", run: p => keyboard(p), sample: "offscreen.html", expect: "off screen", noPages: true },
@@ -267,7 +270,8 @@ try {
   for (const c of CHECKS) {
     const path = "/__sample__/" + c.sample;
     const found = await withPage(c.mode, path, (p, errors) => c.run(p, path, errors));
-    if (!found.length || (c.expect && !found.some(f => f.includes(c.expect))))
+    // Every finding a sample is built to give must be there.
+    if (!found.length || ![].concat(c.expect ?? []).every(e => found.some(f => f.includes(e))))
       fail(`${c.name} didn't catch its known-bad sample (${c.sample}): the check isn't working`);
     // A mode's sample must pass in normal mode, or its finding doesn't
     // prove the mode was applied.
