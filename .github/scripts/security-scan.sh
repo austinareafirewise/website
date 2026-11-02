@@ -7,7 +7,8 @@
 #   1. Refuse the ways the tool offers to silence a finding in the files it
 #      reads (inline comments, config files it would pick up on its own).
 #      Exceptions live in one visible place: this script and .github/scan/.
-#   2. List what it is to read from `git ls-files`, and fail if that is empty.
+#   2. List what it is to read (the tracked files, or for TruffleHog and
+#      exiftool every commit in the history), and fail if that is empty.
 #   3. Run it on a sample made here that it must catch, and fail if it
 #      doesn't: a scanner that can't find anything is a scanner that passes.
 #   4. Run it on the repository. A tool error, or proof that it read nothing,
@@ -332,7 +333,10 @@ exiftool_scan() {  # files...
                 -InternalSerialNumber -Company -Manager -Copyright -Rights
                 -RegionName -PersonInImage -City -Sub-location -State
                 -Country -Location* -*Email* -*AgentTitle)
-    exiftool -json -G1 -a -q -q "${tags[@]}" -- "$@" > "$work/out" 2> "$work/err" || true
+    # -ee reads what is embedded too (a photo inside a PDF, a video's own
+    # tracks); -G3:1 gives an embedded document's tags keys of their own
+    # (Doc1:IFD0:Artist), so they don't overwrite the outer file's.
+    exiftool -json -G3:1 -a -ee -q -q "${tags[@]}" -- "$@" > "$work/out" 2> "$work/err" || true
     jq -e 'type == "array"' "$work/out" > /dev/null 2>&1 || fail "exiftool gave no JSON report: $(cat "$work/err")"
     # One entry per file, and none it couldn't read.
     [ "$(jq length "$work/out")" -eq "$#" ] || fail "exiftool read $(jq length "$work/out") of $# files"
@@ -508,6 +512,8 @@ EOF
     declare -A seen=()
     targets=()
     for c in "${commits[@]}"; do
+        git -c core.quotePath=false ls-tree -r -z --full-tree "$c" > "$work/tree" \
+            || fail "couldn't list the files in commit ${c:0:12}"
         while IFS= read -r -d '' entry; do
             meta=${entry%%$'\t'*} path=${entry#*$'\t'}
             read -r _ type oid <<<"$meta"
@@ -525,7 +531,7 @@ EOF
             git cat-file blob "$oid" > "$copy"
             label[$copy]="$path (blob ${oid:0:12})" origin[$copy]="$path"
             targets+=("$copy")
-        done < <(git -c core.quotePath=false ls-tree -r -z --full-tree "$c")
+        done < "$work/tree"
     done
     need "${targets[@]}"
     # The smallest valid PNG, then a location and a name written into it.
@@ -540,6 +546,36 @@ PY
     exiftool -q -overwrite_original -GPSLatitude=30.27 -GPSLatitudeRef=N \
         -GPSLongitude=97.74 -GPSLongitudeRef=W -Artist="Sample Person" "$sample/t.png"
     expect_caught "a picture with a location and a name in it" exiftool_scan "$sample/t.png"
+    # The same kind of photo as a JPEG inside a PDF: proof embedded pictures
+    # are read. The JPEG starts as the smallest valid one (1x1 grey, 159
+    # bytes), and exiftool writes the location and name into it.
+    python3 - "$sample/p.jpg" <<'PY'
+import base64, sys
+open(sys.argv[1], "wb").write(base64.b64decode(
+    "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkz"
+    "ODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/wAALCAABAAEBAREA/8QAFAABAAAAAAAA"
+    "AAAAAAAAAAAAAf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AH//Z"))
+PY
+    exiftool -q -overwrite_original -GPSLatitude=30.27 -GPSLatitudeRef=N \
+        -Artist="Sample Person" "$sample/p.jpg"
+    python3 - "$sample/p.jpg" "$sample/t.pdf" <<'PY'
+import sys
+jpg = open(sys.argv[1], "rb").read()
+objs = [b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1 1] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>",
+        b"<< /Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /DCTDecode /Length %d >>\nstream\n" % len(jpg) + jpg + b"\nendstream",
+        b"<< /Length 18 >>\nstream\nq 1 0 0 1 0 0 cm /Im0 Do Q\nendstream"]
+out, offsets = b"%PDF-1.4\n", []
+for i, obj in enumerate(objs, 1):
+    offsets.append(len(out))
+    out += b"%d 0 obj\n" % i + obj + b"\nendobj\n"
+xref = len(out)
+out += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objs) + 1) + b"".join(b"%010d 00000 n \n" % o for o in offsets)
+out += b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (len(objs) + 1, xref)
+open(sys.argv[2], "wb").write(out)
+PY
+    expect_caught "a PDF with that kind of photo inside it" exiftool_scan "$sample/t.pdf"
     exiftool_scan "${targets[@]}" ;;
 
   *)
