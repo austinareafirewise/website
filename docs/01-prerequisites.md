@@ -9,8 +9,9 @@ not need to finish in one sitting.
 You will need:
 
 - An email address you control
-- A credit or debit card (AWS requires one even though this site costs a few
-  dollars a year)
+- A credit or debit card (AWS requires one even though the site itself costs
+  about $20 a year; the optional board-editing and members systems add a
+  few dollars a month, [05-runbook.md](05-runbook.md))
 - A phone that can receive a call or text
 - A password manager, or somewhere genuinely safe to write two passwords
 
@@ -22,8 +23,10 @@ Go to <https://aws.amazon.com/> and choose **Create an AWS Account**.
 
 Use the organization's email address if one exists. If it does not, a personal
 address is fine to start — **an AWS account's root email can be changed later**,
-so this is not a decision you are locked into. Put it on the list in
-[05-runbook.md](05-runbook.md) to revisit.
+so this is not a decision you are locked into. Put it on
+[TODO.md](../TODO.md) to revisit (T42 covers this one). This used to say to
+put it on a list in 05-runbook.md; TODO.md is now the one list of
+everything still to do, so nothing waiting is spread across several files.
 
 Choose the **Basic (free)** support plan.
 
@@ -200,7 +203,7 @@ tidiest. Pointing the existing registrar at Route 53's nameservers also works.
 Either way you need a hosted zone, below.
 
 **To register a new domain in AWS:** console search → **Route 53** →
-**Registered domains** → **Register domains**. Roughly $13–15 a year for a
+**Registered domains** → **Register domains**. Roughly $15–16 a year for a
 `.com` or `.org`. Registering here creates the hosted zone automatically, which
 is why it is the easiest path.
 

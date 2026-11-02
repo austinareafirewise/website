@@ -9,7 +9,8 @@ a developer, and to be reusable for other sites and other organizations.
 ## What you end up with
 
 - A website on AWS Amplify Hosting, on your own domain, with HTTPS
-- Editing by saving a file to GitHub — live in about a minute
+- Editing through a pull request on GitHub — live about a minute after it
+  is merged
 - No AWS keys in GitHub. The connection is short-lived tokens that expire in
   minutes and only work from your repository, on your branch
 - A permission scoped so tightly that the worst a compromised workflow can do
@@ -18,7 +19,10 @@ a developer, and to be reusable for other sites and other organizations.
 - A cost alert, because a volunteer organization should hear about a surprise
   bill from an email rather than a card statement
 
-Under **$25 a year**, nearly all of it the domain name.
+Under **$25 a year** for the site itself, nearly all of it the domain
+registration and its hosted zone.
+The optional board-editing and members systems add a few dollars a month
+([05-runbook.md](05-runbook.md), "What this costs to run").
 
 ## The steps
 
@@ -69,13 +73,15 @@ site.
 
 Register the AWS account to an organization email too, if one exists. If it
 does not yet, a personal address works to start — AWS root email can be changed
-later — but put it on the list in [05-runbook.md](05-runbook.md) rather than
-discovering it at a bad moment.
+later — but put it on [TODO.md](../TODO.md) (T42 covers this one) rather
+than discovering it at a bad moment. This used to say to put it on a list in
+05-runbook.md; TODO.md is now the one list of everything still to do, so
+nothing waiting is spread across several files.
 
 **Who can publish.** Every change reaches `main` through a pull request, even
-when one person makes and merges it, and merging is what publishes. GitHub
-enforces that with a branch ruleset —
-[08-making-changes.md](08-making-changes.md) §2.4.
+when one person makes and merges it, and merging is what publishes. A branch
+ruleset makes GitHub enforce it, once it is set up as in
+[08-making-changes.md](08-making-changes.md) §2.4 (TODO.md, T3).
 
 ## If you get stuck
 
@@ -93,7 +99,8 @@ fixes. The two that account for most lost time:
 ## Scope
 
 This covers hosting a static site: HTML, CSS, JavaScript, images. No server, no
-database, no build step.
+database, no build step. (The optional board-editing and members systems,
+below, are the parts with a database.)
 
 The optional board-editing area — notices and news from a browser, no GitHub —
 is [06-cms-design.md](06-cms-design.md) for how it works and

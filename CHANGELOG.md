@@ -8,6 +8,23 @@ Work from before this file started is in the git history.
 
 ## 2026-11-01
 
+- **Keep the documents in sync, and say why practices changed**
+  ([#9](https://github.com/austinareafirewise/website/pull/9)). CLAUDE.md
+  gains three rules for every document: when one changes, check every other
+  document for what must change with it; when a practice is retired, say
+  what it was, what replaced it and why; and no code in documents (the
+  existing command blocks move into scripts in T55). The docs are brought in
+  line with the security scan (PR #8), with pull requests for every change,
+  including rollbacks, with the costs and teardown of all three stacks, and
+  with the content and members systems being built and live. Closes T38, T39
+  and T40, and the docs parts of T26; rewrites T37 (sign-in on our own
+  domain); updates T4, T33, T34, T47 and T49; and adds T55 to T63. T33, T57 and
+  T61 record what test sign-ups on the live site showed. CLAUDE.md also now
+  asks for every security scan job, not only gitleaks, to pass before a merge;
+  dates changelog entries in the maintainer's own time zone; and has every
+  reviewer's brief state the maintainer's own observations as given and the
+  bar for each rank of finding.
+
 - **Run security scanners on every push**
   ([#8](https://github.com/austinareafirewise/website/pull/8)). A new
   workflow runs nine scanners, each in a job of its own: actionlint,

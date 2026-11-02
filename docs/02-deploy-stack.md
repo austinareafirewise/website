@@ -53,12 +53,17 @@ name.
 blank** if you are not attaching a domain yet; the site still works on its free
 address and you can add the domain later by updating this same stack.
 
-**Email for cost alerts** — worth filling in. This site should cost a few
-dollars a year; an email is how you find out if something is wrong before a
-card statement does.
+**Email for cost alerts** — worth filling in. The site itself should cost
+about $20 a year, and the board-editing and members systems a few dollars
+a month more ([05-runbook.md](05-runbook.md)); an email is how you find out
+if something is wrong before a card statement does.
 
-**Alert if the month exceeds** — `10` dollars is a sensible smoke alarm. It
-warns. It does not cap or stop anything.
+**Alert if the month exceeds** — a smoke alarm, not a limit: it warns, and
+does not cap or stop anything. It covers every charge in the account, so the
+month the domain renews (about $15–16) goes over `10` every year, even for
+the site alone. The warning comes at 80% of the figure, so choose one whose
+80% is above the renewal month, such as `25`, or expect that one alert a
+year; with the board-editing and members systems too, see TODO.md, T58.
 
 **Create the GitHub identity provider?** — `yes` for a fresh account, `no` if
 step 1.9 showed one already exists.

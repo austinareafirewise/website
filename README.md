@@ -11,7 +11,7 @@ written.
 
 1. Edit files under `src/`, on a branch of their own.
 2. Push the branch and open a pull request; merge it once **Check for
-   secrets** passes and you've read the changes.
+   secrets** and **Security scan** pass and you've read the changes.
 3. `.github/workflows/deploy.yml` checks `src/`, zips it and pushes it to AWS
    Amplify.
 
@@ -186,16 +186,18 @@ Deploying changes to it: `infra/README.md`.
 
 ## Contact address and mailing list
 
-Both are switched on in `src/js/config.js`, and both are off right now.
+- `window.AAFA_CONTACT_EMAIL` in `src/js/config.js` is `null`, so the site
+  renders **no** mailto links. Set it to the Alliance's real address once a
+  monitored mailbox exists (TODO.md, T36).
+- The sign-up form posts to the members API, which stores the person as
+  unconfirmed until they confirm by email or text. How it works:
+  [docs/07](docs/07-members-and-communications-design.md); the stack:
+  [`infra/README.md`](infra/README.md).
 
-- `window.AAFA_CONTACT_EMAIL` is `null`, so the site renders **no** mailto
-  links. Set it to the Alliance's real address once a mailbox exists.
-- `window.AAFA_SIGNUP_ENDPOINT` is unset, so the form stores nothing and says
-  so plainly, pointing at official channels instead.
-
-See `infra/README.md` for the planned collection path and what it needs —
-double opt-in, unsubscribe, CORS, rate limiting, a privacy statement — before
-it handles a real address.
+This section used to say the mailing list was switched off and the form
+stored nothing, with a setting, `AAFA_SIGNUP_ENDPOINT`, to point it at a
+backend once one existed. The members system has since been built and the
+form always uses it, so that setting no longer exists.
 
 ## Brand assets
 

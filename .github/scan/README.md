@@ -7,7 +7,7 @@ through `.github/scripts/security-scan.sh`:
 | --- | --- | --- |
 | actionlint (with shellcheck) | workflows, including their `run:` blocks | gate |
 | shellcheck | shell scripts (`.sh`, or a shell `#!` line) | gate |
-| TruffleHog | every commit in the history | gate |
+| TruffleHog | every commit in the history, and the files as they are in HEAD | gate |
 | cfn-lint | CloudFormation templates | gate |
 | Bandit | Python | gate |
 | zizmor | workflows, actions, Dependabot's config (online, read-only token) | gate |

@@ -107,8 +107,12 @@ either way. *Falls short*: a gap, described in its row.
     GitHub, or an approval given before later pushes, doesn't count. If
     approval comes before review is done (see below), say so and ask.
   - Before merging, check that the `gitleaks` check (the job in **Check for
-    secrets**) passed on the head commit, and note that commit's SHA:
-    `gh pr view <n> --json headRefOid,statusCheckRollup`.
+    secrets**) and every job of **Security scan** passed on the head commit,
+    and note that commit's SHA:
+    `gh pr view <n> --json headRefOid,statusCheckRollup`. A `(report)` job
+    passes whatever it counts, so its success says nothing about findings;
+    but one that failed means the check didn't do its job (the tool failed,
+    read nothing, missed its known sample, or found a suppression).
   - Write the subject (without the pull request number; the merge command adds
     it) and the message yourself, accurate for the change as merged and
     neutral, outside the checkout. Before merging, check exactly what will be
@@ -205,7 +209,8 @@ was done.
   item learned after approval waits for a `docs` pull request.
 - **When an item is done**, the pull request that does it removes its row from
   TODO.md. Every pull request adds an entry to CHANGELOG.md before it is
-  approved: under the date it is written (not moved later, which would need
+  approved: under the date it is written, in the maintainer's own time zone
+  as the commits record it (not moved later, which would need
   approving again), its title (the squash subject it will merge with) and
   number, what changed, and the IDs it closed. Dependabot's dependency updates
   are the exception: the git history records them, and a row such a merge
@@ -218,6 +223,36 @@ was done.
   rule for such findings; the other sections point here.
 - **To choose what to do next**, start at the top of TODO.md: high
   importance, low difficulty first.
+
+## Keeping the documents right
+
+Every document in the repository — every `.md` file wherever it is (the
+ones at the top, the guides in `docs/`, the READMEs, the board's training
+pages in `src/admin/training/`), the other pages written for people (such
+as `docs/field-guide.html`), and comments anywhere — follows three rules.
+
+- **Change one, check them all.** When a change touches a document, or
+  changes anything a document describes, search the whole repository for
+  every other place that says the same thing, and update each of them in
+  the same pull request. Documents that disagree with each other are as
+  wrong as documents that disagree with the code.
+- **When a practice is retired, say so, and say why.** Don't just delete the
+  old text. Say what we used to do, what we do now, and above all why it
+  changed: the history shows what changed, but only the documents can say
+  why.
+- **No code in documents.** A procedure of more than one command, and
+  anything the repository depends on, lives in a script; the document names
+  the script, says when to run it and what a pass means, so the two can't
+  drift apart. A single command may stay in the text: one that only runs one
+  of our scripts, or one standard command such as `git clone <url>`, `gh
+  auth login` or `gh pr merge <n> --squash`. Two or more commands that must
+  run together are a procedure, and belong in a script. Data a script reads
+  from a document, such as the `- target:` lines in the board's training
+  lessons, is data rather than code, and may stay. A comment in code
+  describes the code next to it rather than giving steps to follow, so the
+  first two rules apply to it and this one doesn't. Documents written before
+  this rule still hold command blocks; moving them into scripts is TODO.md,
+  T55.
 
 ## Reviewing a pull request
 
@@ -258,6 +293,15 @@ is wrong is for a person to decide.
    pushes, no comments or approvals on the pull request, no triggering
    workflows. It tests in throwaway repositories under a scratch folder, never
    in the checkout.
+
+   Two more things go in every brief, because rounds without them don't
+   converge:
+   - **What the maintainer saw for themself is given.** Something a
+     maintainer observed that the reviewer can't repeat — a test sign-up on
+     the live site, say — is stated as fact in the brief, and the reviewer
+     checks the rest against it rather than re-deriving or doubting it.
+   - **How to judge a finding against the scope.** Spell out the bar (step
+     4 below), in the brief's own terms for this pull request.
 2. **The standard** is [the one above](#the-standard): current best practice,
    applied to every line the pull request changes. Anything below it that the
    reviewer sees in code the pull request doesn't touch goes in a separate
@@ -273,16 +317,31 @@ is wrong is for a person to decide.
    Lambdas and the site; CloudFormation and IAM; Python; HTML, CSS and
    accessibility for `src/`, measured against the website's principles;
    gitleaks rules and Go regex semantics; and Markdown, where every statement
-   must be true of the code. Plus the lessons below.
+   must be true of the code and follow [Keeping the documents
+   right](#keeping-the-documents-right). Plus the lessons below.
 3. **Test, don't assert.** Where a claim can be checked — a regex, a range, an
    exit code, a hook, a workflow path — the reviewer runs it and quotes the
    result, failure paths included, and for anything that is run, both its exit
    code and its output. A safety check in the changed code that can pass
-   without checking is always blocking.
+   without checking, on any input within the stated scope, is always
+   blocking.
 4. **Findings**, each with file and line, what is wrong, why it matters
    (written for someone new to the repository), evidence, a fix, and
    *verified* or *suspected*. Ranked blocking, should fix, nit, question.
    "Nothing material found" is a valid result and must not be padded.
+   Judged against the pull request's stated scope:
+   - **Blocking** or **should fix** needs a realistic problem: an honest
+     mistake a maintainer or volunteer could make, a check that can pass
+     without having looked, a statement that is false or misleading — or
+     missing — where a reader would act on it, or a breach of a rule in this
+     file.
+   - **Nit** or **question**: a case only a deliberate attacker would set
+     up, when the stated threat model leaves deliberate attackers out (a
+     pull request whose threat model is abuse, such as a public form's
+     abuse controls, judges those cases as real); a widening of what the
+     change claims to cover; and wording, placement or completeness that
+     wouldn't mislead anyone. A widening
+     worth doing becomes a TODO.md item, not a reason to hold the merge.
 5. **The author verifies before fixing.** Reproduce each finding. One that
    doesn't reproduce is recorded as such, with the evidence, and not fixed.
    Reviewers are wrong sometimes, and so are authors.

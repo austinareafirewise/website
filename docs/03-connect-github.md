@@ -1,7 +1,8 @@
 # 3 — Connect GitHub to AWS
 
-After this, saving a change to GitHub publishes the website. That is the whole
-workflow from then on.
+After this, merging a change into `main` on GitHub publishes the website.
+That is the whole workflow from then on: every change after the first goes
+through a pull request ([08-making-changes.md](08-making-changes.md) §2.2).
 
 About 15 minutes.
 
@@ -64,6 +65,13 @@ git push
 
 If Git asks you to sign in, a browser window opens — approve it there. That
 happens once.
+
+This first commit is the only one that goes straight to `main`: a new
+repository has no `main` yet for a pull request to merge into. Every change
+after it goes through a pull request
+([08-making-changes.md](08-making-changes.md) §2.2), so that the checks see
+it before it can reach the live site. Turn on the GitHub settings in 08 §2.4
+straight after this, and GitHub will refuse any later push to `main`.
 
 ## 3.4 Watch the first deploy
 
@@ -144,9 +152,9 @@ secrets and personal data before publishing; nothing else stands in the
 way.)
 
 The Alliance's rule is that every change goes through a pull request, even a
-lone maintainer's, so the secrets check gets its say before anything is
-live. Set up the branch ruleset that enforces it as described in
-[08-making-changes.md](08-making-changes.md) §2.4.
+lone maintainer's, so the secrets check and the security scan get their say
+before anything is live. Set up the branch ruleset that enforces it as
+described in [08-making-changes.md](08-making-changes.md) §2.4.
 
 ---
 

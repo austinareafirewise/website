@@ -1,6 +1,6 @@
 name: Deploy to Amplify
 
-# Push to main with a change under src/ and the site updates. That is the whole
+# Merge a change under src/ into main and the site updates. That is the whole
 # workflow: there is no build step, because the site is static files served as
 # written. `workflow_dispatch` exists to republish the current contents of main
 # without a content change (useful after an Amplify-side setting changes).

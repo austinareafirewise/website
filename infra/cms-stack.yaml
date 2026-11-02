@@ -76,9 +76,10 @@ Resources:
   #   AllowAdminCreateUserOnly — nobody can sign themselves up. A board
   #   member exists because someone with account access created them.
   #
-  #   DeletionProtection — a stack delete will NOT remove the pool, and
-  #   with it every board member's login, by accident. To retire the whole
-  #   thing on purpose, flip this to INACTIVE first.
+  #   DeletionProtection — a stack delete fails while this is ACTIVE,
+  #   rather than removing the pool, and with it every board member's
+  #   login, by accident. To retire the whole thing on purpose, flip this
+  #   to INACTIVE first (docs/05-runbook.md, "Delete everything").
   # ------------------------------------------------------------------
   UserPool:
     Type: AWS::Cognito::UserPool
