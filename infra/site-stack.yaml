@@ -115,8 +115,10 @@ Parameters:
     Default: 10
     MinValue: 1
     Description: >
-      This site should cost near zero. A low figure here is a smoke alarm, not
-      a limit — it warns, it does not stop anything.
+      The site itself should cost near zero, and the board-editing and
+      members systems a few dollars a month more (docs/05-runbook.md). A low
+      figure here is a smoke alarm, not a limit — it warns, it does not stop
+      anything.
 
   CreateGitHubOIDCProvider:
     Type: String
@@ -306,8 +308,9 @@ Resources:
           Prefix: www
 
   # ------------------------------------------------------------------
-  # Cost smoke alarm. A static site like this should cost a few dollars a
-  # year, nearly all of it the domain registration. A bill that climbs
+  # Cost smoke alarm. The static site alone should cost a few dollars a
+  # year, nearly all of it the domain registration; the board-editing and
+  # members stacks add a few dollars a month (docs/05-runbook.md). A bill that climbs
   # means something is wrong, and a volunteer organization should hear
   # about it from an email rather than from a card statement.
   # ------------------------------------------------------------------

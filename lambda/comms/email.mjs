@@ -16,10 +16,11 @@ let ses = null;
  *
  * A new SES account sits in a sandbox that only permits sending to verified
  * addresses, and a new domain identity takes time to verify by DNS. Either
- * one means a stranger's confirmation email will fail. The signup form asks
- * this first and says "not open yet" rather than accepting a sign-up it
- * cannot honour — an error after someone has typed their address is the
- * worst version of this.
+ * one means a stranger's confirmation email will fail. The sign-up asks this
+ * first: if email can't be sent yet, it still takes the sign-up, holds it
+ * unconfirmed, and sends the confirmation once sending works (api.mjs).
+ * It used to say "not open yet" and refuse instead; that turned away people
+ * who wanted to be on the list.
  *
  * Cached for the life of the container, and never fatal: if the check itself
  * fails we assume email works and let the real send report the truth.

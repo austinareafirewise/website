@@ -53,9 +53,10 @@ name.
 blank** if you are not attaching a domain yet; the site still works on its free
 address and you can add the domain later by updating this same stack.
 
-**Email for cost alerts** — worth filling in. This site should cost a few
-dollars a year; an email is how you find out if something is wrong before a
-card statement does.
+**Email for cost alerts** — worth filling in. The site itself should cost a
+few dollars a year, and the board-editing and members systems a few dollars
+a month more ([05-runbook.md](05-runbook.md)); an email is how you find out
+if something is wrong before a card statement does.
 
 **Alert if the month exceeds** — `10` dollars is a sensible smoke alarm. It
 warns. It does not cap or stop anything.

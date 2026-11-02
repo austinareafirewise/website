@@ -18,7 +18,7 @@ Work from before this file started is in the git history.
   including rollbacks, with the costs and teardown of all three stacks, and
   with the content and members systems being built and live. Closes T38, T39
   and T40, and the docs parts of T26; rewrites T37 (sign-in on our own
-  domain) and adds T55 and T56.
+  domain) and adds T55 to T58.
 
 ## 2026-11-01
 

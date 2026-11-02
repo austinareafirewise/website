@@ -472,7 +472,8 @@ T47).
 Every job first checks that its tool catches a known-bad sample, and fails
 if the tool errors or reads nothing. The ways the tools offer to silence a
 finding (inline comments, their own config files) are refused; the few
-exceptions are in `.github/scan/`, each with its reason.
+exceptions are in `.github/scan/` and `.github/scripts/security-scan.sh`,
+each with its reason.
 [`.github/scan/README.md`](../.github/scan/README.md) lists what each tool
 reads and how to move a pinned version.
 
@@ -491,7 +492,7 @@ reads and how to move a pinned version.
 | `git push` to `main` rejected | Working through pull requests is enforced (§2.4). Move the commit to a branch: `git switch -c <branch>`, push that |
 | `git push` of a branch rejected | Somebody else pushed to it first. `git pull`, resolve, push again |
 | **Check for secrets** failed | Its log names the rule, file and line, or the commit. Fix it on the branch and push again (§4.1) |
-| A **Security scan** `(gate)` job failed | Its log names the rule, file and line. Fix it on the branch and push again; if it says the tool "did not catch its known sample" or "read nothing", the check itself is broken (§4.3) |
+| A **Security scan** `(gate)` job failed | Its log names the rule, file and line. Fix it on the branch and push again; if instead it says the tool failed, read nothing, had nothing to scan or "did not catch its known sample", the check itself is broken (§4.3) |
 | Deploy stopped at "Check the site" | Something under `src/` looks like a secret or personal data, and nothing was published. Its log says what |
 | A page is blank in a browser | JavaScript may be off. Every page now says so rather than showing nothing |
 

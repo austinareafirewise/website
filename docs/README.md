@@ -9,7 +9,8 @@ a developer, and to be reusable for other sites and other organizations.
 ## What you end up with
 
 - A website on AWS Amplify Hosting, on your own domain, with HTTPS
-- Editing by saving a file to GitHub — live in about a minute
+- Editing through a pull request on GitHub — live about a minute after it
+  is merged
 - No AWS keys in GitHub. The connection is short-lived tokens that expire in
   minutes and only work from your repository, on your branch
 - A permission scoped so tightly that the worst a compromised workflow can do
@@ -18,7 +19,9 @@ a developer, and to be reusable for other sites and other organizations.
 - A cost alert, because a volunteer organization should hear about a surprise
   bill from an email rather than a card statement
 
-Under **$25 a year**, nearly all of it the domain name.
+Under **$25 a year** for the site itself, nearly all of it the domain name.
+The optional board-editing and members systems add a few dollars a month
+([05-runbook.md](05-runbook.md), "What this costs to run").
 
 ## The steps
 
@@ -95,7 +98,8 @@ fixes. The two that account for most lost time:
 ## Scope
 
 This covers hosting a static site: HTML, CSS, JavaScript, images. No server, no
-database, no build step.
+database, no build step. (The optional board-editing and members systems,
+below, are the parts with a database.)
 
 The optional board-editing area — notices and news from a browser, no GitHub —
 is [06-cms-design.md](06-cms-design.md) for how it works and

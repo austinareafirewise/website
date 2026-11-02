@@ -78,7 +78,7 @@ and the wording it accepts is at the top of `lambda/burnban/index.mjs`.
 | Functions | `aafa-comms-api`, `aafa-comms-sender`, `aafa-comms-events` |
 | Email | SES identity `austinareafirewise.org`, configuration set `aafa-comms`, events to SNS `aafa-comms-events` |
 | Signing key | Secrets Manager `aafa/comms/signing-key` — rotating it invalidates every outstanding confirm/unsubscribe/manage link |
-| SMS | `SmsProvider` parameter: `off` (current), `aws`, or `twilio` |
+| SMS | `SmsProvider` parameter: `off`, `aws`, or `twilio`; set now, but texts don't arrive yet (see the parameter table below) |
 
 Design and reasoning: [`../docs/07-members-and-communications-design.md`](../docs/07-members-and-communications-design.md).
 
@@ -105,9 +105,10 @@ that matter:
 #### Things only a person can do
 
 - **SES production access** — requested. The live API now reports email as
-  sendable, which `lambda/comms/email.mjs` reports only when AWS says
-  production access is granted and the domain is verified; confirm it in the
-  SES console (TODO.md, T33). A sign-up made while email can't be sent is
+  sendable. `lambda/comms/email.mjs` reports that when AWS says production
+  access is granted and the domain is verified, and also when the check
+  itself fails, so it suggests access was granted without proving it; confirm
+  it in the SES console (TODO.md, T33). A sign-up made while email can't be sent is
   stored unconfirmed, and its confirmation goes out once sending works. This
   used to say sign-ups were refused until access was granted; the code was
   changed because refusing turned away people who wanted to be on the list
@@ -124,8 +125,10 @@ that matter:
   ```
 
   Declared as NON_PROFIT, public announcements, digital-form opt-in, 1,000
-  messages a month. Numbers are already being collected and held unconfirmed
-  in the meantime.
+  messages a month. While `SmsProvider` was `off`, numbers were collected and
+  held unconfirmed until texting worked. With it set, a sign-up for texts
+  sends its confirmation code straight away, before the number is approved
+  (TODO.md, T57).
 
 - **Two more SMS gates after that.** The account's SMS tier is SANDBOX
   (texts only reach verified numbers) and the monthly text spend limit is $1,

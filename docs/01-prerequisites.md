@@ -9,8 +9,9 @@ not need to finish in one sitting.
 You will need:
 
 - An email address you control
-- A credit or debit card (AWS requires one even though this site costs a few
-  dollars a year)
+- A credit or debit card (AWS requires one even though the site itself costs
+  a few dollars a year; the optional board-editing and members systems add a
+  few dollars a month, [05-runbook.md](05-runbook.md))
 - A phone that can receive a call or text
 - A password manager, or somewhere genuinely safe to write two passwords
 

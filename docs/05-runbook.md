@@ -202,17 +202,26 @@ uses.
    on purpose when the stack is deleted (`DeletionPolicy: Retain`), because
    they hold people's names, email addresses and phone numbers. Decide what
    happens to that data, then delete those tables by hand in DynamoDB.
-2. **`aafa-cms`**, the content stack. Empty its content bucket first: S3
-   won't delete a bucket that still holds files, and the stack's deletion
-   stops there. Its content table is deleted with the stack.
+2. **`aafa-cms`**, the content stack. First switch off the board sign-in's
+   deletion protection (`DeletionProtection` on the user pool in
+   `infra/cms-stack.yaml`, `ACTIVE` so that no one removes every board
+   member's login by accident), and empty its content bucket: S3 won't delete
+   a bucket that still holds files. Either one left as it is stops the
+   stack's deletion. Its content table is deleted with the stack.
 3. **`aafa-site`**, the site stack. That removes the Amplify app, the role,
-   the domain association, and the budget.
+   the domain association, and the budget, and the GitHub identity provider
+   if this stack created it (`CreateGitHubOIDCProvider` left at `yes`). If
+   another site uses that provider, update this stack with
+   `CreateGitHubOIDCProvider` set to `no` before deleting it.
 
 Things none of them remove, on purpose:
 
 - **The Route 53 hosted zone and domain registration** — deleting a hosted zone
   breaks email for that domain too, so AWS makes you do it deliberately
-- **The GitHub identity provider**, if another site is using it
+- **The GitHub identity provider**, if it was created outside these stacks
+- **The deploy artifacts bucket** that holds the packaged Lambda code
+  (`aafa-deploy-artifacts-…`, in [infra/README.md](../infra/README.md)),
+  made by hand before the stacks; empty it and delete it in S3
 - **The toll-free number and its registration**, which were set up by hand
   ([infra/README.md](../infra/README.md)) and are billed monthly until
   released in AWS End User Messaging

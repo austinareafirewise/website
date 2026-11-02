@@ -1,7 +1,8 @@
 # 3 — Connect GitHub to AWS
 
-After this, saving a change to GitHub publishes the website. That is the whole
-workflow from then on.
+After this, merging a change into `main` on GitHub publishes the website.
+That is the whole workflow from then on: every change after the first goes
+through a pull request ([08-making-changes.md](08-making-changes.md) §2.2).
 
 About 15 minutes.
 
