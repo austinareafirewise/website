@@ -153,8 +153,9 @@ way.)
 
 The Alliance's rule is that every change goes through a pull request, even a
 lone maintainer's, so the secrets check, the security scan and the
-accessibility check get their say before anything is live. Set up the branch ruleset that enforces it as
-described in [08-making-changes.md](08-making-changes.md) §2.4.
+accessibility check get their say before anything is live. Set up the branch
+ruleset that enforces it as described in
+[08-making-changes.md](08-making-changes.md) §2.4.
 
 ---
 

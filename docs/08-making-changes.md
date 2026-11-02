@@ -420,13 +420,13 @@ The checks run in three places:
 
 The GitHub checks, **Check for secrets**, the `(gate)` jobs of **Security
 scan** and **Accessibility check**, are the ones a pull request must pass
-(§2.4), and they run whether or not anyone turned the hooks on. The hooks add catching a mistake
-before it leaves your computer at all. They don't run for everything: a `git
-merge` with no conflict runs only the commit-message hook, and a
-`cherry-pick`, `revert` or plain `rebase` with no conflict runs neither (an
-interactive rebase's `reword` runs both). After a conflict, a continued merge,
-`cherry-pick` or `revert` runs both, but `git rebase --continue` still runs
-neither. The GitHub check covers all of these. To turn them on, once per
+(§2.4), and they run whether or not anyone turned the hooks on. The hooks add
+catching a mistake before it leaves your computer at all. They don't run for
+everything: a `git merge` with no conflict runs only the commit-message hook,
+and a `cherry-pick`, `revert` or plain `rebase` with no conflict runs neither
+(an interactive rebase's `reword` runs both). After a conflict, a continued
+merge, `cherry-pick` or `revert` runs both, but `git rebase --continue` still
+runs neither. The GitHub check covers all of these. To turn them on, once per
 checkout:
 
 ```bash
@@ -494,9 +494,11 @@ reads and how to move a pinned version.
 
 **Accessibility check** opens every page under `src/` in a real browser, on
 every push, with requests to any other site blocked. axe's WCAG A and AA
-rules are checked in four modes (normal, dark, a 320-pixel phone, and the
-site's own scripts blocked), and a keyboard check makes sure Tab reaches
-every control and that focus can be seen. Those fail the job. Whether
+rules are checked in four modes (normal, dark, a 320-pixel phone, and no
+JavaScript), and a keyboard check at desktop and phone widths makes sure Tab
+reaches every control without getting stuck, and that focus can be seen.
+Those fail the job. The content the pages fetch isn't checked yet, only how
+they look without it (TODO.md, T76). Whether
 anything scrolls sideways on a phone, and axe's best-practice rules (heading
 order, landmarks), are listed in its log but don't fail it yet; each will
 once the TODO.md item that fixes it is done. Like the scanners, it first
@@ -520,7 +522,7 @@ how to run it on your own computer.
 | `git push` to `main` rejected | Working through pull requests is enforced (§2.4). Move the commit to a branch: `git switch -c <branch>`, push that |
 | `git push` of a branch rejected | Somebody else pushed to it first. `git pull`, resolve, push again |
 | **Check for secrets** failed | Its log names the rule, file and line, or the commit. Fix it on the branch and push again (§4.1) |
-| **Accessibility check** failed | Its log names the check, the page and the rule, with an example element. Fix it on the branch and push again (§4.4) |
+| **Accessibility check** failed | Its log names the check, the page and the rule, with an example element. Fix it on the branch and push again; if instead it says a check "didn't catch its known-bad sample", "axe ran no rules" or a page "didn't load", the check itself is broken (§4.4) |
 | A **Security scan** `(gate)` job failed | Its log names the rule, file and line. Fix it on the branch and push again; if instead it says the tool failed, read nothing, had nothing to scan or "did not catch its known sample", the check itself is broken (§4.3) |
 | Deploy stopped at "Check the site" | Something under `src/` looks like a secret or personal data, and nothing was published. Its log says what |
 | A page is blank in a browser | JavaScript may be off. Every page now says so rather than showing nothing |
