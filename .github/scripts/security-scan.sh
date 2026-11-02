@@ -314,7 +314,7 @@ semgrep_scan() {  # files...
 # exiftool can't see inside it.
 # shellcheck source=.githooks/file-types
 . "$root/.githooks/file-types"
-extra_re='\.(svg|heic|heif|tiff?|bmp|mov|m4v|aac|flac)$'
+extra_re='\.(svg|heic|heif|tiff?|bmp|jfif|dng|cr2|cr3|nef|arw|mov|m4v|3gp|aac|flac)$'
 skip_re='\.(woff2?|ttf|otf|csv|tsv|eml)$'
 archive_re='\.(zip|7z|rar|tar|gz|tgz|xz|bz2)$'
 
@@ -334,9 +334,11 @@ exiftool_scan() {  # files...
                 -RegionName -PersonInImage -City -Sub-location -State
                 -Country -Location* -*Email* -*AgentTitle)
     # -ee reads what is embedded too (a photo inside a PDF, a video's own
-    # tracks); -G3:1 gives an embedded document's tags keys of their own
-    # (Doc1:IFD0:Artist), so they don't overwrite the outer file's.
-    exiftool -json -G3:1 -a -ee -q -q "${tags[@]}" -- "$@" > "$work/out" 2> "$work/err" || true
+    # tracks). -G3:4:1 gives each tag a key of its own: an embedded
+    # document's (Doc1:IFD0:Artist) and a second copy of the same tag
+    # (Copy1:PNG:Artist), which JSON would otherwise fold into one, keeping
+    # only the last.
+    exiftool -json -G3:4:1 -a -ee -q -q "${tags[@]}" -- "$@" > "$work/out" 2> "$work/err" || true
     jq -e 'type == "array"' "$work/out" > /dev/null 2>&1 || fail "exiftool gave no JSON report: $(cat "$work/err")"
     # One entry per file, and none it couldn't read.
     [ "$(jq length "$work/out")" -eq "$#" ] || fail "exiftool read $(jq length "$work/out") of $# files"
@@ -535,7 +537,7 @@ EOF
     done
     need "${targets[@]}"
     # The smallest valid PNG, then a location and a name written into it.
-    python3 - "$sample/t.png" <<'PY'
+    python3 -I - "$sample/t.png" <<'PY'
 import struct, sys, zlib
 def chunk(kind, data):
     return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
@@ -549,7 +551,7 @@ PY
     # The same kind of photo as a JPEG inside a PDF: proof embedded pictures
     # are read. The JPEG starts as the smallest valid one (1x1 grey, 159
     # bytes), and exiftool writes the location and name into it.
-    python3 - "$sample/p.jpg" <<'PY'
+    python3 -I - "$sample/p.jpg" <<'PY'
 import base64, sys
 open(sys.argv[1], "wb").write(base64.b64decode(
     "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkz"
@@ -558,7 +560,7 @@ open(sys.argv[1], "wb").write(base64.b64decode(
 PY
     exiftool -q -overwrite_original -GPSLatitude=30.27 -GPSLatitudeRef=N \
         -Artist="Sample Person" "$sample/p.jpg"
-    python3 - "$sample/p.jpg" "$sample/t.pdf" <<'PY'
+    python3 -I - "$sample/p.jpg" "$sample/t.pdf" <<'PY'
 import sys
 jpg = open(sys.argv[1], "rb").read()
 objs = [b"<< /Type /Catalog /Pages 2 0 R >>",
@@ -576,6 +578,18 @@ out += b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (len(o
 open(sys.argv[2], "wb").write(out)
 PY
     expect_caught "a PDF with that kind of photo inside it" exiftool_scan "$sample/t.pdf"
+    # A name in the first of two copies of the same field, the second empty:
+    # proof every copy is read, not just the last.
+    python3 -I - "$sample/d.png" <<'PY'
+import struct, sys, zlib
+def chunk(kind, data):
+    return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+png = (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", 1, 1, 8, 0, 0, 0, 0))
+       + chunk(b"tEXt", b"Artist\x00Sample Person") + chunk(b"tEXt", b"Artist\x00")
+       + chunk(b"IDAT", zlib.compress(b"\x00\x00")) + chunk(b"IEND", b""))
+open(sys.argv[1], "wb").write(png)
+PY
+    expect_caught "a picture whose first copy of a field holds a name" exiftool_scan "$sample/d.png"
     exiftool_scan "${targets[@]}" ;;
 
   *)

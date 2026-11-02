@@ -2,6 +2,6 @@
 # (the value itself is never written here). Tab-separated; one per line, with
 # the reason after the hash. Used by .github/scripts/security-scan.sh. The
 # hash is of the value as the scan sees it; to get it for <file> and <tag>:
-#   exiftool -json -G3:1 -a -ee -<tag> <file> | jq -r '.[0]["<key>"] | tostring' | tr -d '\n' | sha256sum
+#   exiftool -json -G3:4:1 -a -ee -<tag> <file> | jq -r '.[0]["<key>"] | tostring' | tr -d '\n' | sha256sum
 # where <key> is the tag as exiftool names it there (Doc3:XML:LastModifiedBy).
 docs/AAFA-website-overview.pptx	Doc3:XML:LastModifiedBy	d2b90968eea37a42d30c93c9c4c34b38ca25632088071b6c78e65994ec1d44f6	the python-pptx template's own author, not anyone here (TODO.md)

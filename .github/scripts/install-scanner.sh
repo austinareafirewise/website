@@ -35,8 +35,8 @@ fetch() {  # url sha256
 
 python_tool() {  # name: venv with only the hash-pinned packages
     local venv="$base/${1}-venv"
-    python3 -m venv "$venv"
-    "$venv/bin/python" -m pip install --quiet --disable-pip-version-check \
+    python3 -I -m venv "$venv"
+    "$venv/bin/python" -I -m pip install --quiet --disable-pip-version-check \
         --require-hashes --no-deps --only-binary :all: \
         -r "$root/.github/scan/requirements/$1.txt"
     ln -sf "$venv/bin/$1" "$bin/$1"
