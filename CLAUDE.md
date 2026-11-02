@@ -491,6 +491,10 @@ if the files are to live there, and keep `.claude/state/` ignored.)
 - Bandit applies its default excludes (`.tox`, `__pycache__` and others)
   even to files named on its command line; `-x ''` turns them off. Its
   report names a relative path with `./` in front.
+- axe checks only what is shown: content hidden by `display:none` or
+  `visibility:hidden` is skipped, and a page's own rules (a title, a
+  language) still pass, so a page whose content a mistake hides passes with
+  nothing looked at. Check that there was something shown to examine.
 - zizmor `--offline` silently skips the audits that check a pinned SHA
   against its repository; they need a token (`contents: read` is enough).
 
@@ -609,8 +613,10 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   entries) isn't a complete record: the same page can list a file on one
   load and not on the next. Confirm against the source.
 - Claude Code's safety checks won't let it run code fetched from a CDN in the
-  browser, so a full automated accessibility audit (axe-core and the like)
-  needs another route, set up and reviewed like any other tool.
+  browser, so an automated accessibility audit (axe-core and the like) can't
+  be run that way on the live site. It runs instead from pinned, locked
+  packages against `src/` in GitHub Actions (`.github/a11y/`, since PR #11),
+  where it was set up and reviewed like any other tool.
 
 ### Writing and reviewing
 
