@@ -37,6 +37,12 @@ jobs:
         with:
           persist-credentials: false
 
+      # In a container the checkout belongs to another user, so git refuses
+      # it ("dubious ownership") unless it is marked safe; checkout marks it
+      # only for its own step. The check lists pages with git ls-files.
+      - name: Let git read the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       # Exactly the locked versions, each checked against its integrity
       # hash; no install scripts run.
       - name: Install the pinned tools
