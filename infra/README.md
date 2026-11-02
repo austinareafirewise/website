@@ -106,9 +106,9 @@ that matter:
 
 - **SES production access** — requested. The live API now reports email as
   sendable. `lambda/comms/email.mjs` reports that when AWS says production
-  access is granted and the domain is verified, and also when the check
-  itself fails, so it suggests access was granted without proving it; confirm
-  it in the SES console (TODO.md, T33). A sign-up made while email can't be sent is
+  access is granted and the domain is verified, and also when the check itself
+  fails, so it suggests access was granted without proving it; confirm it in
+  the SES console (TODO.md, T33). A sign-up made while email can't be sent is
   stored unconfirmed, and its confirmation goes out once sending works. This
   used to say sign-ups were refused until access was granted; the code was
   changed because refusing turned away people who wanted to be on the list
@@ -127,9 +127,9 @@ that matter:
   Declared as NON_PROFIT, public announcements, digital-form opt-in, 1,000
   messages a month. While `SmsProvider` was `off`, numbers were collected and
   held unconfirmed, and a held number kept only if its email was confirmed;
-  nothing sends a held number its code once texting works (TODO.md, T63). With it set, a sign-up for texts
-  is told its confirmation code has been sent, before the number is
-  approved, and the code doesn't arrive (TODO.md, T57).
+  nothing sends a held number its code once texting works (TODO.md, T63). With
+  it set, a sign-up for texts is told its confirmation code has been sent,
+  before the number is approved, and the code doesn't arrive (TODO.md, T57).
 
 - **Two more SMS gates after that.** The account's SMS tier is SANDBOX
   (texts only reach verified numbers) and the monthly text spend limit is $1,

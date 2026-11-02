@@ -172,9 +172,9 @@ Or tell the session "commit this on a branch and open a pull request". It
 writes the message, which should say what changed in plain words — the
 commit log is read later by whoever inherits this site.
 
-On the pull request, wait for **Check for secrets** and **Security scan**
-to pass (§4) and read the **Files changed** tab. GitHub doesn't let you approve your own pull request;
-merging after reading it is the approval.
+On the pull request, wait for **Check for secrets** and **Security scan** to
+pass (§4) and read the **Files changed** tab. GitHub doesn't let you approve
+your own pull request; merging after reading it is the approval.
 
 Before it is merged, the pull request adds a short entry to
 [`CHANGELOG.md`](../CHANGELOG.md) at the repository root (Dependabot's
@@ -191,7 +191,8 @@ commit, and the pull request's title when it has more; the message is every
 commit's message. Neither the title nor anything typed into the merge box is
 checked until it is already on `main`, so make sure they name no one. From
 the command line, or ask the session to do it, pinned to the commit you read
-so nothing pushed since slips in:
+(its SHA is at the top of the pull request's **Commits** tab, or from `gh pr
+view <number> --json headRefOid`) so nothing pushed since slips in:
 
 ```bash
 gh pr merge <number> --squash --delete-branch --match-head-commit <sha>

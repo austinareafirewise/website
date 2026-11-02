@@ -152,9 +152,9 @@ secrets and personal data before publishing; nothing else stands in the
 way.)
 
 The Alliance's rule is that every change goes through a pull request, even a
-lone maintainer's, so the secrets check and the security scan get their
-say before anything is live. Set up the branch ruleset that enforces it as described in
-[08-making-changes.md](08-making-changes.md) §2.4.
+lone maintainer's, so the secrets check and the security scan get their say
+before anything is live. Set up the branch ruleset that enforces it as
+described in [08-making-changes.md](08-making-changes.md) §2.4.
 
 ---
 

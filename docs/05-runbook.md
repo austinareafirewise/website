@@ -174,9 +174,9 @@ account with extra steps. Promote a second person.
 Console → **Billing and Cost Management** → **Bills**, which breaks the
 month down by service.
 
-Expect a few dollars a month (see "What this costs to run" below): the
-domain, the toll-free number for texts, and the members stack's one secret
-are the fixed part, and the rest grows with the email and texts sent.
+Expect a few dollars a month (see "What this costs to run" below): the domain,
+its hosted zone, the toll-free number for texts, and the members stack's one
+secret are the fixed part, and the rest grows with the email and texts sent.
 Amplify hosting, the API, the Lambdas and the tables are pennies or free tier
 at this site's size.
 
@@ -228,6 +228,9 @@ Things none of them remove, on purpose:
 - **The deploy artifacts bucket** that holds the packaged Lambda code
   (`aafa-deploy-artifacts-…`, in [infra/README.md](../infra/README.md)),
   made by hand before the stacks; empty it and delete it in S3
+- **The Twilio credentials** stored by hand in SSM Parameter Store
+  (`/aafa/comms/twilio`, if they were created), and the Twilio account and
+  number itself, which bills until it is closed
 - **The toll-free number and its registration**, which were set up by hand
   ([infra/README.md](../infra/README.md)) and are billed monthly until
   released in AWS End User Messaging

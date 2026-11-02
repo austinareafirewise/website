@@ -18,7 +18,7 @@ Work from before this file started is in the git history.
   including rollbacks, with the costs and teardown of all three stacks, and
   with the content and members systems being built and live. Closes T38, T39
   and T40, and the docs parts of T26; rewrites T37 (sign-in on our own
-  domain); updates T33, T34, T47 and T49; and adds T55 to T63. T33, T57 and
+  domain); updates T4, T33, T34, T47 and T49; and adds T55 to T63. T33, T57 and
   T61 record what test sign-ups on the live site showed. CLAUDE.md also now
   asks for the security scan's gate jobs, not only gitleaks, before a merge;
   dates changelog entries in the maintainer's own time zone; and has every
