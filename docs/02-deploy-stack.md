@@ -58,8 +58,10 @@ few dollars a year, and the board-editing and members systems a few dollars
 a month more ([05-runbook.md](05-runbook.md)); an email is how you find out
 if something is wrong before a card statement does.
 
-**Alert if the month exceeds** — `10` dollars is a sensible smoke alarm. It
-warns. It does not cap or stop anything.
+**Alert if the month exceeds** — `10` dollars is a sensible smoke alarm for
+the site alone. It warns. It does not cap or stop anything. With the
+board-editing and members systems too, the month the domain renews goes over
+it every year, so choose a higher figure for those (TODO.md, T58).
 
 **Create the GitHub identity provider?** — `yes` for a fresh account, `no` if
 step 1.9 showed one already exists.

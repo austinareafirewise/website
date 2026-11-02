@@ -18,8 +18,12 @@ Work from before this file started is in the git history.
   including rollbacks, with the costs and teardown of all three stacks, and
   with the content and members systems being built and live. Closes T38, T39
   and T40, and the docs parts of T26; rewrites T37 (sign-in on our own
-  domain); updates T33, T34, T47 and T49; and adds T55 to T63. T33 and T57
-  record what test sign-ups on the live site showed.
+  domain); updates T33, T34, T47 and T49; and adds T55 to T63. T33, T57 and
+  T61 record what test sign-ups on the live site showed. CLAUDE.md also now
+  asks for the security scan's gate jobs, not only gitleaks, before a merge;
+  dates changelog entries in the maintainer's own time zone; and has every
+  reviewer's brief state the maintainer's own observations as given and the
+  bar for each rank of finding.
 
 - **Run security scanners on every push**
   ([#8](https://github.com/austinareafirewise/website/pull/8)). A new
