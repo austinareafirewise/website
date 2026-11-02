@@ -44,9 +44,11 @@ It takes about 17 seconds a page, so the job's 15-minute limit allows about
   digest in the workflow. Its version must match Playwright's in
   `package-lock.json`, so a pull request that moves one moves the other.
   Dependabot's monthly update moves `package.json` and `package-lock.json`
-  but not the image digest: when it moves Playwright, the job fails to start
-  the browser (it fails closed), and the digest is moved by hand in the same
-  pull request: look up the new image's digest in Microsoft's container
+  but not the image digest. A Playwright release that needs a different
+  browser build than the image holds fails to start it (the job fails
+  closed), but one that keeps the same build may pass, so don't wait for a
+  failure: whenever Dependabot moves Playwright, move the digest by hand in
+  the same pull request. Look up the new image's digest in Microsoft's container
   registry (`mcr.microsoft.com/playwright`, the `v<version>-noble` tag) and
   check it against a second request before pinning it.
 
