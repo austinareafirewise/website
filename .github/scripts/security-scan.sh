@@ -16,7 +16,9 @@
 #
 # Then, by mode:
 #   gate    any finding fails the job; each is printed as rule, file and line,
-#           never the matched text (Actions logs are public).
+#           never the matched text (Actions logs are public). Run outside
+#           GitHub Actions, Semgrep's findings also carry the hash that
+#           .github/scan/semgrep-allowed.txt lists them by.
 #   report  findings are counted, and only the count is printed. For tools
 #           whose existing findings are still being triaged: TODO.md says
 #           which, and each moves to gate in a pull request of its own.
@@ -309,54 +311,70 @@ semgrep_scan() {  # files...
 # Semgrep's exceptions, after the run over the repository: each finding the
 # maintainer has judged harmless, and each file Semgrep is known not to
 # parse, listed in .github/scan/semgrep-allowed.txt with a reason. A finding
-# is matched by rule, file and the SHA-256 of the flagged line as written
-# (spaces at either end trimmed), so a listed finding survives the code
-# around it moving, while anything new in the same file still counts. An
-# entry that no longer matches is stale, and counts too.
+# is matched by rule, file and the SHA-256 of the lines it covers (each with
+# white space at either end trimmed, joined by newlines), so a listed finding
+# survives the code around it moving, while a change inside it, or anything
+# new in the same file, still counts. An unparsed file is matched by file and
+# Semgrep's error type, and a time-out is never excused. An entry that no
+# longer matches is stale, and counts too. Outside GitHub Actions, each
+# finding not listed is printed with its hash, ready to list; the public log
+# names only rule, file and line.
 semgrep_allowed() {
-    local list="$root/.github/scan/semgrep-allowed.txt" kind a b c d extra n=0
-    local -A allow=() unparsable=() used=()
+    local list="$root/.github/scan/semgrep-allowed.txt" raw n=0 key
+    local -a f
+    local -A allow=() unparsable=() used=() excused=()
     [ -s "$list" ] || fail "missing or empty .github/scan/semgrep-allowed.txt"
-    while IFS=$'\t' read -r kind a b c d extra || [ -n "$kind" ]; do
+    while IFS= read -r raw || [ -n "$raw" ]; do
         n=$((n + 1))
-        case "$kind" in
-            ''|'#'*) continue ;;
+        [[ "$raw" != *$'\r' ]] || fail "semgrep-allowed.txt line $n: a CRLF line ending; save the file with LF endings"
+        case "$raw" in ''|'#'*) continue ;; esac
+        mapfile -t -d $'\t' f < <(printf '%s' "$raw")
+        case "${f[0]}" in
             finding)
-                [ -n "$a" ] && [ -n "$b" ] && [[ "$c" =~ ^[0-9a-f]{64}$ ]] && [ -n "$d" ] && [ -z "$extra" ] ||
-                    fail "semgrep-allowed.txt line $n: want finding, rule, file, SHA-256 and reason, tab-separated"
-                allow["$a"$'\t'"$b"$'\t'"$c"]=1 ;;
+                [ "${#f[@]}" -eq 5 ] && [ -n "${f[1]}" ] && [ -n "${f[2]}" ] && [[ "${f[3]}" =~ ^[0-9a-f]{64}$ ]] && [ -n "${f[4]}" ] ||
+                    fail "semgrep-allowed.txt line $n: want finding, rule, file, SHA-256 and reason, separated by single tabs"
+                key="${f[1]}"$'\t'"${f[2]}"$'\t'"${f[3]}"
+                [ -z "${allow[$key]:-}" ] || fail "semgrep-allowed.txt line $n: the same finding is listed twice"
+                allow["$key"]=1 ;;
             unparsed)
-                [ -n "$a" ] && [ -n "$b" ] && [ -z "$c" ] ||
-                    fail "semgrep-allowed.txt line $n: want unparsed, file and reason, tab-separated"
-                unparsable["$a"]=1 ;;
-            *) fail "semgrep-allowed.txt line $n: unknown kind '$kind'" ;;
+                [ "${#f[@]}" -eq 4 ] && [ -n "${f[1]}" ] && [ -n "${f[2]}" ] && [ -n "${f[3]}" ] ||
+                    fail "semgrep-allowed.txt line $n: want unparsed, file, Semgrep's error type and reason, separated by single tabs"
+                [ "${f[2]}" != Timeout ] || fail "semgrep-allowed.txt line $n: a time-out can't be listed"
+                key="${f[1]}"$'\t'"${f[2]}"
+                [ -z "${unparsable[$key]:-}" ] || fail "semgrep-allowed.txt line $n: the same file is listed twice"
+                unparsable["$key"]=1 ;;
+            *) fail "semgrep-allowed.txt line $n: unknown kind '${f[0]}'" ;;
         esac
     done < "$list"
-    local rule file line text hash key excused=0
+    local rule file start end hash
     : > "$findings"
-    while IFS=$'\t' read -r rule file line; do
+    while IFS=$'\t' read -r rule file start end; do
         [ -f "$file" ] || fail "semgrep reported a finding in $file, which isn't a file here"
-        text=$(sed -n "${line}p" < "$file")
-        text="${text#"${text%%[![:space:]]*}"}"; text="${text%"${text##*[![:space:]]}"}"
-        hash=$(printf '%s' "$text" | sha256sum | cut -d' ' -f1)
+        hash=$(sed -n "${start},${end}p" < "$file" |
+               awk '{ sub(/^[[:space:]]+/, ""); sub(/[[:space:]]+$/, ""); print }' |
+               { lines=$(cat); printf '%s' "$lines"; } | sha256sum | cut -d' ' -f1)
         key="$rule"$'\t'"$file"$'\t'"$hash"
-        if [ -n "${allow[$key]:-}" ]; then used["$key"]=1; excused=$((excused + 1))
-        else printf '%s\t%s:%s\t%s\n' "$rule" "$file" "$line" "$hash" >> "$findings"; fi
-    done < <(jq -r '.results[] | [(.check_id | split(".") | last), .path, (.start.line|tostring)] | @tsv' "$work/out")
-    semgrep_unparsed=0
-    while IFS= read -r file; do
-        if [ -n "${unparsable[$file]:-}" ]; then used["unparsed"$'\t'"$file"]=1
-        else semgrep_unparsed=$((semgrep_unparsed + 1)); echo "not parsed: $file"; fi
-    done < <(jq -r '[.errors[] | .path // empty] | unique[]' "$work/out")
-    echo "$excused result(s) matched an exception; ${#used[@]} of $(( ${#allow[@]} + ${#unparsable[@]} )) exception(s) in use"
+        if [ -n "${allow[$key]:-}" ]; then used["$key"]=1; excused["$rule"$'\t'"$file:$start"]=1
+        elif [ -n "${GITHUB_ACTIONS:-}" ]; then printf '%s\t%s:%s\n' "$rule" "$file" "$start" >> "$findings"
+        else printf '%s\t%s:%s\t%s\n' "$rule" "$file" "$start" "$hash" >> "$findings"; fi
+    done < <(jq -r '.results[] | [(.check_id | split(".") | last), .path, (.start.line|tostring), (.end.line|tostring)] | @tsv' "$work/out")
+    local type
+    semgrep_unparsed=0 semgrep_timeouts=0
+    while IFS=$'\t' read -r file type; do
+        if [ "$type" = Timeout ]; then
+            semgrep_timeouts=$((semgrep_timeouts + 1)); echo "timed out: $file"
+        elif [ -n "${unparsable[$file$'\t'$type]:-}" ]; then used["unparsed"$'\t'"$file"$'\t'"$type"]=1
+        else semgrep_unparsed=$((semgrep_unparsed + 1)); echo "not parsed: $file ($type)"; fi
+    done < <(jq -r '[.errors[] | select(.path) | [.path, (.type | if type == "array" then .[0] else . end)] | @tsv] | unique[]' "$work/out")
+    echo "${#excused[@]} finding(s) matched an exception; ${#used[@]} of $(( ${#allow[@]} + ${#unparsable[@]} )) exception(s) in use"
     semgrep_stale=0
     for key in "${!allow[@]}"; do
         [ -n "${used[$key]:-}" ] && continue
         semgrep_stale=$((semgrep_stale + 1)); echo "stale exception: ${key%$'\t'*}"
     done
-    for file in "${!unparsable[@]}"; do
-        [ -n "${used["unparsed"$'\t'"$file"]:-}" ] && continue
-        semgrep_stale=$((semgrep_stale + 1)); echo "stale exception: $file now parses"
+    for key in "${!unparsable[@]}"; do
+        [ -n "${used["unparsed"$'\t'"$key"]:-}" ] && continue
+        semgrep_stale=$((semgrep_stale + 1)); echo "stale exception: ${key%$'\t'*} no longer gives ${key#*$'\t'}"
     done
 }
 
@@ -421,6 +439,7 @@ exiftool_scan() {  # files...
 
 semgrep_unparsed=0
 semgrep_stale=0
+semgrep_timeouts=0
 sample="$work/sample"
 mkdir -p "$sample"
 
@@ -661,6 +680,10 @@ problems=()
 if [ "$tool" = semgrep ] && [ "$semgrep_unparsed" -gt 0 ]; then
     # A file it couldn't parse is a file it didn't read.
     problems+=("$semgrep_unparsed file(s) couldn't be parsed and aren't listed in .github/scan/semgrep-allowed.txt")
+fi
+if [ "$tool" = semgrep ] && [ "$semgrep_timeouts" -gt 0 ]; then
+    # A file it gave up on is a file it didn't read; run it again.
+    problems+=("Semgrep timed out on $semgrep_timeouts file(s)")
 fi
 if [ "$tool" = semgrep ] && [ "$semgrep_stale" -gt 0 ]; then
     # An exception that matches nothing would hide whatever comes to match it.

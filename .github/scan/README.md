@@ -17,8 +17,9 @@ through `.github/scripts/security-scan.sh`:
 
 *Gate* fails on any finding and prints its rule, file and line. *Report*
 prints only a count, because Actions logs are as public as the repository;
-a tool runs that way while its existing findings are triaged, and moves to
-gate in a pull request of its own (TODO.md). Semgrep moved on 2026-11-02. In both modes a check fails if
+a tool runs that way while its existing findings are triaged, and moves
+to gate in a pull request of its own (TODO.md). Semgrep moved on
+2026-11-02. In both modes a check fails if
 the tool errors, reads nothing, or misses the known-bad sample it is given
 first.
 
@@ -37,9 +38,11 @@ All in one place, each with its reason:
 - `exiftool-allowed.txt`: metadata allowed by file, tag and the SHA-256 of
   its value; the file's header says how to compute the hash.
 - `semgrep-allowed.txt`: Semgrep findings allowed by rule, file and the
-  SHA-256 of the flagged line, and files Semgrep can't parse. The scan
-  prints the hash of any finding that isn't listed, and fails on an entry
-  that no longer matches anything, so the list can't go stale.
+  SHA-256 of the lines they cover, and files Semgrep can't parse, by file
+  and error type. The scan fails on any finding, unparsed file or time-out
+  not listed, and on an entry that no longer matches anything, so the list
+  can't go stale. Run on your own computer, it prints the hash of each
+  finding that isn't listed; the file's header says more.
 
 Every other way the tools offer to silence a finding (inline comments, their
 own config files) is refused.
