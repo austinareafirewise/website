@@ -555,6 +555,14 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   output of commands that scripts parse. Force it off with
   `GIT_CONFIG_COUNT` / `GIT_CONFIG_KEY_n` / `GIT_CONFIG_VALUE_n`.
 - `--numstat` shows `-` and `-` (separated by a tab) for a binary file.
+- **Keep a checkout out of folders a sync service manages**, such as
+  Desktop and Documents when iCloud Drive's "Desktop & Documents Folders"
+  is on. A checkout kept there (2026-11-02) gained copies of git objects
+  named `<object> 2` and lost its pack's `.idx`, so git couldn't read
+  anything in the pack: clones failed with "unable to read tree" and
+  `git fsck` listed missing objects. Everything pushed was safe on GitHub;
+  a fresh clone into a folder iCloud doesn't sync (`~/src/...`), with the
+  uncommitted files and `.claude/` copied across, recovered it.
 - `:(attr:!binary)` and `git grep -I` follow `.gitattributes`: one line
   marking a script `binary` takes it out of both. Where it matters, decide
   binary by the file's content (a NUL byte), not by its attributes.
