@@ -233,22 +233,25 @@ was done.
   when it merges, so nothing about that merge is left to record later.
   Dependabot's dependency updates are the exception: the git history records
   them, and a row such a merge closes is removed as the next bullet says.
-- **Nothing waits outside the repository.** Anything that couldn't go into
-  the pull request it belongs to — a TODO.md item finished outside a pull
-  request (a setting changed, a Dependabot merge), an item or lesson learned
+- **Nothing waits outside the repository.** Anything that couldn't go into the
+  pull request it belongs to — a TODO.md item finished without a pull request
+  of ours (a setting changed, a Dependabot merge), an item or lesson learned
   after approval or in the final check of facts, a correction to an earlier
-  changelog entry — is noted in `.claude/state/session.md` straight away,
-  and goes in as the **first commit of the next pull request**, whatever that
-  pull request is for: a commit touching only TODO.md, CHANGELOG.md and
-  this file's lessons, whose claims that pull request's review checks like
-  any lesson commit's. So every pull request starts by checking which TODO.md
-  items are now done and what is waiting. The one thing that does wait is
-  the detail of a weakness that isn't fixed, which stays out of the
-  repository until it is (next bullet). Until 2026-11-02 such changes
-  waited instead for a `docs` pull request of their own (or, for a
-  Dependabot merge, the next one to touch TODO.md); that left them recorded
-  only on one computer, sometimes across several merges, and a changelog
-  entry known to be wrong stayed wrong on `main` in the meantime.
+  changelog entry — is noted in `.claude/state/session.md` straight away, and
+  goes in as the **first commit of the next pull request we open**, whatever
+  that pull request is for: a commit touching only TODO.md, CHANGELOG.md and
+  this file's lessons, whose claims that pull request's review checks like any
+  lesson commit's, and whose changelog entry names any item closed that way.
+  Only the record goes in early; the fix for something found below the
+  standard still gets a pull request of its own, as [the
+  standard](#the-standard) says. So every pull request starts by checking
+  which TODO.md items are now done and what is waiting. The one thing that
+  does wait is the detail of a weakness that isn't fixed, which stays out of
+  the repository until it is (next bullet). Until 2026-11-02 such changes
+  waited instead for a `docs` pull request of their own (or, for a Dependabot
+  merge, the next one to touch TODO.md); that left them recorded only on one
+  computer, sometimes across several merges, and a changelog entry known to be
+  wrong stayed wrong on `main` in the meantime.
 - **A weakness that isn't fixed** goes into TODO.md only in general terms —
   naming the area that needs work, not what is wrong or how it could be
   used — or not at all. Its details go to the maintainer in the
