@@ -305,7 +305,6 @@ semgrep_scan() {  # files...
     fi
     jq -r '.results[] | [(.check_id | split(".") | last), (.path + ":" + (.start.line|tostring))] | @tsv' \
         "$work/out" >> "$findings"
-    semgrep_unparsed=$(jq '[.errors[] | .path // empty] | unique | length' "$work/out")
 }
 
 # Semgrep's exceptions, after the run over the repository: each finding the
@@ -357,7 +356,7 @@ semgrep_allowed() {
     while IFS=$'\t' read -r rule file start end; do
         [ -f "$file" ] || fail "semgrep reported a finding in $file, which isn't a file here"
         hash=$(sed -n "${start},${end}p" < "$file" |
-               awk '{ sub(/^[[:space:]]+/, ""); sub(/[[:space:]]+$/, ""); print }' |
+               LC_ALL=C awk '{ sub(/^[[:space:]]+/, ""); sub(/[[:space:]]+$/, ""); print }' |
                { lines=$(cat); printf '%s' "$lines"; } | sha256sum | cut -d' ' -f1)
         key="$rule"$'\t'"$file"$'\t'"$hash"
         if [ -n "${allow[$key]:-}" ]; then used["$key"]=1; excused["$rule"$'\t'"$file:$start"]=1
@@ -693,7 +692,13 @@ if [ "$tool" = semgrep ] && [ "$semgrep_timeouts" -gt 0 ]; then
 fi
 if [ "$tool" = semgrep ] && [ "$semgrep_stale" -gt 0 ]; then
     # An exception that matches nothing would hide whatever comes to match it.
-    problems+=("$semgrep_stale exception(s) in .github/scan/semgrep-allowed.txt no longer match; remove them")
+    # A file Semgrep timed out on drops out of its report, so its entries
+    # look stale too: then the advice is to run again, not to remove them.
+    if [ "$semgrep_timeouts" -gt 0 ]; then
+        problems+=("$semgrep_stale exception(s) in .github/scan/semgrep-allowed.txt didn't match, but Semgrep timed out, so run it again before removing any entry")
+    else
+        problems+=("$semgrep_stale exception(s) in .github/scan/semgrep-allowed.txt no longer match; remove them")
+    fi
 fi
 
 if [ "$mode" = gate ]; then

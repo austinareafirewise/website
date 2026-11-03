@@ -52,11 +52,11 @@ own config files) is refused.
 
 `.github/scripts/scan-locally.sh <tool>` installs the pinned tool, checked
 against its pinned hashes, into `~/.cache/aafa-scan` (or
-`$AAFA_SCAN_CACHE`), fetches Semgrep's rules at the commit the workflow
-pins, and runs the same scan as the job. Its header lists what it needs and
-which tools it covers: the Python ones and exiftool (the rest are pinned as
-Linux builds). It is how to get the hash of a Semgrep finding that isn't
-listed yet, which the scan on GitHub doesn't print.
+`$XDG_CACHE_HOME/aafa-scan`, or `$AAFA_SCAN_CACHE`), fetches Semgrep's rules
+at the commit the workflow pins, and runs the same scan as the job. Its header
+lists what it needs and which tools it covers: the Python ones and exiftool
+(the rest are pinned as Linux builds). It is how to get the hash of a Semgrep
+finding that isn't listed yet, which the scan on GitHub doesn't print.
 
 ## Moving a pin
 
@@ -80,4 +80,7 @@ these (TODO.md, T50).
   workflow, a full commit SHA.
 
 A pull request that moves a pin shows the new version's findings in its own
-run, so read that run before merging.
+run, so read that run before merging. Moving Semgrep or its rules can also
+make entries in `semgrep-allowed.txt` stale, or bring findings it doesn't
+list: run `.github/scripts/scan-locally.sh semgrep` to see each with its
+hash, and update the list in the same pull request.

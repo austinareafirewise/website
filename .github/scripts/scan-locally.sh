@@ -6,7 +6,7 @@
 #
 # Installs the pinned tool with install-scanner.sh, checked against its
 # pinned hashes, into a folder outside the repository ($AAFA_SCAN_CACHE,
-# default ~/.cache/aafa-scan); for Semgrep, also fetches its rules at the
+# default $XDG_CACHE_HOME/aafa-scan, or ~/.cache/aafa-scan); for Semgrep, also fetches its rules at the
 # commit the workflow pins. Then runs security-scan.sh in the given mode
 # (default gate). Run here rather than on GitHub, a Semgrep finding that
 # isn't listed in .github/scan/semgrep-allowed.txt is printed with the hash
@@ -14,7 +14,8 @@
 #
 # Works for the tools installed from Python packages (semgrep, checkov,
 # cfn-lint, bandit, zizmor) and for exiftool. The others are pinned as Linux
-# builds for GitHub's runners; on another system, use your own copy.
+# x86-64 builds for GitHub's runners and aren't installed here: put a copy of
+# your own on PATH and run security-scan.sh.
 # Needs bash 4.4 or later (on a Mac, Homebrew's), git, curl, jq, sha256sum,
 # and for the Python tools Python 3.12 or 3.13 (the workflow uses 3.12; the
 # pinned packages have no builds for newer versions).
@@ -24,6 +25,9 @@ set -euo pipefail
 [ "$#" -ge 1 ] || { echo "usage: scan-locally.sh <tool> [gate|report]" >&2; exit 2; }
 tool="$1"
 mode="${2:-gate}"
+if [ "$mode" != gate ] && [ "$mode" != report ]; then
+    echo "scan-locally.sh: mode must be gate or report" >&2; exit 2
+fi
 root="$(git rev-parse --show-toplevel)"
 cache="${AAFA_SCAN_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/aafa-scan}"
 export SCANNER_BIN="$cache/bin"
@@ -41,7 +45,7 @@ case "$tool" in
   exiftool)
     "$root/.github/scripts/install-scanner.sh" "$tool" ;;
   *)
-    echo "scan-locally.sh: $tool is pinned as a Linux build; on this system, put your own copy on PATH and run .github/scripts/security-scan.sh" >&2
+    echo "scan-locally.sh: $tool is pinned as a Linux x86-64 build for GitHub's runners and isn't installed here; put a copy of your own on PATH and run .github/scripts/security-scan.sh" >&2
     exit 2 ;;
 esac
 
