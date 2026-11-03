@@ -1,0 +1,79 @@
+# Semgrep findings judged harmless, and files Semgrep can't parse, each with
+# the reason. Used by .github/scripts/security-scan.sh, which fails on any
+# finding or unparsed file not listed here, and on any entry here that no
+# longer matches (a stale entry would hide whatever came to match it).
+#
+# Tab-separated, one per line:
+#   finding  <rule>  <file>  <SHA-256 of the flagged line>  <reason>
+#   unparsed  <file>  <reason>
+# <rule> is the last part of Semgrep's rule id. The hash is of the flagged
+# line as written, with spaces at either end trimmed; a finding that isn't
+# listed is printed with its rule, file, line and hash, so a person who
+# judges it harmless can add it here, with a reason, in a pull request.
+
+finding	html-in-template-string	.github/a11y/check.mjs	8958f39d392a5c9589025a2d2e6d96109c36ae9fa65b97b4f0ef60a3ebf1f40f	a known-bad sample page the accessibility check builds on purpose and serves only to itself
+finding	html-in-template-string	.github/a11y/check.mjs	438bf6707d51da4374927e5cca7ea7daa7cdbbd55a575a71cc393dea065baabf	a known-bad sample page the accessibility check builds on purpose and serves only to itself
+finding	html-in-template-string	.github/a11y/check.mjs	594c78198c4b849c7b2a1e8e43a9a8142ff97d185d8f78980de15625792ceac1	a known-bad sample page the accessibility check builds on purpose and serves only to itself
+finding	html-in-template-string	.github/a11y/check.mjs	3793f22b150d20b965a93cd298237715fed7854553ebd51a6a0efa200c266470	a known-bad sample page the accessibility check builds on purpose and serves only to itself
+finding	html-in-template-string	.github/a11y/check.mjs	0eda042cf367a9da32623d5ddda72672f9c64bdc0d05960ae22ef321a783eebc	a known-bad sample page the accessibility check builds on purpose and serves only to itself
+finding	html-in-template-string	.github/a11y/check.mjs	f31fb93db1851d9023ee2fd33043ae84de8f5d56e7d946338559fb9ba1e4a76f	a known-bad sample page the accessibility check builds on purpose and serves only to itself
+finding	html-in-template-string	.github/a11y/check.mjs	308d5f03dbb8236682f58c045bcea1bc794bd1bc63d86c8af7983c2ae6e4cabf	a known-bad sample page the accessibility check builds on purpose and serves only to itself
+finding	html-in-template-string	.github/a11y/check.mjs	4bc602a6f7ad7944f2cffaa9aa749fd5d4b89c31c85ed7e23443f086069f3f75	a known-bad sample page the accessibility check builds on purpose and serves only to itself
+finding	html-in-template-string	.github/a11y/check.mjs	a98d74cbc591f06b8ab48fb07f0a55e3d06cb0af9a7a7e1ab040d2706213667c	a known-bad sample page the accessibility check builds on purpose and serves only to itself
+finding	html-in-template-string	.github/a11y/check.mjs	13a7020a97f050a114ac67de9469b6e0af01f20cdb4ed767e90de857290a0dc8	a known-bad sample page the accessibility check builds on purpose and serves only to itself
+finding	html-in-template-string	.github/a11y/check.mjs	54e7f0e42d8d7cc7c2e5c43dfd69b8730d598b24599fb50178d4d68eae06f4e0	a known-bad sample page the accessibility check builds on purpose and serves only to itself
+finding	missing-template-string-indicator	.github/a11y/check.mjs	438bf6707d51da4374927e5cca7ea7daa7cdbbd55a575a71cc393dea065baabf	CSS braces in a sample page's style, not a template placeholder missing its $
+finding	missing-template-string-indicator	.github/a11y/check.mjs	594c78198c4b849c7b2a1e8e43a9a8142ff97d185d8f78980de15625792ceac1	CSS braces in a sample page's style, not a template placeholder missing its $
+finding	missing-template-string-indicator	.github/a11y/check.mjs	0eda042cf367a9da32623d5ddda72672f9c64bdc0d05960ae22ef321a783eebc	CSS braces in a sample page's style, not a template placeholder missing its $
+finding	missing-template-string-indicator	.github/a11y/check.mjs	f31fb93db1851d9023ee2fd33043ae84de8f5d56e7d946338559fb9ba1e4a76f	CSS braces in a sample page's style, not a template placeholder missing its $
+finding	missing-template-string-indicator	.github/a11y/check.mjs	a98d74cbc591f06b8ab48fb07f0a55e3d06cb0af9a7a7e1ab040d2706213667c	CSS braces in a sample page's style, not a template placeholder missing its $
+finding	missing-template-string-indicator	.github/a11y/check.mjs	13a7020a97f050a114ac67de9469b6e0af01f20cdb4ed767e90de857290a0dc8	CSS braces in a sample page's style, not a template placeholder missing its $
+finding	robots-denied	infra/site-stack.yaml	d57c9cad38939c624c1c0f5aa51272d432cca7ff8dee49699aef757cc74f9ce6	a comment recommending noindex for the 404 page
+finding	html-in-template-string	lambda/comms/api.mjs	ce8a7ffc3b1ae5136d4c88625645171b76b51f75b3da61335241ca2c0f9c7d5d	the values put in are the stack's own settings and a signed token, not anyone's input; escaping them as lib.mjs does is T81
+finding	html-in-template-string	lambda/comms/lib.mjs	68964ba4a965ea58a2a1d839f6540d00194d4f6a25d4aff882aa4c0b3da9e9c1	every value put into the HTML goes through escapeHtml first
+finding	html-in-template-string	lambda/comms/lib.mjs	0933bf9dd76252108f3494371a7298af9191778ce3e1f0facee875816c2f8923	every value put into the HTML goes through escapeHtml first
+finding	html-in-template-string	lambda/comms/lib.mjs	172e7b24caab2a6fd1ccc6591a50c3290050c0d45c1149bbf158b4543618b36e	every value put into the HTML goes through escapeHtml first
+finding	html-in-template-string	lambda/comms/lib.mjs	3f1b7dbd4c4675e0d8c39aeab93589cfd96a5d0ad47cba8b60795cb161814e3c	every value put into the HTML goes through escapeHtml first
+finding	html-in-template-string	lambda/comms/lib.mjs	90e16e306ce481eeca17d78e93d55ea4c52c86ddcb9dffd394e3655056dac77c	every value put into the HTML goes through escapeHtml first
+finding	html-in-template-string	lambda/comms/lib.mjs	39809005c17b61393e2c5992084a9047c52604830edcd65ce7ad18ad5f42491a	every value put into the HTML goes through escapeHtml first
+finding	html-in-template-string	lambda/comms/lib.mjs	0a5e65a20d489838d5bf7221946f4c13a91d4f68a46fd1a2f7c63e243d74d302	every value put into the HTML goes through escapeHtml first
+finding	html-in-template-string	lambda/comms/lib.mjs	d9eb7100f3d49d934bf3e8a5a6514d288126da437a83e4424bb6b493a87d098c	every value put into the HTML goes through escapeHtml first
+finding	html-in-template-string	lambda/comms/lib.mjs	427cbd36acafc35681c17316b7a9ea487cd671adfe922e8cf2e49a4e86914f87	every value put into the HTML goes through escapeHtml first
+finding	string-concat-in-list	scripts/fire-danger-signs.py	9d5920cccc44f4016f6a4d593a4474bcc9631c996cde2490188e56ed2bc291fb	two adjacent f-strings that build one SVG element on purpose
+finding	string-concat-in-list	scripts/fire-danger-signs.py	589fdf40111aa49e2b8cf37794efad3a79570133a52be041331e6dc0f4ab8de6	two adjacent f-strings that build one SVG element on purpose
+finding	robots-denied	src/404.html	e65bf5653c83d9cccf9b4fe3bca75c2bd869aa2228ee2c455d75132f4f1ff06c	noindex on purpose: this page isn't meant to be found by search
+finding	missing-integrity	src/about.html	2209d909a17c0f0a7eb708c76687df68204db75456ae9df1b5fea55198ed2a55	a rel=canonical link, which loads nothing
+finding	insecure-document-method	src/admin/admin-data.js	3aeb72b90b4a9f7d7c41ab6b3d289ef753427337326a4d4ae33eb3d2c087847a	the el() helper's html option, which nothing calls; removing it is T80
+finding	insecure-innerhtml	src/admin/admin-data.js	3aeb72b90b4a9f7d7c41ab6b3d289ef753427337326a4d4ae33eb3d2c087847a	the el() helper's html option, which nothing calls; removing it is T80
+finding	jquery-insecure-selector	src/admin/admin-data.js	9cd78ee7315bbfdd1105a469660f44bce847c883b746451d23d314fae58c822e	$ here is the file's own getElementById wrapper, not jQuery, given a fixed id
+finding	jquery-insecure-selector	src/admin/admin-data.js	fe2500d0846894b9c48d37b4f469ec5eb01a39d83bfd1587e3b29aa0a63ac36f	$ here is the file's own getElementById wrapper, not jQuery, given a fixed id
+finding	jquery-insecure-selector	src/admin/admin-data.js	fd279eb8492979240651ccb308ac0b65ffc91d41d3030e029bb6b8f91b908d6a	$ here is the file's own getElementById wrapper, not jQuery, given a fixed id
+finding	jquery-insecure-selector	src/admin/admin-data.js	5ef197d270ce2507cde9a622429b4732d6d1423f0b76f443a643ba15d593ecbd	$ here is the file's own getElementById wrapper, not jQuery, given a fixed id
+finding	jquery-insecure-selector	src/admin/admin-data.js	55425d46d4b1c28fec697aa930ebe47bc1f4b980a70b79ed336dd91ad8e298c6	$ here is the file's own getElementById wrapper, not jQuery, given a fixed id
+finding	unsafe-dynamic-method	src/admin/admin-data.js	9850dd9de1796eb848cc6d389294921659b37c144581809e3df80ee393180c2f	looks up one of the file's own tables by a fixed internal name, never by input
+finding	unsafe-dynamic-method	src/admin/admin-data.js	54e3a099f365ef53ca8c7bcf890e9483a6746f573f68a8929f05c8af56c8bb78	looks up one of the file's own tables by a fixed internal name, never by input
+finding	unsafe-dynamic-method	src/admin/admin-data.js	f8c10426718f659c5fd48e609340b914fe99734a51bc1cee46c1684325772004	looks up one of the file's own tables by a fixed internal name, never by input
+finding	jquery-insecure-selector	src/admin/admin.js	3415660846a0a77abc23f1e24210d84b4d5f63540ddae3b863687a42841fbfd7	$ here is the file's own getElementById wrapper, not jQuery, given a fixed id
+finding	jquery-insecure-selector	src/admin/admin.js	8a2ead0e200fe16e8a56576b6e335bb9e7e07eb71d4154af768d75d165743a74	$ here is the file's own getElementById wrapper, not jQuery, given a fixed id
+finding	jquery-insecure-selector	src/admin/admin.js	ff80e6a868cd3a6fae40c63dea7e10c8979fb9becea10248f1e48f6cef7cac36	$ here is the file's own getElementById wrapper, not jQuery, given a fixed id
+finding	jquery-insecure-selector	src/admin/admin.js	95a78e68b68e968b2b6dbbfb54d7b252526d3bd3a5c831ca4731ce57059e62ac	$ here is the file's own getElementById wrapper, not jQuery, given a fixed id
+finding	jquery-insecure-selector	src/admin/admin.js	3309c9279cd861d20f55e47538281290668fb4959237c888f89515b078b551da	$ here is the file's own getElementById wrapper, not jQuery, given a fixed id
+finding	jquery-insecure-selector	src/admin/admin.js	2ebd54901d76b8c5f3a4759bbe62a3c9ab1a6babfa32039d862033530e610bbc	$ here is the file's own getElementById wrapper, not jQuery, given a fixed id
+finding	robots-denied	src/admin/index.html	600c0445c05362d6c079414ffa7bba2e13589d3fd89f9749bafe15dad140883d	noindex on purpose: this page isn't meant to be found by search
+finding	robots-denied	src/admin/training.html	600c0445c05362d6c079414ffa7bba2e13589d3fd89f9749bafe15dad140883d	noindex on purpose: this page isn't meant to be found by search
+finding	missing-integrity	src/board.html	35ce19653724d508d3b6a97f92ac5353195aec79c397936d2e1594077917356a	a rel=canonical link, which loads nothing
+finding	missing-integrity	src/evacuation.html	2998b4232d310e9a7d8bd71f687d7737704988692f1fa47b8287ba013a230268	a rel=canonical link, which loads nothing
+finding	missing-integrity	src/firewise-communities.html	308fdebdb062a8b4e43dca2bd83367e838ef283fda196828169ed6c5aa23e3ec	a rel=canonical link, which loads nothing
+finding	missing-integrity	src/index.html	ab906699a2fa0979af1a73f2019bff46147d8d059a3f8d5e867ec903f6c4eaed	a rel=canonical link, which loads nothing
+finding	generic-api-key	src/js/config.js	f5ab1f1210e5b667a02a8e61f74bbb4797a3be60090a0828dc6385f7514a5e6d	the sign-in service's app client id, public by design (the comment above it says why)
+finding	missing-integrity	src/manage.html	cecd4dd853edfa539e5a39fdee84e74eaf0e760d112d130e4b1101dcca582bf8	a rel=canonical link, which loads nothing
+finding	robots-denied	src/manage.html	e65bf5653c83d9cccf9b4fe3bca75c2bd869aa2228ee2c455d75132f4f1ff06c	noindex on purpose: this page isn't meant to be found by search
+finding	missing-integrity	src/news.html	1e8999a706e376028fedbaa6b2264e01af092d3777da84cc755ecbed8e5e03f8	a rel=canonical link, which loads nothing
+finding	missing-integrity	src/prepare-your-home.html	2e3e21f39442acefe50478cf40a777d21817e8ce27677db0f3ef9b6f3d65f5e7	a rel=canonical link, which loads nothing
+finding	missing-integrity	src/privacy.html	02b70c2b1fce1c8e358cc959b5657d9366d7ae01f49bd81e8afb658ab6d824f2	a rel=canonical link, which loads nothing
+finding	missing-integrity	src/resources.html	bd3568c3649ee7e6f97b6274c9997a9acd14c3419508ae58dee88d5598afeb22	a rel=canonical link, which loads nothing
+finding	missing-integrity	src/terms.html	12a9efc35861aab5875a419596c7c739dde41ca0a79695ccf88710f4478f920c	a rel=canonical link, which loads nothing
+
+unparsed	.github/scripts/install-scanner.sh	valid bash (shellcheck reads it); Semgrep's bash parser stops at <tool> in its usage line
+unparsed	.github/scripts/security-scan.sh	valid bash (shellcheck reads it); Semgrep's bash parser can't read it from its first line
+unparsed	src/admin/training/check.mjs	valid JavaScript (Node runs it); Semgrep rejects its #! line

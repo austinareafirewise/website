@@ -13,12 +13,12 @@ through `.github/scripts/security-scan.sh`:
 | zizmor | workflows, actions, Dependabot's config (online, read-only token) | gate |
 | exiftool | names and locations in pictures, sound, video and documents, every version in the history | gate |
 | Checkov | CloudFormation templates | report |
-| Semgrep | JavaScript, Python, shell, HTML, YAML | report |
+| Semgrep | JavaScript, Python, shell, HTML, YAML | gate |
 
 *Gate* fails on any finding and prints its rule, file and line. *Report*
 prints only a count, because Actions logs are as public as the repository;
-those tools have existing findings still being triaged, and each moves to
-gate in a pull request of its own (TODO.md). In both modes a check fails if
+a tool runs that way while its existing findings are triaged, and moves to
+gate in a pull request of its own (TODO.md). Semgrep moved on 2026-11-02. In both modes a check fails if
 the tool errors, reads nothing, or misses the known-bad sample it is given
 first.
 
@@ -36,6 +36,10 @@ All in one place, each with its reason:
   syntax it asks for.
 - `exiftool-allowed.txt`: metadata allowed by file, tag and the SHA-256 of
   its value; the file's header says how to compute the hash.
+- `semgrep-allowed.txt`: Semgrep findings allowed by rule, file and the
+  SHA-256 of the flagged line, and files Semgrep can't parse. The scan
+  prints the hash of any finding that isn't listed, and fails on an entry
+  that no longer matches anything, so the list can't go stale.
 
 Every other way the tools offer to silence a finding (inline comments, their
 own config files) is refused.

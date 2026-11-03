@@ -8,6 +8,19 @@ Work from before this file started is in the git history.
 
 ## 2026-11-02
 
+- **Fail the security scan on any new Semgrep finding**
+  ([#14](https://github.com/austinareafirewise/website/pull/14)). Semgrep's
+  64 findings and the 3 files it can't parse were triaged with the
+  maintainer: none is a security problem. The ones judged harmless are
+  listed in `.github/scan/semgrep-allowed.txt`, each by rule, file and the
+  SHA-256 of the flagged line, with its reason, and Semgrep moves from
+  report to gate: any finding or unparsed file not listed fails the job,
+  and so does any entry that no longer matches. The scan now prints
+  everything wrong before failing. Two small items it found become T80
+  (an unused option that sets `innerHTML` in the admin page) and T81
+  (escaping two settings in the confirmation email, for consistency).
+  Closes T47; docs/08 and the scan README say what changed.
+
 - **Put work that unblocks other work first in TODO.md**
   ([#13](https://github.com/austinareafirewise/website/pull/13)). At the
   maintainer's request, an item that others depend on now comes before the

@@ -306,6 +306,60 @@ semgrep_scan() {  # files...
     semgrep_unparsed=$(jq '[.errors[] | .path // empty] | unique | length' "$work/out")
 }
 
+# Semgrep's exceptions, after the run over the repository: each finding the
+# maintainer has judged harmless, and each file Semgrep is known not to
+# parse, listed in .github/scan/semgrep-allowed.txt with a reason. A finding
+# is matched by rule, file and the SHA-256 of the flagged line as written
+# (spaces at either end trimmed), so a listed finding survives the code
+# around it moving, while anything new in the same file still counts. An
+# entry that no longer matches is stale, and counts too.
+semgrep_allowed() {
+    local list="$root/.github/scan/semgrep-allowed.txt" kind a b c d extra n=0
+    local -A allow=() unparsable=() used=()
+    [ -s "$list" ] || fail "missing or empty .github/scan/semgrep-allowed.txt"
+    while IFS=$'\t' read -r kind a b c d extra || [ -n "$kind" ]; do
+        n=$((n + 1))
+        case "$kind" in
+            ''|'#'*) continue ;;
+            finding)
+                [ -n "$a" ] && [ -n "$b" ] && [[ "$c" =~ ^[0-9a-f]{64}$ ]] && [ -n "$d" ] && [ -z "$extra" ] ||
+                    fail "semgrep-allowed.txt line $n: want finding, rule, file, SHA-256 and reason, tab-separated"
+                allow["$a"$'\t'"$b"$'\t'"$c"]=1 ;;
+            unparsed)
+                [ -n "$a" ] && [ -n "$b" ] && [ -z "$c" ] ||
+                    fail "semgrep-allowed.txt line $n: want unparsed, file and reason, tab-separated"
+                unparsable["$a"]=1 ;;
+            *) fail "semgrep-allowed.txt line $n: unknown kind '$kind'" ;;
+        esac
+    done < "$list"
+    local rule file line text hash key excused=0
+    : > "$findings"
+    while IFS=$'\t' read -r rule file line; do
+        [ -f "$file" ] || fail "semgrep reported a finding in $file, which isn't a file here"
+        text=$(sed -n "${line}p" < "$file")
+        text="${text#"${text%%[![:space:]]*}"}"; text="${text%"${text##*[![:space:]]}"}"
+        hash=$(printf '%s' "$text" | sha256sum | cut -d' ' -f1)
+        key="$rule"$'\t'"$file"$'\t'"$hash"
+        if [ -n "${allow[$key]:-}" ]; then used["$key"]=1; excused=$((excused + 1))
+        else printf '%s\t%s:%s\t%s\n' "$rule" "$file" "$line" "$hash" >> "$findings"; fi
+    done < <(jq -r '.results[] | [(.check_id | split(".") | last), .path, (.start.line|tostring)] | @tsv' "$work/out")
+    semgrep_unparsed=0
+    while IFS= read -r file; do
+        if [ -n "${unparsable[$file]:-}" ]; then used["unparsed"$'\t'"$file"]=1
+        else semgrep_unparsed=$((semgrep_unparsed + 1)); echo "not parsed: $file"; fi
+    done < <(jq -r '[.errors[] | .path // empty] | unique[]' "$work/out")
+    echo "$excused result(s) matched an exception; ${#used[@]} of $(( ${#allow[@]} + ${#unparsable[@]} )) exception(s) in use"
+    semgrep_stale=0
+    for key in "${!allow[@]}"; do
+        [ -n "${used[$key]:-}" ] && continue
+        semgrep_stale=$((semgrep_stale + 1)); echo "stale exception: ${key%$'\t'*}"
+    done
+    for file in "${!unparsable[@]}"; do
+        [ -n "${used["unparsed"$'\t'"$file"]:-}" ] && continue
+        semgrep_stale=$((semgrep_stale + 1)); echo "stale exception: $file now parses"
+    done
+}
+
 # What exiftool reads: every document and media type .githooks/check-documents
 # knows ($documents and $media, from the one list both use), SVG, and other
 # picture, sound and video types a phone or camera writes. Not fonts, which
@@ -366,6 +420,7 @@ exiftool_scan() {  # files...
 # What each tool reads, its sample, and its run over the repository.
 
 semgrep_unparsed=0
+semgrep_stale=0
 sample="$work/sample"
 mkdir -p "$sample"
 
@@ -502,7 +557,9 @@ EOF
     need "${targets[@]}"
     printf 'const input = location.hash;\neval(input);\n' > "$sample/t.js"
     expect_caught "eval() of text from the address bar" semgrep_scan "$sample/t.js"
-    semgrep_scan "${targets[@]}" ;;
+    : > "$findings"
+    semgrep_scan "${targets[@]}"
+    semgrep_allowed ;;
 
   exiftool)
     # Every version of every such file in the history, not just today's: the
@@ -599,16 +656,23 @@ esac
 [ ! -s "$findings" ] || sort -u -o "$findings" "$findings"
 n=$(count)
 echo "$tool read ${#targets[@]} target(s); $n finding(s)"
+# Everything wrong is printed before the job fails, so one run shows it all.
+problems=()
 if [ "$tool" = semgrep ] && [ "$semgrep_unparsed" -gt 0 ]; then
     # A file it couldn't parse is a file it didn't read.
-    [ "$mode" = report ] || fail "$semgrep_unparsed file(s) couldn't be parsed"
-    echo "::warning title=$tool::$semgrep_unparsed file(s) couldn't be parsed"
+    problems+=("$semgrep_unparsed file(s) couldn't be parsed and aren't listed in .github/scan/semgrep-allowed.txt")
+fi
+if [ "$tool" = semgrep ] && [ "$semgrep_stale" -gt 0 ]; then
+    # An exception that matches nothing would hide whatever comes to match it.
+    problems+=("$semgrep_stale exception(s) in .github/scan/semgrep-allowed.txt no longer match; remove them")
 fi
 
 if [ "$mode" = gate ]; then
-    [ "$n" -eq 0 ] || { sort -u "$findings"; fail "$n finding(s)"; }
+    [ "$n" -eq 0 ] || { sort -u "$findings"; problems+=("$n finding(s)"); }
+    if [ "${#problems[@]}" -gt 0 ]; then msg=$(printf '%s; ' "${problems[@]}"); fail "${msg%; }"; fi
     echo "PASS: $tool found nothing"
 else
+    for p in "${problems[@]}"; do echo "::warning title=$tool::$p"; done
     [ "$n" -eq 0 ] || echo "::warning title=$tool::$n finding(s), report-only until they are triaged (TODO.md)"
     echo "REPORT: $tool, $n finding(s); details are not printed here"
 fi
