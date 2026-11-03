@@ -27,3 +27,18 @@ updates:
         patterns: ["*"]
     commit-message:
       prefix: "ci"
+
+  # The accessibility check's pinned tools (.github/a11y/). Its container
+  # image is pinned by digest in .github/workflows/accessibility.yml and
+  # moves by hand with the Playwright version (.github/a11y/README.md).
+  - package-ecosystem: npm
+    directory: "/.github/a11y"
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      accessibility:
+        patterns: ["*"]
+    commit-message:
+      prefix: "ci"

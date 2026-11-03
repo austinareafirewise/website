@@ -1,0 +1,53 @@
+name: Accessibility check
+
+# Every page under src/ checked on every push, in a browser, by
+# .github/a11y/check.mjs: axe's WCAG A and AA rules in four modes and a
+# keyboard check fail the job; reflow on a phone and axe's best-practice
+# rules are reported until the items that fix them (TODO.md) are done.
+# What it covers and how its pins move: .github/a11y/README.md.
+#
+# Push only, no pull_request trigger, as in the other checks: every change
+# arrives as a branch here, and both would run every check twice.
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: accessibility (gate)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # Each run checks the whole site, so a newer push's run covers an
+    # older one's.
+    concurrency:
+      group: accessibility-${{ github.ref }}
+      cancel-in-progress: true
+    # Microsoft's Playwright image, pinned by digest: the browser it holds
+    # matches the pinned Playwright in .github/a11y/package-lock.json.
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # In a container the checkout belongs to another user, so git refuses
+      # it ("dubious ownership") unless it is marked safe; checkout marks it
+      # only for its own step. The check lists pages with git ls-files.
+      - name: Let git read the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      # Exactly the locked versions, each checked against its integrity
+      # hash; no install scripts run.
+      - name: Install the pinned tools
+        working-directory: .github/a11y
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Check every page
+        run: node .github/a11y/check.mjs

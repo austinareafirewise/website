@@ -73,7 +73,7 @@ either way. *Falls short*: a gap, described in its row.
 
 | # | Status | As found |
 | --- | --- | --- |
-| 1 | Falls short | Scripted checks (a subset of WCAG 2.2 AA, not a full audit, and not yet in the repository) pass on every public page — language, image text alternatives, form labels, landmarks, unique ids, skip link, text contrast — with two exceptions: on most pages the footer's headings skip levels — an `h4` after an `h2`, or straight after the page's `h1` where no heading comes between — and the three text-size buttons are each named only "A". Not yet checked: keyboard use and focus, screen readers, dark mode, small screens. |
+| 1 | Falls short | Checked on every push since 2026-11-01 (`.github/a11y/`, docs/08 §4.4): axe's WCAG 2.2 A and AA rules pass on all 14 pages in normal and dark mode, on a 320-pixel phone, and without JavaScript, and Tab reaches every control at desktop and phone widths without a trap, with focus visible; content the pages fetch is checked only in its empty state so far. Short of the principle: four pages (about, evacuation, Firewise communities, prepare your home) scroll sideways on a phone (WCAG 1.4.10); on most pages the footer's headings skip levels; the emergency banner sits outside every landmark; the training page has no main landmark; and the three text-size buttons are each named only "A". Not yet checked: a real screen reader, and the admin pages behind sign-in. |
 | 2 | Falls short | The information pages work without JavaScript, and the pages that need it say so (though the home page's note leaves out the burn ban). News, the board, resources, and the home page's news headlines, notices, fire danger and burn ban need it, though they could be published as HTML; the sign-up and manage forms need it too. |
 | 3 | Believed met | No ad code and no ad hosts in `src/`. AdBlock found nothing to block, with a system-wide ad blocker also running; not yet checked with AdGuard on its own. |
 | 4 | Meets | No analytics or tracking code, and no cookies on the public pages. Local storage holds only the text-size choice, once a visitor makes one, and it never leaves the browser. The admin pages keep their own state in session storage. |
@@ -107,7 +107,8 @@ either way. *Falls short*: a gap, described in its row.
     GitHub, or an approval given before later pushes, doesn't count. If
     approval comes before review is done (see below), say so and ask.
   - Before merging, check that the `gitleaks` check (the job in **Check for
-    secrets**) and every job of **Security scan** passed on the head commit,
+    secrets**), every job of **Security scan** and **Accessibility check**
+    passed on the head commit,
     and note that commit's SHA:
     `gh pr view <n> --json headRefOid,statusCheckRollup`. A `(report)` job
     passes whatever it counts, so its success says nothing about findings;
@@ -126,6 +127,18 @@ either way. *Falls short*: a gap, described in its row.
   - Then merge, pinned to the commit that was checked:
     `gh pr merge <n> --squash --delete-branch --match-head-commit <sha>
     --subject "<subject> (#<n>)" --body-file <message-file>`.
+- **Warn before an OS prompt.** Before running anything likely to make the
+  maintainer's computer ask a question — a local server (macOS asks whether
+  the program may "find devices on your local network"), a newly downloaded
+  program's first run, a tool reading Documents, Desktop or Downloads, the
+  keychain, `sudo` — say so first, why, and which answer is safe. A server
+  bound to 127.0.0.1 works whether or not local-network access is allowed.
+- **Let the maintainer watch anything long.** A local command likely to
+  run for more than a minute or so (a test suite, a full scan, a browser
+  check) runs where the maintainer can see it live — in the app's Terminal
+  panel — piped through `tee` into a log under `.claude/state/logs/`, which
+  is what Claude reads afterwards. Don't cut its output down (`| tail`)
+  before anyone has seen it.
 - **Force-pushing** a pull request branch needs the maintainer's explicit OK
   each time, and uses `--force-with-lease=<branch>:<expected-sha>`. Claude
   never force-pushes `main`; rewriting its history, if that is ever needed,
@@ -478,6 +491,13 @@ if the files are to live there, and keep `.claude/state/` ignored.)
 - Bandit applies its default excludes (`.tox`, `__pycache__` and others)
   even to files named on its command line; `-x ''` turns them off. Its
   report names a relative path with `./` in front.
+- axe checks only what is shown: content hidden by `display:none` or
+  `visibility:hidden` is skipped, and a page's own rules (a title, a
+  language) still pass, so a page whose content a mistake hides passes with
+  nothing looked at. Check that there was something shown to examine.
+  Content made invisible by `opacity: 0` or clipped away by `overflow` is a
+  half-way case: axe still checks its structure (alt text, names) but
+  measures no contrast for it, as it isn't painted.
 - zizmor `--offline` silently skips the audits that check a pinned SHA
   against its repository; they need a token (`contents: read` is enough).
 
@@ -528,6 +548,11 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   subshell, and the pipeline's failure looks like an ordinary non-zero
   result. Feed it from a file instead when it must be able to stop the
   script.
+- **Never edit a script while it is running.** bash reads a script a piece
+  at a time as it runs, not all at once, so an edit that moves text shifts
+  everything after it: the running copy resumes mid-line and fails with a
+  syntax error it doesn't have (seen 2026-11-01, editing a test script during
+  its run). Wait for it to finish, or stop it first, or edit a copy.
 - `set -e` doesn't catch a failure inside `for x in $(cmd)`.
 - `set -e` is off inside `$(...)`, so a function that checks something
   carries on past a failed check when called as `x=$(check ...)`. Call it
@@ -561,6 +586,11 @@ if the files are to live there, and keep `.claude/state/` ignored.)
 - A push runs the workflows in the pushed commit, not those on `main`. A
   branch cut before a check existed doesn't get that check; merge `main`
   into it (no force-push needed).
+- In a `container:` job, git refuses the checkout ("detected dubious
+  ownership"): the files belong to another user, and `actions/checkout`
+  marks the folder safe only for its own step. Add it with `git config
+  --global --add safe.directory "$GITHUB_WORKSPACE"` before anything runs
+  git.
 - `gh pr merge --delete-branch` deletes the local branch too.
 - `gh pr merge --subject … --body-file …` was recorded byte for byte on a
   pull request whose commits all had one author. With several authors,
@@ -586,8 +616,10 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   entries) isn't a complete record: the same page can list a file on one
   load and not on the next. Confirm against the source.
 - Claude Code's safety checks won't let it run code fetched from a CDN in the
-  browser, so a full automated accessibility audit (axe-core and the like)
-  needs another route, set up and reviewed like any other tool.
+  browser, so an automated accessibility audit (axe-core and the like) can't
+  be run that way on the live site. It runs instead from pinned, locked
+  packages against `src/` in GitHub Actions (`.github/a11y/`, since PR #11),
+  where it was set up and reviewed like any other tool.
 
 ### Writing and reviewing
 

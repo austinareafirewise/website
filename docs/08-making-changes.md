@@ -172,7 +172,8 @@ Or tell the session "commit this on a branch and open a pull request". It
 writes the message, which should say what changed in plain words — the
 commit log is read later by whoever inherits this site.
 
-On the pull request, wait for **Check for secrets** and **Security scan** to
+On the pull request, wait for **Check for secrets**, **Security scan** and
+**Accessibility check** to
 pass (§4) and read the **Files changed** tab. GitHub doesn't let you approve
 your own pull request; merging after reading it is the approval.
 
@@ -241,7 +242,8 @@ is public; a private one needs a paid plan (TODO.md, T5 and T43).
 - **Require status checks to pass:** `gitleaks` (the job in **Check for
   secrets**), and the gate jobs of **Security scan**: `actionlint (gate)`,
   `shellcheck (gate)`, `trufflehog (gate)`, `cfn-lint (gate)`,
-  `bandit (gate)`, `zizmor (gate)` and `exiftool (gate)` (§4.3)
+  `bandit (gate)`, `zizmor (gate)` and `exiftool (gate)` (§4.3), and
+  `accessibility (gate)`, the job in **Accessibility check** (§4.4)
 - **Bypass list:** empty, so the rule applies to owners too
 
 Also under **Settings → General → Pull Requests**, turn on **Automatically
@@ -413,17 +415,18 @@ The checks run in three places:
 | Your computer (`.githooks/`) | each `git commit`, once turned on | staged files, documents, the commit message |
 | GitHub (**Check for secrets**) | each push of any branch | the pushed commits including merges, their messages, documents |
 | GitHub (**Security scan**) | each push of any branch | nine scanners over the workflows, scripts, templates, code, history and media (§4.3) |
+| GitHub (**Accessibility check**) | each push of any branch | every page under `src/`, in a browser (§4.4) |
 | The deploy (**Deploy to Amplify**) | before every publish of the site | everything under `src/`, as it is about to go live |
 
-The GitHub checks, **Check for secrets** and the `(gate)` jobs of **Security
-scan**, are the ones a pull request must pass (§2.4), and they run whether or
-not anyone turned the hooks on. The hooks add catching a mistake
-before it leaves your computer at all. They don't run for everything: a `git
-merge` with no conflict runs only the commit-message hook, and a
-`cherry-pick`, `revert` or plain `rebase` with no conflict runs neither (an
-interactive rebase's `reword` runs both). After a conflict, a continued merge,
-`cherry-pick` or `revert` runs both, but `git rebase --continue` still runs
-neither. The GitHub check covers all of these. To turn them on, once per
+The GitHub checks, **Check for secrets**, the `(gate)` jobs of **Security
+scan** and **Accessibility check**, are the ones a pull request must pass
+(§2.4), and they run whether or not anyone turned the hooks on. The hooks add
+catching a mistake before it leaves your computer at all. They don't run for
+everything: a `git merge` with no conflict runs only the commit-message hook,
+and a `cherry-pick`, `revert` or plain `rebase` with no conflict runs neither
+(an interactive rebase's `reword` runs both). After a conflict, a continued
+merge, `cherry-pick` or `revert` runs both, but `git rebase --continue` still
+runs neither. The GitHub check covers all of these. To turn them on, once per
 checkout:
 
 ```bash
@@ -487,6 +490,23 @@ each with its reason.
 [`.github/scan/README.md`](../.github/scan/README.md) lists what each tool
 reads and how to move a pinned version.
 
+### 4.4 The accessibility check
+
+**Accessibility check** opens every page under `src/` in a real browser, on
+every push, with requests to any other site blocked. axe's WCAG A and AA
+rules are checked in four modes (normal, dark, a 320-pixel phone, and no
+JavaScript), and a keyboard check at desktop and phone widths makes sure Tab
+reaches every control without getting stuck, and that focus can be seen.
+Those fail the job. The content the pages fetch isn't checked yet, only how
+they look without it (TODO.md, T76). Whether
+anything scrolls sideways on a phone, and axe's best-practice rules (heading
+order, landmarks), are listed in its log but don't fail it yet; each will
+once the TODO.md item that fixes it is done. Like the scanners, it first
+checks that it catches a known-bad sample.
+[`.github/a11y/README.md`](../.github/a11y/README.md) says what it covers,
+what it can't (a real screen reader, the admin pages behind sign-in), and
+how to run it on your own computer.
+
 ---
 
 ## 5 — When it does not work
@@ -502,6 +522,7 @@ reads and how to move a pinned version.
 | `git push` to `main` rejected | Working through pull requests is enforced (§2.4). Move the commit to a branch: `git switch -c <branch>`, push that |
 | `git push` of a branch rejected | Somebody else pushed to it first. `git pull`, resolve, push again |
 | **Check for secrets** failed | Its log names the rule, file and line, or the commit. Fix it on the branch and push again (§4.1) |
+| **Accessibility check** failed | Its log names the check, the page and the rule, with an example element. Fix it on the branch and push again; if instead it says a check "didn't catch its known-bad sample", "axe ran no rules" or a page "didn't load", the check itself is broken (§4.4) |
 | A **Security scan** `(gate)` job failed | Its log names the rule, file and line. Fix it on the branch and push again; if instead it says the tool failed, read nothing, had nothing to scan or "did not catch its known sample", the check itself is broken (§4.3) |
 | Deploy stopped at "Check the site" | Something under `src/` looks like a secret or personal data, and nothing was published. Its log says what |
 | A page is blank in a browser | JavaScript may be off. Every page now says so rather than showing nothing |

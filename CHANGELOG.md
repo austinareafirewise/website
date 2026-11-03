@@ -8,6 +8,19 @@ Work from before this file started is in the git history.
 
 ## 2026-11-01
 
+- **Check every page for accessibility on every push**
+  ([#11](https://github.com/austinareafirewise/website/pull/11)). A new
+  workflow opens every page under `src/` in a real browser, with requests to
+  other sites blocked, and fails on axe's WCAG 2.2 A and AA rules in four
+  modes (normal, dark, a 320-pixel phone, no JavaScript) and on a keyboard
+  check at desktop and phone widths (Tab reaches every control without a
+  trap, focus visible on screen). Reflow on a
+  phone and axe's best-practice rules are reported until T73, T74, T8 and T24
+  are done. Pinned by an npm lock file and a container image digest, and
+  each check must first catch a known-bad sample; a page that shows nothing
+  to check fails too. Closes T17; updates T6 and T43; adds T73, T74, T76,
+  T77, T78 and T79.
+
 - **Track the GitHub community-profile items**
   ([#10](https://github.com/austinareafirewise/website/pull/10)). TODO.md
   gains T64 to T72, at the maintainer's request after reading the

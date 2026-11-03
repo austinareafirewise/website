@@ -1,0 +1,11 @@
+{
+  "name": "aafa-accessibility-check",
+  "private": true,
+  "description": "Pinned tools for check.mjs, the accessibility check. Versions are exact; package-lock.json pins every package by integrity hash, and the workflow installs with npm ci.",
+  "type": "module",
+  "dependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "axe-core": "4.14.0",
+    "playwright": "1.64.1"
+  }
+}
