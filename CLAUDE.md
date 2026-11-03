@@ -206,8 +206,8 @@ was done.
   Give it the next unused ID, where it came from, its importance, its
   difficulty, and anything it needs beyond a pull request, using the
   scales at the top of TODO.md, and keep the table sorted by importance,
-  then by how many items depend on it (more first), then difficulty, then
-  ID.
+  then by how many items depend on it directly (more first), then
+  difficulty, then ID.
 - **Record what each item depends on**, because work that unblocks other
   work is worth doing first. An item that blocks a more important one takes
   on that importance. Within the same importance, an item that others
@@ -602,10 +602,11 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   message with what was checked after each merge.
 - Compare commit messages with trailing newlines stripped. `git log
   --format=%B` prints the stored message and then a newline of its own;
-  `git commit` stores a message ending in one newline (trailing blank lines
-  removed), while GitHub's squash merge stored the messages of #11 and #12
-  with none. So a message file taken from `%B` of a branch commit ends in
-  one more newline than the merged commit read back the same way.
+  `git commit`, with its default clean-up, stores a message ending in one
+  newline (trailing blank lines removed), while GitHub's squash merge
+  stored the messages of #11 and #12 with none. So a message file taken
+  from `%B` of a branch commit ends in one more newline than the merged
+  commit read back the same way.
 - Repository visibility, rulesets and merge settings are settings, not
   files: say exactly what to set, and who has to set it.
 
