@@ -8,6 +8,17 @@ Work from before this file started is in the git history.
 
 ## 2026-11-02
 
+- **Put work that unblocks other work first in TODO.md**
+  ([#13](https://github.com/austinareafirewise/website/pull/13)). At the
+  maintainer's request, an item that others depend on now comes before the
+  rest of its importance level, whatever its difficulty, and the more it
+  unblocks, the earlier it comes; CLAUDE.md and TODO.md's notes say so, and
+  why. The table is re-sorted to match. New dependencies: T66 and T71 on
+  T55, and T19 on T14. Items that block others now all say so in their
+  text (T3, T6, T14, T20, T55, T63 and T64 gain a note; T36's names T65
+  too). CLAUDE.md also gains a lesson about comparing a recorded commit
+  message.
+
 - **Track crediting other sources' information on the site**
   ([#12](https://github.com/austinareafirewise/website/pull/12)). TODO.md
   gains T75, at the maintainer's request after looking at the home page's

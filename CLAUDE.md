@@ -206,10 +206,14 @@ was done.
   Give it the next unused ID, where it came from, its importance, its
   difficulty, and anything it needs beyond a pull request, using the
   scales at the top of TODO.md, and keep the table sorted by importance,
-  then difficulty, then ID.
-- **Record what each item depends on.** An item that blocks a more
-  important one takes on that importance, with a note in its text saying
-  which item depends on it. Re-check this whenever an item's importance or
+  then by how many items depend on it (more first), then difficulty, then
+  ID.
+- **Record what each item depends on**, because work that unblocks other
+  work is worth doing first. An item that blocks a more important one takes
+  on that importance. Within the same importance, an item that others
+  depend on comes before those that don't, whatever its difficulty, and the
+  more it unblocks, the earlier it comes. Either way, its text says which
+  items depend on it. Re-check this whenever an item's importance or
   dependencies change, so the order shows what is really holding work up.
 - **Update an item when what is known about it changes** — a new finding,
   a revised difficulty, a decision.
@@ -235,7 +239,7 @@ was done.
   conversation, and into the changelog once it is fixed. This is the one
   rule for such findings; the other sections point here.
 - **To choose what to do next**, start at the top of TODO.md: high
-  importance, low difficulty first.
+  importance first, then what unblocks the most, then low difficulty.
 
 ## Keeping the documents right
 
