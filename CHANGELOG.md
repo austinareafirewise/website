@@ -20,9 +20,9 @@ Work from before this file started is in the git history.
   the repository: a change that couldn't go into the pull request it belongs
   to (a TODO.md item finished without a pull request of ours, an item or
   lesson learned after approval, a correction to an earlier entry) goes in
-  as the first commit of the next pull request we open, rather than waiting for a docs pull request of its
-  own; docs/08 says the same. And a lesson about comparing a recorded commit
-  message.
+  as the first commit of the next pull request we open, rather than waiting
+  for a docs pull request of its own; docs/08 says the same. And a lesson
+  about comparing a recorded commit message.
 
 - **Track crediting other sources' information on the site**
   ([#12](https://github.com/austinareafirewise/website/pull/12)). TODO.md
