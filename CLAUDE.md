@@ -522,6 +522,9 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   Content made invisible by `opacity: 0` or clipped away by `overflow` is a
   half-way case: axe still checks its structure (alt text, names) but
   measures no contrast for it, as it isn't painted.
+- Semgrep's open-source JSON report doesn't include the code it matched:
+  `extra.lines` and `extra.fingerprint` both read "requires login". To key
+  an exception on the code, read the flagged line from the file itself.
 - zizmor `--offline` silently skips the audits that check a pinned SHA
   against its repository; they need a token (`contents: read` is enough).
 
@@ -577,6 +580,10 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   everything after it: the running copy resumes mid-line and fails with a
   syntax error it doesn't have (seen 2026-11-01, editing a test script during
   its run). Wait for it to finish, or stop it first, or edit a copy.
+- macOS's `sed` reads `--` before a file name as a file name: `sed -n 2p --
+  file` prints the line, then exits 1 with `sed: --: No such file or
+  directory`. Read the file through `<` instead, which also copes with a
+  name that starts with `-`.
 - `set -e` doesn't catch a failure inside `for x in $(cmd)`.
 - `set -e` is off inside `$(...)`, so a function that checks something
   carries on past a failed check when called as `x=$(check ...)`. Call it
