@@ -181,8 +181,10 @@ Before it is merged, the pull request adds a short entry to
 [`CHANGELOG.md`](../CHANGELOG.md) at the repository root (Dependabot's
 dependency updates are the exception), and updates
 [`TODO.md`](../TODO.md), the list of everything still to do, if it
-finishes an item or turns up a new one. `CLAUDE.md` says how
-both are kept.
+finishes an item or turns up a new one. Its first commit brings in
+anything still waiting from earlier merges, such as a TODO.md item finished
+since or a lesson learned after an approval. `CLAUDE.md` says how both files
+are kept.
 
 Merge with **Squash and merge**: the branch's commits become one commit on
 `main`, so `main` reads as one line per change. Check the subject and

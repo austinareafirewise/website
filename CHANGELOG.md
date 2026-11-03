@@ -16,8 +16,13 @@ Work from before this file started is in the git history.
   why. The table is re-sorted to match. New dependencies: T66 and T71 on
   T55, and T19 on T14. Items that block others now all say so in their
   text (T3, T6, T14, T20, T55, T63 and T64 gain a note; T36's names T65
-  too). CLAUDE.md also gains a lesson about comparing a recorded commit
-  message.
+  too). CLAUDE.md also gains a rule that nothing waits outside the
+  repository: a change that couldn't go into the pull request it belongs to
+  (a TODO.md item finished outside one, an item or lesson learned after
+  approval, a correction to an earlier entry) goes in as the first commit
+  of the next pull request, rather than waiting for a docs pull request of
+  its own; docs/08 says the same. And a lesson about comparing a recorded
+  commit message.
 
 - **Track crediting other sources' information on the site**
   ([#12](https://github.com/austinareafirewise/website/pull/12)). TODO.md

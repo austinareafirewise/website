@@ -153,11 +153,11 @@ either way. *Falls short*: a gap, described in its row.
   [Lessons learned](#lessons-learned) — unless it describes a weakness that
   isn't fixed, which waits until it is. Add it to the pull request the lesson
   came from, as a commit that touches only this file; with no pull request
-  open, in a `docs` pull request of its own. A lesson-only commit doesn't
-  change the scope of the review, but its factual claims are checked in the
-  next round like any others — lessons have been wrong. A lesson pushed after
-  approval needs approving again, so a lesson learned at that point waits for
-  a `docs` pull request of its own.
+  open, or after approval (a lesson pushed then would need approving again),
+  as [Nothing waits outside the
+  repository](#tracking-work-todomd-and-changelogmd) says. A lesson-only
+  commit doesn't change the scope of the review, but its factual claims are
+  checked in the next round like any others — lessons have been wrong.
 
 ## Keeping state on local disk
 
@@ -220,19 +220,35 @@ was done.
 - **Where the change goes:** in the pull request the item came from, as a
   commit that touches only TODO.md — outside the review's scope like a lesson
   commit, and like one, its factual claims are checked in the next round. With
-  no pull request it came from, in a `docs` pull request of its own; one that
-  changes only TODO.md and its changelog entry needs just the check of factual
-  claims described under [When to stop](#when-to-stop), not review rounds. An
-  item learned after approval waits for a `docs` pull request.
+  no pull request it came from, or after approval, as **Nothing waits
+  outside the repository** below says. A pull request that changes only
+  TODO.md and its changelog entry needs just the check of factual claims
+  described under [When to stop](#when-to-stop), not review rounds.
 - **When an item is done**, the pull request that does it removes its row from
   TODO.md. Every pull request adds an entry to CHANGELOG.md before it is
   approved: under the date it is written, in the maintainer's own time zone
   as the commits record it (not moved later, which would need
   approving again), its title (the squash subject it will merge with) and
-  number, what changed, and the IDs it closed. Dependabot's dependency updates
-  are the exception: the git history records them, and a row such a merge
-  closes is removed, with a changelog note, by the next pull request that
-  touches TODO.md.
+  number, what changed, and the IDs it closed. It is complete and accurate
+  when it merges, so nothing about that merge is left to record later.
+  Dependabot's dependency updates are the exception: the git history records
+  them, and a row such a merge closes is removed as the next bullet says.
+- **Nothing waits outside the repository.** Anything that couldn't go into
+  the pull request it belongs to — a TODO.md item finished outside a pull
+  request (a setting changed, a Dependabot merge), an item or lesson learned
+  after approval or in the final check of facts, a correction to an earlier
+  changelog entry — is noted in `.claude/state/session.md` straight away,
+  and goes in as the **first commit of the next pull request**, whatever that
+  pull request is for: a commit touching only TODO.md, CHANGELOG.md and
+  this file's lessons, whose claims that pull request's review checks like
+  any lesson commit's. So every pull request starts by checking which TODO.md
+  items are now done and what is waiting. The one thing that does wait is
+  the detail of a weakness that isn't fixed, which stays out of the
+  repository until it is (next bullet). Until 2026-11-02 such changes
+  waited instead for a `docs` pull request of their own (or, for a
+  Dependabot merge, the next one to touch TODO.md); that left them recorded
+  only on one computer, sometimes across several merges, and a changelog
+  entry known to be wrong stayed wrong on `main` in the meantime.
 - **A weakness that isn't fixed** goes into TODO.md only in general terms —
   naming the area that needs work, not what is wrong or how it could be
   used — or not at all. Its details go to the maintainer in the
@@ -384,9 +400,10 @@ merge.
 Lessons, TODO.md updates and nit fixes pushed after that round get a check of
 their own before the merge: a fresh reviewer verifies only the factual claims
 in those commits. It doesn't restart the count. A claim it finds wrong is
-fixed and checked again; one that can't be settled is taken out and waits for
-a `docs` pull request of its own. Lessons that check itself teaches go to a
-`docs` pull request too, so the pull request can close.
+fixed and checked again; one that can't be settled is taken out, and it and
+any lessons that check itself teaches go into the next pull request, as
+[Nothing waits outside the repository](#tracking-work-todomd-and-changelogmd)
+says, so this one can close.
 
 **Stop and ask a person** — don't start another round — when the rounds stop
 converging. Only blocking and should-fix findings count here; nits don't,
