@@ -453,7 +453,10 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   offers to silence a finding (inline comments, ignore files).
 - **Log the finding, not the data.** Print rule, file, line and commit hash
   — not the matched text, its surroundings, or a commit subject. Actions
-  logs are as public as the repository and outlive any later clean-up.
+  logs are as public as the repository and outlive any later clean-up. A
+  hash of the matched text counts as the data: a short or guessable value
+  can be confirmed from its hash, so print one only where the log stays
+  local.
 - **A check is code: keep it in a script, not in a document.** Shell meant to
   be copied out of Markdown can't be linted or tested where it lives, and a
   check written that way drew new findings round after round, each fix
@@ -522,6 +525,21 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   Content made invisible by `opacity: 0` or clipped away by `overflow` is a
   half-way case: axe still checks its structure (alt text, names) but
   measures no contrast for it, as it isn't painted.
+- Semgrep's open-source JSON report doesn't include the code it matched:
+  `extra.lines` and `extra.fingerprint` both read "requires login". To key
+  an exception on the code, read the flagged lines from the file itself:
+  all of them, from `start.line` to `end.line`. A finding can cover a whole
+  template, and a key on its first line alone let an edit further down
+  pass as already excused.
+- Semgrep's bash parser reports a file as only partly parsed when it meets
+  `<` inside a `${var:?message}` expansion (`${1:?usage: x.sh <tool>}`), or
+  a `case` written on one line (`case "$m" in a) echo ok ;; *) exit 2 ;;
+  esac`); written over several lines, the same `case` parses. In a script
+  Semgrep must read in full, write such checks out over several lines, or
+  as an `if` with an `echo`.
+- Semgrep lists a file it gave up on (`"type": "Timeout"`) in the same
+  `errors` as one it couldn't parse; tell them apart by `type`, and never
+  excuse a time-out, which can come and go with the machine's load.
 - zizmor `--offline` silently skips the audits that check a pinned SHA
   against its repository; they need a token (`contents: read` is enough).
 
@@ -537,6 +555,14 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   output of commands that scripts parse. Force it off with
   `GIT_CONFIG_COUNT` / `GIT_CONFIG_KEY_n` / `GIT_CONFIG_VALUE_n`.
 - `--numstat` shows `-` and `-` (separated by a tab) for a binary file.
+- **Keep a checkout out of folders a sync service manages**, such as
+  Desktop and Documents when iCloud Drive's "Desktop & Documents Folders"
+  is on. A checkout kept there (2026-11-02) gained copies of git objects
+  named `<object> 2` and lost its pack's `.idx`, so git couldn't read
+  anything in the pack: clones failed with "unable to read tree" and
+  `git fsck` listed missing objects. Everything pushed was safe on GitHub;
+  a fresh clone into a folder iCloud doesn't sync (`~/src/...`), with the
+  uncommitted files and `.claude/` copied across, recovered it.
 - `:(attr:!binary)` and `git grep -I` follow `.gitattributes`: one line
   marking a script `binary` takes it out of both. Where it matters, decide
   binary by the file's content (a NUL byte), not by its attributes.
@@ -577,6 +603,10 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   everything after it: the running copy resumes mid-line and fails with a
   syntax error it doesn't have (seen 2026-11-01, editing a test script during
   its run). Wait for it to finish, or stop it first, or edit a copy.
+- macOS's `sed` reads `--` before a file name as a file name: `sed -n 2p --
+  file` prints the line, then exits 1 with `sed: --: No such file or
+  directory`. Read the file through `<` instead, which also copes with a
+  name that starts with `-`.
 - `set -e` doesn't catch a failure inside `for x in $(cmd)`.
 - `set -e` is off inside `$(...)`, so a function that checks something
   carries on past a failed check when called as `x=$(check ...)`. Call it

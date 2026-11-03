@@ -246,7 +246,8 @@ is public; a private one needs a paid plan (TODO.md, T5 and T43).
 - **Require status checks to pass:** `gitleaks` (the job in **Check for
   secrets**), and the gate jobs of **Security scan**: `actionlint (gate)`,
   `shellcheck (gate)`, `trufflehog (gate)`, `cfn-lint (gate)`,
-  `bandit (gate)`, `zizmor (gate)` and `exiftool (gate)` (§4.3), and
+  `bandit (gate)`, `zizmor (gate)`, `exiftool (gate)` and `semgrep (gate)`
+  (§4.3), and
   `accessibility (gate)`, the job in **Accessibility check** (§4.4)
 - **Bypass list:** empty, so the rule applies to owners too
 
@@ -475,16 +476,21 @@ hooks and the checks agree.
 ### 4.3 The security scan
 
 **Security scan** runs nine scanners on every push, one job each, so no one
-needs them on their own computer: actionlint and zizmor (workflows),
+needs them on their own computer to check a change (to list a new Semgrep
+finding as harmless, run Semgrep locally with
+`.github/scripts/scan-locally.sh semgrep`, which prints the hash the list
+needs): actionlint and zizmor (workflows),
 shellcheck (shell), TruffleHog (secrets, in every commit and in the files
 as they stand), cfn-lint and Checkov (CloudFormation), Bandit (Python),
 Semgrep (JavaScript, Python, shell, HTML and YAML), and exiftool (names and
 locations in pictures, sound, video and documents, in every version in the
 history). A job named `(gate)` fails on any finding and its log names the
-rule, file and line. Checkov and Semgrep run as `(report)`: they print only
-how many findings there are, because Actions logs are as public as the
-repository, until their existing findings are dealt with (TODO.md, T46 and
-T47).
+rule, file and line. Checkov runs as `(report)`: it prints only how many
+findings there are, because Actions logs are as public as the repository,
+until its existing findings are dealt with (TODO.md, T46). Semgrep ran that
+way too until 2026-11-02, while its findings were triaged; the ones judged
+harmless are now listed, each with its reason, in
+`.github/scan/semgrep-allowed.txt`, and anything else fails the job.
 
 Every job first checks that its tool catches a known-bad sample, and fails
 if the tool errors or reads nothing. The ways the tools offer to silence a
@@ -527,7 +533,7 @@ how to run it on your own computer.
 | `git push` of a branch rejected | Somebody else pushed to it first. `git pull`, resolve, push again |
 | **Check for secrets** failed | Its log names the rule, file and line, or the commit. Fix it on the branch and push again (§4.1) |
 | **Accessibility check** failed | Its log names the check, the page and the rule, with an example element. Fix it on the branch and push again; if instead it says a check "didn't catch its known-bad sample", "axe ran no rules" or a page "didn't load", the check itself is broken (§4.4) |
-| A **Security scan** `(gate)` job failed | Its log names the rule, file and line. Fix it on the branch and push again; if instead it says the tool failed, read nothing, had nothing to scan or "did not catch its known sample", the check itself is broken (§4.3) |
+| A **Security scan** `(gate)` job failed | Its log names the rule, file and line. Fix it on the branch and push again; if instead it says the tool failed, read nothing, had nothing to scan or "did not catch its known sample", the check itself is broken (§4.3). Semgrep also fails on a file it couldn't parse, on one it timed out on (run it again), and on an entry in `.github/scan/semgrep-allowed.txt` that no longer matches: remove the entry (unless Semgrep also timed out, which can make good entries look stale: run it again first), or, for a new finding judged harmless, add one with its reason (the file's header says how) |
 | Deploy stopped at "Check the site" | Something under `src/` looks like a secret or personal data, and nothing was published. Its log says what |
 | A page is blank in a browser | JavaScript may be off. Every page now says so rather than showing nothing |
 

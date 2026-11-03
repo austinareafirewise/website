@@ -13,12 +13,13 @@ through `.github/scripts/security-scan.sh`:
 | zizmor | workflows, actions, Dependabot's config (online, read-only token) | gate |
 | exiftool | names and locations in pictures, sound, video and documents, every version in the history | gate |
 | Checkov | CloudFormation templates | report |
-| Semgrep | JavaScript, Python, shell, HTML, YAML | report |
+| Semgrep | JavaScript, Python, shell, HTML, YAML | gate |
 
 *Gate* fails on any finding and prints its rule, file and line. *Report*
 prints only a count, because Actions logs are as public as the repository;
-those tools have existing findings still being triaged, and each moves to
-gate in a pull request of its own (TODO.md). In both modes a check fails if
+a tool runs that way while its existing findings are triaged, and moves
+to gate in a pull request of its own (TODO.md). Semgrep moved on
+2026-11-02. In both modes a check fails if
 the tool errors, reads nothing, or misses the known-bad sample it is given
 first.
 
@@ -36,9 +37,26 @@ All in one place, each with its reason:
   syntax it asks for.
 - `exiftool-allowed.txt`: metadata allowed by file, tag and the SHA-256 of
   its value; the file's header says how to compute the hash.
+- `semgrep-allowed.txt`: Semgrep findings allowed by rule, file and the
+  SHA-256 of the lines they cover, and files Semgrep can't parse, by file
+  and error type. The scan fails on any time-out, on any finding or
+  unparsed file not listed, and on an entry that no longer matches
+  anything, so the list can't go stale. Run on your own computer, it prints
+  the hash of each finding that isn't listed; the file's header says how an
+  entry is written.
 
 Every other way the tools offer to silence a finding (inline comments, their
 own config files) is refused.
+
+## Running a scan on your own computer
+
+`.github/scripts/scan-locally.sh <tool>` installs the pinned tool, checked
+against its pinned hashes, into `~/.cache/aafa-scan` (or
+`$XDG_CACHE_HOME/aafa-scan`, or `$AAFA_SCAN_CACHE`), fetches Semgrep's rules
+at the commit the workflow pins, and runs the same scan as the job. Its header
+lists what it needs and which tools it covers: the Python ones and exiftool
+(the rest are pinned as Linux builds). It is how to get the hash of a Semgrep
+finding that isn't listed yet, which the scan on GitHub doesn't print.
 
 ## Moving a pin
 
@@ -62,4 +80,7 @@ these (TODO.md, T50).
   workflow, a full commit SHA.
 
 A pull request that moves a pin shows the new version's findings in its own
-run, so read that run before merging.
+run, so read that run before merging. Moving Semgrep or its rules can also
+make entries in `semgrep-allowed.txt` stale, or bring findings it doesn't
+list: run `.github/scripts/scan-locally.sh semgrep` to see each with its
+hash, and update the list in the same pull request.
