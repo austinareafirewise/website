@@ -322,12 +322,13 @@ semgrep_scan() {  # files...
 semgrep_allowed() {
     local list="$root/.github/scan/semgrep-allowed.txt" raw n=0 key
     local -a f
-    local -A allow=() unparsable=() used=() excused=()
+    local -A allow=() unparsable=() used=() excused=() at=()
     [ -s "$list" ] || fail "missing or empty .github/scan/semgrep-allowed.txt"
     while IFS= read -r raw || [ -n "$raw" ]; do
         n=$((n + 1))
         [[ "$raw" != *$'\r' ]] || fail "semgrep-allowed.txt line $n: a CRLF line ending; save the file with LF endings"
         case "$raw" in ''|'#'*) continue ;; esac
+        [[ "$raw" != *$'\t' ]] || fail "semgrep-allowed.txt line $n: a tab after the last field"
         mapfile -t -d $'\t' f < <(printf '%s' "$raw")
         case "${f[0]}" in
             finding)
@@ -335,19 +336,24 @@ semgrep_allowed() {
                     fail "semgrep-allowed.txt line $n: want finding, rule, file, SHA-256 and reason, separated by single tabs"
                 key="${f[1]}"$'\t'"${f[2]}"$'\t'"${f[3]}"
                 [ -z "${allow[$key]:-}" ] || fail "semgrep-allowed.txt line $n: the same finding is listed twice"
-                allow["$key"]=1 ;;
+                allow["$key"]=1; at["$key"]=$n ;;
             unparsed)
                 [ "${#f[@]}" -eq 4 ] && [ -n "${f[1]}" ] && [ -n "${f[2]}" ] && [ -n "${f[3]}" ] ||
                     fail "semgrep-allowed.txt line $n: want unparsed, file, Semgrep's error type and reason, separated by single tabs"
                 [ "${f[2]}" != Timeout ] || fail "semgrep-allowed.txt line $n: a time-out can't be listed"
                 key="${f[1]}"$'\t'"${f[2]}"
                 [ -z "${unparsable[$key]:-}" ] || fail "semgrep-allowed.txt line $n: the same file is listed twice"
-                unparsable["$key"]=1 ;;
+                unparsable["$key"]=1; at["unparsed"$'\t'"$key"]=$n ;;
             *) fail "semgrep-allowed.txt line $n: unknown kind '${f[0]}'" ;;
         esac
     done < "$list"
     local rule file start end hash
     : > "$findings"
+    # Read from files, not process substitutions, so a jq failure stops here.
+    jq -r '.results[] | [(.check_id | split(".") | last), .path, (.start.line|tostring), (.end.line|tostring)] | @tsv' \
+        "$work/out" > "$work/results.tsv" || fail "couldn't read Semgrep's results"
+    jq -r '[.errors[] | select(.path) | [.path, (.type | if type == "array" then .[0] else . end)] | @tsv] | unique[]' \
+        "$work/out" > "$work/errors.tsv" || fail "couldn't read Semgrep's errors"
     while IFS=$'\t' read -r rule file start end; do
         [ -f "$file" ] || fail "semgrep reported a finding in $file, which isn't a file here"
         hash=$(sed -n "${start},${end}p" < "$file" |
@@ -357,7 +363,7 @@ semgrep_allowed() {
         if [ -n "${allow[$key]:-}" ]; then used["$key"]=1; excused["$rule"$'\t'"$file:$start"]=1
         elif [ -n "${GITHUB_ACTIONS:-}" ]; then printf '%s\t%s:%s\n' "$rule" "$file" "$start" >> "$findings"
         else printf '%s\t%s:%s\t%s\n' "$rule" "$file" "$start" "$hash" >> "$findings"; fi
-    done < <(jq -r '.results[] | [(.check_id | split(".") | last), .path, (.start.line|tostring), (.end.line|tostring)] | @tsv' "$work/out")
+    done < "$work/results.tsv"
     local type
     semgrep_unparsed=0 semgrep_timeouts=0
     while IFS=$'\t' read -r file type; do
@@ -365,16 +371,16 @@ semgrep_allowed() {
             semgrep_timeouts=$((semgrep_timeouts + 1)); echo "timed out: $file"
         elif [ -n "${unparsable[$file$'\t'$type]:-}" ]; then used["unparsed"$'\t'"$file"$'\t'"$type"]=1
         else semgrep_unparsed=$((semgrep_unparsed + 1)); echo "not parsed: $file ($type)"; fi
-    done < <(jq -r '[.errors[] | select(.path) | [.path, (.type | if type == "array" then .[0] else . end)] | @tsv] | unique[]' "$work/out")
+    done < "$work/errors.tsv"
     echo "${#excused[@]} finding(s) matched an exception; ${#used[@]} of $(( ${#allow[@]} + ${#unparsable[@]} )) exception(s) in use"
     semgrep_stale=0
     for key in "${!allow[@]}"; do
         [ -n "${used[$key]:-}" ] && continue
-        semgrep_stale=$((semgrep_stale + 1)); echo "stale exception: ${key%$'\t'*}"
+        semgrep_stale=$((semgrep_stale + 1)); echo "stale exception, semgrep-allowed.txt line ${at[$key]}: ${key%$'\t'*}"
     done
     for key in "${!unparsable[@]}"; do
         [ -n "${used["unparsed"$'\t'"$key"]:-}" ] && continue
-        semgrep_stale=$((semgrep_stale + 1)); echo "stale exception: ${key%$'\t'*} no longer gives ${key#*$'\t'}"
+        semgrep_stale=$((semgrep_stale + 1)); echo "stale exception, semgrep-allowed.txt line ${at["unparsed"$'\t'"$key"]}: ${key%$'\t'*} no longer gives ${key#*$'\t'}"
     done
 }
 

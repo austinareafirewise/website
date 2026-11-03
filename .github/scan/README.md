@@ -39,13 +39,24 @@ All in one place, each with its reason:
   its value; the file's header says how to compute the hash.
 - `semgrep-allowed.txt`: Semgrep findings allowed by rule, file and the
   SHA-256 of the lines they cover, and files Semgrep can't parse, by file
-  and error type. The scan fails on any finding, unparsed file or time-out
-  not listed, and on an entry that no longer matches anything, so the list
-  can't go stale. Run on your own computer, it prints the hash of each
-  finding that isn't listed; the file's header says more.
+  and error type. The scan fails on any time-out, on any finding or
+  unparsed file not listed, and on an entry that no longer matches
+  anything, so the list can't go stale. Run on your own computer, it prints
+  the hash of each finding that isn't listed; the file's header says how an
+  entry is written.
 
 Every other way the tools offer to silence a finding (inline comments, their
 own config files) is refused.
+
+## Running a scan on your own computer
+
+`.github/scripts/scan-locally.sh <tool>` installs the pinned tool, checked
+against its pinned hashes, into `~/.cache/aafa-scan` (or
+`$AAFA_SCAN_CACHE`), fetches Semgrep's rules at the commit the workflow
+pins, and runs the same scan as the job. Its header lists what it needs and
+which tools it covers: the Python ones and exiftool (the rest are pinned as
+Linux builds). It is how to get the hash of a Semgrep finding that isn't
+listed yet, which the scan on GitHub doesn't print.
 
 ## Moving a pin
 

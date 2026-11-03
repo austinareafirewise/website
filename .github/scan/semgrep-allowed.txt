@@ -9,9 +9,9 @@
 #   unparsed  <file>  <Semgrep's error type>  <reason>
 # <rule> is the last part of Semgrep's rule id. The hash is of the lines the
 # finding covers, each with white space at either end trimmed, joined by
-# newlines. To get it, run the scan on your own computer
-# (.github/scan/README.md says how): each finding not listed is printed with
-# its rule, file, line and hash. Add it here, with a reason, in a pull
+# newlines. To get it, run the scan on your own computer with
+# .github/scripts/scan-locally.sh semgrep: each finding not listed is printed
+# with its rule, file, line and hash. Add it here, with a reason, in a pull
 # request; the scan on GitHub prints only rule, file and line.
 
 finding	html-in-template-string	.github/a11y/check.mjs	8958f39d392a5c9589025a2d2e6d96109c36ae9fa65b97b4f0ef60a3ebf1f40f	a known-bad sample page the accessibility check builds on purpose and serves only to itself

@@ -19,7 +19,9 @@ Work from before this file started is in the git history.
   findings, unparsed files and stale entries are all printed before the
   job fails. Two small items it found become T80 (an unused option that
   sets `innerHTML` in the admin page) and T81 (escaping settings and links
-  in two emails, for consistency).
+  in two emails, for consistency). A new script, `.github/scripts/scan-locally.sh`,
+  runs a scan on your own computer, which is how to get the hash a new
+  entry needs.
   Closes T47; docs/08 and the scan README say what changed.
 
 - **Put work that unblocks other work first in TODO.md**

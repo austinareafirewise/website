@@ -476,7 +476,10 @@ hooks and the checks agree.
 ### 4.3 The security scan
 
 **Security scan** runs nine scanners on every push, one job each, so no one
-needs them on their own computer: actionlint and zizmor (workflows),
+needs them on their own computer to check a change (to list a new Semgrep
+finding as harmless, run Semgrep locally with
+`.github/scripts/scan-locally.sh semgrep`, which prints the hash the list
+needs): actionlint and zizmor (workflows),
 shellcheck (shell), TruffleHog (secrets, in every commit and in the files
 as they stand), cfn-lint and Checkov (CloudFormation), Bandit (Python),
 Semgrep (JavaScript, Python, shell, HTML and YAML), and exiftool (names and
