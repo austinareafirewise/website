@@ -453,7 +453,10 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   offers to silence a finding (inline comments, ignore files).
 - **Log the finding, not the data.** Print rule, file, line and commit hash
   — not the matched text, its surroundings, or a commit subject. Actions
-  logs are as public as the repository and outlive any later clean-up.
+  logs are as public as the repository and outlive any later clean-up. A
+  hash of the matched text counts as the data: a short or guessable value
+  can be confirmed from its hash, so print one only where the log stays
+  local.
 - **A check is code: keep it in a script, not in a document.** Shell meant to
   be copied out of Markdown can't be linted or tested where it lives, and a
   check written that way drew new findings round after round, each fix
@@ -524,7 +527,13 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   measures no contrast for it, as it isn't painted.
 - Semgrep's open-source JSON report doesn't include the code it matched:
   `extra.lines` and `extra.fingerprint` both read "requires login". To key
-  an exception on the code, read the flagged line from the file itself.
+  an exception on the code, read the flagged lines from the file itself:
+  all of them, from `start.line` to `end.line`. A finding can cover a whole
+  template, and a key on its first line alone let an edit further down
+  pass as already excused.
+- Semgrep lists a file it gave up on (`"type": "Timeout"`) in the same
+  `errors` as one it couldn't parse; tell them apart by `type`, and never
+  excuse a time-out, which can come and go with the machine's load.
 - zizmor `--offline` silently skips the audits that check a pinned SHA
   against its repository; they need a token (`contents: read` is enough).
 
