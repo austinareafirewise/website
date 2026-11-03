@@ -531,9 +531,12 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   all of them, from `start.line` to `end.line`. A finding can cover a whole
   template, and a key on its first line alone let an edit further down
   pass as already excused.
-- Semgrep's bash parser can't read `<` inside a `${var:?message}`
-  expansion (`${1:?usage: x.sh <tool>}`): it reports the file as only
-  partly parsed. Write a usage check out as a test and an `echo` instead.
+- Semgrep's bash parser reports a file as only partly parsed when it meets
+  `<` inside a `${var:?message}` expansion (`${1:?usage: x.sh <tool>}`), or
+  a `case` written on one line (`case "$m" in a) echo ok ;; *) exit 2 ;;
+  esac`); written over several lines, the same `case` parses. In a script
+  Semgrep must read in full, write such checks out over several lines, or
+  as an `if` with an `echo`.
 - Semgrep lists a file it gave up on (`"type": "Timeout"`) in the same
   `errors` as one it couldn't parse; tell them apart by `type`, and never
   excuse a time-out, which can come and go with the machine's load.
