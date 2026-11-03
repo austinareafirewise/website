@@ -600,6 +600,12 @@ if the files are to live there, and keep `.claude/state/` ignored.)
   pull request whose commits all had one author. With several authors,
   GitHub may add `Co-authored-by:` lines of its own, so compare the recorded
   message with what was checked after each merge.
+- Compare commit messages with trailing newlines stripped. `git log
+  --format=%B` prints the stored message and then a newline of its own;
+  `git commit` stores a message ending in one newline (trailing blank lines
+  removed), while GitHub's squash merge stored the messages of #11 and #12
+  with none. So a message file taken from `%B` of a branch commit ends in
+  one more newline than the merged commit read back the same way.
 - Repository visibility, rulesets and merge settings are settings, not
   files: say exactly what to set, and who has to set it.
 
