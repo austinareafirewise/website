@@ -6,6 +6,17 @@ history records), naming any [TODO.md](TODO.md) items it closed. How this file
 is kept is in [CLAUDE.md](CLAUDE.md#tracking-work-todomd-and-changelogmd).
 Work from before this file started is in the git history.
 
+## 2026-11-02
+
+- **Track crediting other sources' information on the site**
+  ([#12](https://github.com/austinareafirewise/website/pull/12)). TODO.md
+  gains T75, at the maintainer's request after looking at the home page's
+  fire danger sign: wherever the site shows another source's information
+  (the fire danger rating, the burn-ban status), say whose it is, how
+  current it is, that our copy is for information only, and where the
+  official source is. T59 now also asks that links to an official source
+  say so. The entry for #11 below now lists T71, which it updated.
+
 ## 2026-11-01
 
 - **Check every page for accessibility on every push**
@@ -18,8 +29,8 @@ Work from before this file started is in the git history.
   phone and axe's best-practice rules are reported until T73, T74, T8 and T24
   are done. Pinned by an npm lock file and a container image digest, and
   each check must first catch a known-bad sample; a page that shows nothing
-  to check fails too. Closes T17; updates T6 and T43; adds T73, T74, T76,
-  T77, T78 and T79.
+  to check fails too. Closes T17; updates T6, T43 and T71; adds T73,
+  T74, T76, T77, T78 and T79.
 
 - **Track the GitHub community-profile items**
   ([#10](https://github.com/austinareafirewise/website/pull/10)). TODO.md
