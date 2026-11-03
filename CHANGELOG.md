@@ -22,8 +22,9 @@ Work from before this file started is in the git history.
   in two emails, for consistency). A new script, `.github/scripts/scan-locally.sh`,
   runs a scan on your own computer, which is how to get the hash a new
   entry needs.
-  Closes T47; adds T80 to T83 (T82: the three files Semgrep can't fully
-  read; T83: keying entries on the full rule id); docs/08 and the scan
+  Closes T47; adds T80 to T84 (T82: the three files Semgrep can't fully
+  read; T83: keying entries on the full rule id; T84: saying where to
+  clone, after a checkout in an iCloud-synced folder was damaged); docs/08 and the scan
   README say what changed.
 
 - **Put work that unblocks other work first in TODO.md**
